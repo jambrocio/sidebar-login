@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Script Maestro de Despliegue y Arranque Integral de BevAdmin Pro.
 .DESCRIPTION
@@ -106,7 +106,11 @@ $existingPg = docker ps -a --filter "name=^dev-postgres$" --format "{{.Names}}"
 if ($existingPg) {
     docker start dev-postgres | Out-Null
 } else {
-    docker compose up -d dev-postgres | Out-Null
+    docker compose up -d dev-postgres
+    if ($LASTEXITCODE -ne 0) {
+        Write-Color "ERROR: No se pudo inicializar el contenedor PostgreSQL." "Red"
+        exit 1
+    }
 }
 
 # Esperar a que PostgreSQL acepte conexiones

@@ -80,10 +80,16 @@ export DB_PASSWORD="postgres"
 export SPRING_PROFILES_ACTIVE="$SPRING_PROFILE"
 export FRONTEND_ENV="$NG_CONFIG"
 
+# Limpiar red huérfana manual si existe sin etiquetas de Compose para evitar colisiones
+net_label=$(docker network inspect bevadmin-network --format '{{index .Labels "com.docker.compose.network"}}' 2>/dev/null || true)
+if [ -n "$(docker network ls --filter "name=^bevadmin-network$" -q)" ] && [ -z "$net_label" ]; then
+    docker network rm bevadmin-network 2>/dev/null || true
+fi
+
 if docker ps -a --filter "name=^dev-postgres$" --format "{{.Names}}" | grep -q "dev-postgres"; then
     docker start dev-postgres >/dev/null 2>&1 || true
 else
-    docker compose up -d dev-postgres >/dev/null 2>&1 || true
+    docker compose up -d dev-postgres
 fi
 
 echo -n "  Esperando disponibilidad de PostgreSQL (puerto 5432)..."
