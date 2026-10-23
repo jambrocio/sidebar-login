@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Secuencia: Menú Dinámico y Resolución Recursiva RBAC",
+    "locale": "es",
+    "output": "docs/diagrams/04_secuencia_menu_dinamico_rbac.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "usuario", "type": "external", "label": "Usuario", "sublabel": "Rol Asignado" },
+    { "id": "sidebar", "type": "frontend", "label": "Sidebar Nav", "sublabel": "Angular 21" },
+    { "id": "menu_svc", "type": "frontend", "label": "MenuService", "sublabel": "Signal Store" },
+    { "id": "api", "type": "backend", "label": "Menu API", "sublabel": "Spring Boot 4" },
+    { "id": "db", "type": "database", "label": "PostgreSQL 17", "sublabel": "fn_obtener_menu" }
+  ],
+  "segments": [
+    { "from": 140, "to": 310, "label": "Consulta y Resolución Recursiva RBAC" },
+    { "from": 330, "to": 500, "label": "Sanitización UI y Supresión de Submenús Vacíos" }
+  ],
+  "messages": [
+    {
+      "from": "usuario",
+      "to": "sidebar",
+      "label": "1. Inicia sesión exitosa con Token JWT",
+      "y": 160
+    },
+    {
+      "from": "sidebar",
+      "to": "menu_svc",
+      "label": "2. Cargar menú jerárquico del usuario",
+      "y": 200
+    },
+    {
+      "from": "menu_svc",
+      "to": "api",
+      "label": "3. GET /api/v1/menu/effective",
+      "y": 240
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "label": "4. SELECT * FROM fn_obtener_menu_efectivo(?)",
+      "y": 280
+    },
+    {
+      "from": "db",
+      "to": "api",
+      "label": "5. Devuelve árbol CTE (padres, hijos, ruta)",
+      "y": 350
+    },
+    {
+      "from": "api",
+      "to": "menu_svc",
+      "label": "6. 200 OK: Opciones de navegación autorizadas",
+      "y": 390
+    },
+    {
+      "from": "menu_svc",
+      "to": "sidebar",
+      "label": "7. Emite Signal<MenuItem[]> sanitizado",
+      "y": 430
+    },
+    {
+      "from": "sidebar",
+      "to": "usuario",
+      "label": "8. Oculta chevrons huérfanos y despliega menú",
+      "y": 470
+    }
+  ]
+}

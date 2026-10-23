@@ -1,0 +1,282 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Registro de Usuarios, Asignación de Locales y Expiración de Clave</h1>
+      <p class="subtitle">
+        Negocio Activo: <strong>{{ businessInfo().legalName }}</strong>
+        — Administrador: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <!-- 1. Formulario de Registro / Edición de Usuario con Asignación de Negocio, Locales y Vigencia de Clave -->
+  <div class="card">
+    <div class="toolbar">
+      <h2 class="section-title" style="margin: 0">
+        {{
+          editingUserId()
+            ? 'Editar Asignación y Vigencia de Clave del Usuario (' + editingUserId() + ')'
+            : 'Registrar Nuevo Usuario y Asignar Negocio, Locales y Política de Clave'
+        }}
+      </h2>
+      <button
+        *ngIf="editingUserId()"
+        type="button"
+        class="btn-secondary btn-sm"
+        (click)="resetUserForm()"
+      >
+        <i class="bi bi-x-lg"></i>
+        <span>Cancelar Edición</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="saveUserWithBusinessAndBranches()" class="grid-form">
+      <div class="form-group">
+        <label>Nombre Completo del Usuario</label>
+        <input
+          type="text"
+          name="usrFullName"
+          [(ngModel)]="userForm.name"
+          placeholder="Ej. Roberto Díaz Salazar"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Usuario de Acceso (Login)</label>
+        <input
+          type="text"
+          name="usrUsername"
+          [(ngModel)]="userForm.username"
+          placeholder="Ej. rdiaz"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Correo Electrónico Corporativo</label>
+        <input
+          type="email"
+          name="usrEmail"
+          [(ngModel)]="userForm.email"
+          placeholder="rdiaz@empresa.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña Inicial / Actual</label>
+        <input
+          type="text"
+          name="usrPassword"
+          [(ngModel)]="userForm.password"
+          placeholder="Ej. Temporal2026*"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Rol Asignado en el Sistema</label>
+        <select name="usrRole" [(ngModel)]="userForm.role">
+          <option *ngFor="let r of systemRoles()" [value]="r.name">
+            {{ r.name }} ({{ r.scope }})
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Estado de Vigencia / Expiración de Clave</label>
+        <select name="usrPassStatus" [(ngModel)]="userForm.passwordStatus">
+          <option value="Clave Temporal">Clave Temporal (Exige cambio en 1er Login)</option>
+          <option value="Vigente">Vigente (90 días de validez)</option>
+          <option value="Por Expirar">Por Expirar (Aviso preventivo 4 días)</option>
+          <option value="Expirada">Expirada (Bloquea y exige cambio en Login)</option>
+        </select>
+      </div>
+
+      <!-- Selección del Negocio al que pertenece el usuario -->
+      <div class="form-group">
+        <label>1. Negocio Asignado al Usuario</label>
+        <select
+          name="usrBusinessId"
+          [(ngModel)]="userForm.businessId"
+          (ngModelChange)="onBusinessChange($event)"
+        >
+          <option *ngFor="let biz of businesses()" [value]="biz.id">
+            {{ biz.legalName }} (RUC: {{ biz.taxId }})
+          </option>
+        </select>
+      </div>
+
+      <!-- Selección del Local Principal donde el usuario registra operaciones -->
+      <div class="form-group">
+        <label>2. Local Principal de Operación (Por Defecto)</label>
+        <select name="usrPrimaryBranch" [(ngModel)]="userForm.assignedBranch">
+          <option *ngFor="let br of branchesForSelectedBusiness()" [value]="br.name">
+            {{ br.name }} ({{ br.code }})
+          </option>
+        </select>
+      </div>
+
+      <!-- Selección múltiple de Locales autorizados dentro del Negocio elegido -->
+      <div class="form-group full-width">
+        <label>
+          3. Locales Autorizados del Negocio ({{ selectedAuthorizedBranches().length }} de
+          {{ branchesForSelectedBusiness().length }} seleccionados)
+        </label>
+        <div class="checkbox-grid">
+          <label
+            class="checkbox-item"
+            *ngFor="let br of branchesForSelectedBusiness()"
+          >
+            <input
+              type="checkbox"
+              [checked]="isBranchAuthorized(br.name)"
+              (change)="toggleAuthorizedBranch(br.name)"
+            />
+            <span>
+              <strong>{{ br.name }}</strong>
+              <small class="text-muted"> ({{ br.code }} · {{ br.invoiceSeries }})</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-person-plus-fill"></i>
+          <span>
+            {{
+              editingUserId()
+                ? 'Actualizar Usuario, Locales y Política de Clave'
+                : 'Registrar Usuario con Negocio, Locales y Vigencia de Clave'
+            }}
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. Directorio de Usuarios Registrados con su Negocio, Locales y Estado de Expiración de Clave -->
+  <div class="card">
+    <div class="toolbar">
+      <h2 class="section-title" style="margin: 0">
+        Usuarios Registrados y Vigencia de Contraseña ({{ filteredUsers().length }})
+      </h2>
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          placeholder="Buscar por nombre, usuario, negocio, local o estado de clave..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuario y Clave Prueba</th>
+            <th>Rol</th>
+            <th>Negocio y Local Principal</th>
+            <th>Locales Autorizados</th>
+            <th>Vigencia / Expiración de Clave</th>
+            <th>Estado Cuenta</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers()">
+            <td><code>{{ user.id }}</code></td>
+            <td>
+              <strong>{{ user.name }}</strong>
+              <div class="text-muted">
+                <code>&#64;{{ user.username }}</code> · {{ user.email }}
+              </div>
+              <div class="text-muted" style="font-size: 0.75rem">
+                Clave actual: <code>{{ user.password || 'Admin123*' }}</code>
+              </div>
+            </td>
+            <td><span class="badge badge-info">{{ user.role }}</span></td>
+            <td>
+              <strong>{{ user.businessName }}</strong>
+              <div class="text-muted">Local: <code>{{ user.assignedBranch }}</code></div>
+            </td>
+            <td>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.3rem">
+                <span
+                  class="badge badge-success"
+                  *ngFor="let loc of user.assignedBranches"
+                >
+                  {{ loc }}
+                </span>
+              </div>
+            </td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-success]="user.passwordStatus === 'Vigente'"
+                [class.badge-warning]="
+                  user.passwordStatus === 'Por Expirar' ||
+                  user.passwordStatus === 'Clave Temporal'
+                "
+                [class.badge-danger]="user.passwordStatus === 'Expirada'"
+              >
+                {{ user.passwordStatus }}
+              </span>
+              <div class="text-muted" style="font-size: 0.75rem; margin-top: 0.2rem">
+                Vence: <strong>{{ user.passwordExpiresAt }}</strong> ({{
+                  user.daysUntilExpiration >= 0
+                    ? user.daysUntilExpiration + ' días'
+                    : 'vencida hace ' + -user.daysUntilExpiration + 'd'
+                }})
+              </div>
+            </td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-success]="user.status === 'Activo'"
+                [class.badge-danger]="user.status !== 'Activo'"
+              >
+                {{ user.status }}
+              </span>
+            </td>
+            <td>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="editUser(user)"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                  <span>Editar</span>
+                </button>
+                <button
+                  *ngIf="user.passwordStatus !== 'Expirada'"
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="expireUserPasswordNow(user)"
+                  title="Forzar expiración inmediata para probar el cambio obligatorio en /login"
+                >
+                  <i class="bi bi-clock-history"></i>
+                  <span>Expirar Clave</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="toggleUserStatus(user)"
+                >
+                  {{ user.status === 'Activo' ? 'Desactivar' : 'Activar' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

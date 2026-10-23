@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5318efba-5617-40db-ae09-7b3e58764075",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\02_arquitectura_cloud_gcp.architecture.json",
+  "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\cloud\\02_arquitectura_cloud_gcp.html",
+  "specification": {
+    "sha256": "1d20ecdcbf0c1a340cd824d39c587d8f677d882993b6d85e401bc99f85a2a1d6",
+    "bytes": 5703
+  },
+  "artifact": {
+    "sha256": "7ee0a4944eee18b550dc432af723bd37c2705ce0e7eb26a27a43a76f3f955d8a",
+    "bytes": 835488
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "18113dfe-bbbe-463f-913c-c8c2d44bb693",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_cloud_azure.architecture.json",
+  "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\cloud\\01_arquitectura_cloud_azure.html",
+  "specification": {
+    "sha256": "a7a3063578a24fea15d0f573d9d368567609cdb2ba6d5c584cf5381c19ffdc41",
+    "bytes": 5702
+  },
+  "artifact": {
+    "sha256": "9564e01fcb15d24597ebe23c4420352e3d67cddfc221e5d519ff783d3322cf04",
+    "bytes": 835215
+  }
+}

@@ -1,0 +1,419 @@
+<!-- Vista de Autenticación y Gestión de Expiración de Contraseña (/login) -->
+<div class="login-container">
+  <!-- Botón flotante para cambiar entre Modo Claro y Oscuro desde el Login -->
+  <button
+    type="button"
+    class="theme-toggle-btn"
+    (click)="toggleDarkMode()"
+    [attr.aria-label]="isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+    [title]="isDarkMode() ? 'Modo Claro' : 'Modo Oscuro'"
+  >
+    <i class="bi" [ngClass]="isDarkMode() ? 'bi-sun-fill' : 'bi-moon-stars-fill'"></i>
+    <span>{{ isDarkMode() ? 'Claro' : 'Oscuro' }}</span>
+  </button>
+
+  <div class="login-layout-grid">
+    <!-- COLUMNA IZQUIERDA: Tarjeta de Inicio de Sesión / Cambio de Contraseña por Expiración -->
+    <div class="login-card">
+      <!-- Cabecera de Identidad Visual -->
+      <header class="login-header">
+        <div class="brand-badge" aria-hidden="true">
+          <i
+            class="bi"
+            [ngClass]="activeViewMode() === 'LOGIN' ? 'bi-shield-lock-fill' : 'bi-key-fill'"
+          ></i>
+        </div>
+        <h1>
+          {{
+            activeViewMode() === 'LOGIN'
+              ? 'Acceso al Sistema'
+              : isForcedExpirationChange()
+                ? 'Renovación Obligatoria de Clave'
+                : 'Cambiar Contraseña de Acceso'
+          }}
+        </h1>
+        <p class="subtitle">
+          {{
+            activeViewMode() === 'LOGIN'
+              ? 'Ingresa tus credenciales corporativas (Vigencia de clave: ' + passwordPolicy().rotationDays + ' días)'
+              : 'Actualiza tu contraseña para extender su vigencia por ' + passwordPolicy().rotationDays + ' días adicionales'
+          }}
+        </p>
+      </header>
+
+      <!-- Pestañas de Navegación: Iniciar Sesión vs Cambiar Contraseña -->
+      <div class="auth-mode-tabs" role="tablist">
+        <button
+          type="button"
+          class="mode-tab"
+          [class.active]="activeViewMode() === 'LOGIN'"
+          (click)="switchMode('LOGIN')"
+        >
+          <i class="bi bi-box-arrow-in-right"></i>
+          <span>Iniciar Sesión</span>
+        </button>
+        <button
+          type="button"
+          class="mode-tab"
+          [class.active]="activeViewMode() === 'CHANGE_PASSWORD'"
+          (click)="switchMode('CHANGE_PASSWORD')"
+        >
+          <i class="bi bi-key"></i>
+          <span>Cambiar Clave</span>
+        </button>
+      </div>
+
+      <!-- Alertas de retroalimentación (Servicio Caído, Servicio Restablecido, Error, Advertencia de Expiración, Info, Éxito) -->
+      
+      <!-- ALERTA CRÍTICA: SERVICIO BACKEND FUERA DE SERVICIO -->
+      <div *ngIf="backendHealth.isBackendOffline()" class="alert alert-service-offline" role="alert">
+        <div class="alert-offline-icon">
+          <i class="bi bi-cloud-slash-fill"></i>
+        </div>
+        <div class="alert-content">
+          <div class="alert-title-row">
+            <strong>Servicio Backend Fuera de Servicio</strong>
+            <span class="badge-status-offline">INACCESIBLE</span>
+          </div>
+          <p class="alert-description">
+            No es posible conectar con el servidor en <code>http://localhost:8080</code>.
+            El inicio de sesión ha sido deshabilitado temporalmente por seguridad mientras se restablece el servicio.
+          </p>
+          <div class="offline-actions">
+            <span class="countdown-text">
+              <i class="bi bi-arrow-repeat spin-slow"></i>
+              Reintentando en <strong>{{ backendHealth.retryCountdown() }}s</strong>...
+            </span>
+            <button
+              type="button"
+              class="btn-retry-health"
+              (click)="backendHealth.checkHealthNow(true)"
+              [disabled]="backendHealth.isManualChecking()"
+              title="Comprobar disponibilidad ahora"
+            >
+              <i class="bi bi-arrow-clockwise" [class.spin-slow]="backendHealth.isManualChecking()"></i>
+              <span>{{ backendHealth.isManualChecking() ? 'Verificando...' : 'Verificar Ahora' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERTA POSITIVA: SERVICIO RESTABLECIDO Y LISTO PARA USAR -->
+      <div *ngIf="backendHealth.wasOfflineAndRecovered()" class="alert alert-service-restored" role="status">
+        <div class="alert-restored-icon">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="alert-content">
+          <div class="alert-title-row">
+            <strong>¡Servicio Restablecido con Éxito!</strong>
+            <span class="badge-status-online">EN LÍNEA</span>
+          </div>
+          <p class="alert-description">
+            La conexión con el servidor backend ha sido recuperada satisfactoriamente.
+            El sistema se encuentra disponible y ya puedes iniciar sesión.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="btn-close-alert"
+          (click)="backendHealth.dismissRecoveryAlert()"
+          title="Cerrar aviso"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div *ngIf="errorMessage() && !backendHealth.isBackendOffline() && !backendHealth.wasOfflineAndRecovered()" class="alert alert-error" role="alert">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+        <span>{{ errorMessage() }}</span>
+      </div>
+
+      <div *ngIf="warningMessage()" class="alert alert-warning" role="alert">
+        <i class="bi bi-clock-history"></i>
+        <div class="alert-content">
+          <span>{{ warningMessage() }}</span>
+          <!-- Acciones rápidas cuando la clave está "Por Expirar" (ej. vence en 4 días) -->
+          <div *ngIf="expiringSoonUser()" class="warning-actions">
+            <button
+              type="button"
+              class="btn-warning-action primary"
+              (click)="openPasswordRenewalFromWarning()"
+            >
+              <i class="bi bi-key-fill"></i>
+              <span>Cambiar Contraseña Ahora</span>
+            </button>
+            <button
+              type="button"
+              class="btn-warning-action secondary"
+              (click)="continueToDashboardWithExpiringPassword()"
+            >
+              <span>Continuar al Sistema ({{ expiringSoonUser()?.daysUntilExpiration }}d restantes)</span>
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="infoMessage()" class="alert alert-info" role="status">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>{{ infoMessage() }}</span>
+      </div>
+
+      <div *ngIf="successMessage()" class="alert alert-success" role="status">
+        <i class="bi bi-check-circle-fill"></i>
+        <div class="alert-content">
+          <span>{{ successMessage() }}</span>
+          <div class="warning-actions">
+            <button
+              type="button"
+              class="btn-success-action"
+              (click)="enterDashboardAfterPasswordChange()"
+            >
+              <i class="bi bi-speedometer2"></i>
+              <span>Ingresar al Dashboard Ahora</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODO 1: Formulario Reactivo de Inicio de Sesión -->
+      <form
+        *ngIf="activeViewMode() === 'LOGIN'"
+        class="login-form"
+        (ngSubmit)="login()"
+        (input)="backendHealth.dismissRecoveryAlert()"
+        [formGroup]="loginForm"
+        novalidate
+      >
+        <!-- Campo: Correo Electrónico o Usuario -->
+        <div class="form-field">
+          <div class="input-group" [class.has-error]="hasFieldError('email')">
+            <i class="bi bi-person-badge field-icon" aria-hidden="true"></i>
+            <input
+              type="text"
+              id="email"
+              formControlName="email"
+              placeholder=" "
+              autocomplete="username"
+              [attr.aria-invalid]="hasFieldError('email')"
+            />
+            <label for="email">Correo electrónico o usuario</label>
+          </div>
+          <span *ngIf="hasFieldError('email')" class="error-text">
+            <i class="bi bi-exclamation-circle"></i>
+            {{ getFieldErrorMessage('email') }}
+          </span>
+        </div>
+
+        <!-- Campo: Contraseña -->
+        <div class="form-field">
+          <div class="input-group" [class.has-error]="hasFieldError('password')">
+            <i class="bi bi-lock field-icon" aria-hidden="true"></i>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              placeholder=" "
+              autocomplete="current-password"
+              [attr.aria-invalid]="hasFieldError('password')"
+            />
+            <label for="password">Contraseña actual</label>
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              tabindex="-1"
+            >
+              <i class="bi" [ngClass]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+          <span *ngIf="hasFieldError('password')" class="error-text">
+            <i class="bi bi-exclamation-circle"></i>
+            {{ getFieldErrorMessage('password') }}
+          </span>
+        </div>
+
+        <!-- Opciones secundarias: Recordarme e ir a Cambiar Contraseña -->
+        <div class="form-options">
+          <label class="remember-me">
+            <input type="checkbox" formControlName="rememberMe" />
+            <span>Recordar mi usuario</span>
+          </label>
+          <button
+            type="button"
+            class="link-btn"
+            (click)="switchMode('CHANGE_PASSWORD')"
+          >
+            ¿Tu clave expiró? Cambiar clave
+          </button>
+        </div>
+
+        <!-- Botón de acción principal -->
+        <button
+          type="submit"
+          class="login-button"
+          [disabled]="isSubmitting() || backendHealth.isBackendOffline() || backendHealth.backendStatus() === 'CHECKING'"
+          [class.disabled-offline]="backendHealth.isBackendOffline()"
+        >
+          <ng-container *ngIf="backendHealth.isBackendOffline()">
+            <i class="bi bi-cloud-slash"></i>
+            <span>Servicio Fuera de Servicio (Bloqueado)</span>
+          </ng-container>
+          <ng-container *ngIf="backendHealth.backendStatus() === 'CHECKING'">
+            <i class="bi bi-arrow-repeat spin-slow"></i>
+            <span>Comprobando Estado del Servicio...</span>
+          </ng-container>
+          <ng-container *ngIf="backendHealth.backendStatus() === 'ONLINE' && !isSubmitting()">
+            <span>Iniciar Sesión</span>
+            <i class="bi bi-arrow-right-short"></i>
+          </ng-container>
+          <ng-container *ngIf="backendHealth.backendStatus() === 'ONLINE' && isSubmitting()">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Verificando credenciales...</span>
+          </ng-container>
+        </button>
+      </form>
+
+      <!-- MODO 2: Formulario Reactivo de Cambio / Renovación de Contraseña por Expiración -->
+      <form
+        *ngIf="activeViewMode() === 'CHANGE_PASSWORD'"
+        class="login-form"
+        (ngSubmit)="submitPasswordChange()"
+        [formGroup]="changePasswordForm"
+        novalidate
+      >
+        <div class="form-field">
+          <div class="input-group">
+            <i class="bi bi-person-check field-icon" aria-hidden="true"></i>
+            <input
+              type="text"
+              id="cp-email"
+              formControlName="email"
+              placeholder=" "
+            />
+            <label for="cp-email">Correo o usuario a renovar</label>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <div class="input-group">
+            <i class="bi bi-unlock field-icon" aria-hidden="true"></i>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              id="cp-current"
+              formControlName="currentPassword"
+              placeholder=" "
+            />
+            <label for="cp-current">Contraseña actual o expirada</label>
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              tabindex="-1"
+            >
+              <i class="bi" [ngClass]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <div class="field-helper-row">
+            <span class="helper-label">Define tu nueva contraseña (vigencia 90 días):</span>
+            <button
+              type="button"
+              class="suggest-pass-btn"
+              (click)="fillSuggestedValidNewPassword()"
+              title="Generar y rellenar automáticamente una contraseña segura de prueba"
+            >
+              <i class="bi bi-magic"></i>
+              <span>Sugerir clave válida</span>
+            </button>
+          </div>
+          <div class="input-group">
+            <i class="bi bi-shield-lock field-icon" aria-hidden="true"></i>
+            <input
+              [type]="showNewPassword() ? 'text' : 'password'"
+              id="cp-new"
+              formControlName="newPassword"
+              placeholder=" "
+            />
+            <label for="cp-new">Nueva contraseña</label>
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="toggleNewPasswordVisibility()"
+              tabindex="-1"
+            >
+              <i class="bi" [ngClass]="showNewPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <div class="input-group">
+            <i class="bi bi-shield-check field-icon" aria-hidden="true"></i>
+            <input
+              [type]="showNewPassword() ? 'text' : 'password'"
+              id="cp-confirm"
+              formControlName="confirmPassword"
+              placeholder=" "
+            />
+            <label for="cp-confirm">Confirmar nueva contraseña</label>
+          </div>
+        </div>
+
+        <!-- Lista interactiva de políticas de seguridad para cambio de clave -->
+        <div class="password-policy-box">
+          <div class="policy-title">Requisitos de política de seguridad:</div>
+          <ul class="policy-checklist">
+            <li [class.met]="passwordStrengthChecks().minLength">
+              <i class="bi" [ngClass]="passwordStrengthChecks().minLength ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Mínimo 8 caracteres</span>
+            </li>
+            <li [class.met]="passwordStrengthChecks().hasUppercase && passwordStrengthChecks().hasNumber">
+              <i class="bi" [ngClass]="passwordStrengthChecks().hasUppercase && passwordStrengthChecks().hasNumber ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Al menos 1 mayúscula y 1 número</span>
+            </li>
+            <li [class.met]="passwordStrengthChecks().hasSpecial">
+              <i class="bi" [ngClass]="passwordStrengthChecks().hasSpecial ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Al menos 1 símbolo especial (*, #, &#64;, $)</span>
+            </li>
+            <li [class.met]="passwordStrengthChecks().isDifferent">
+              <i class="bi" [ngClass]="passwordStrengthChecks().isDifferent ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Diferente a la contraseña vencida/actual</span>
+            </li>
+            <li [class.met]="passwordStrengthChecks().matchesConfirm">
+              <i class="bi" [ngClass]="passwordStrengthChecks().matchesConfirm ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>La confirmación coincide</span>
+            </li>
+          </ul>
+        </div>
+
+        <button
+          type="submit"
+          class="login-button"
+          [disabled]="isSubmitting() || backendHealth.isBackendOffline() || backendHealth.backendStatus() === 'CHECKING' || !isNewPasswordPolicyValid()"
+          [class.disabled-offline]="backendHealth.isBackendOffline()"
+        >
+          <ng-container *ngIf="backendHealth.isBackendOffline()">
+            <i class="bi bi-cloud-slash"></i>
+            <span>Servicio Fuera de Servicio (Bloqueado)</span>
+          </ng-container>
+          <ng-container *ngIf="backendHealth.backendStatus() === 'CHECKING'">
+            <i class="bi bi-arrow-repeat spin-slow"></i>
+            <span>Comprobando Estado del Servicio...</span>
+          </ng-container>
+          <ng-container *ngIf="backendHealth.backendStatus() === 'ONLINE' && !isSubmitting()">
+            <i class="bi bi-check2-circle"></i>
+            <span>Actualizar Contraseña y Renovar por 90 Días</span>
+          </ng-container>
+          <ng-container *ngIf="backendHealth.backendStatus() === 'ONLINE' && isSubmitting()">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Actualizando contraseña en base de datos...</span>
+          </ng-container>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

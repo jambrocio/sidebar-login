@@ -1,0 +1,61 @@
+# =========================================================================
+# BevAdmin Pro Root - .gitignore (Monorepo / Multi-project)
+# =========================================================================
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Common IDEs & Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+*.sublime-project
+*.sublime-workspace
+.history/
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Node / Frontend Artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+
+# Java / Maven / Backend Artifacts
+backend/target/
+backend/*.jar
+backend/*.war
+backend/hs_err_pid*
+backend/replay_pid*
+backend/application-local.yml
+backend/application-secret.yml
+
+# Docker & Container Data
+docker-data/
+*.pid
+*.seed
+*.pid.lock

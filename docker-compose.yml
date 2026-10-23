@@ -1,0 +1,82 @@
+services:
+  # Base de Datos Relacional PostgreSQL 17
+  dev-postgres:
+    image: postgres:17
+    container_name: dev-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-admin_dashboard_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docs/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME:-admin_dashboard_db}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 2s
+    networks:
+      - bevadmin-network
+
+  # Backend REST API Spring Boot 4 + Java 21 (Imperativo / Síncrono)
+  dev-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: dev-backend
+    container_name: dev-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=jdbc:postgresql://dev-postgres:5432/${DB_NAME:-admin_dashboard_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - SPRING_FLYWAY_BASELINE_ON_MIGRATE=true
+      - SPRING_FLYWAY_BASELINE_VERSION=7
+      - JWT_SECRET=${JWT_SECRET:-ElRobleBebidasMayorYMenorClaveSecretaCorporativa2026SpringSecurity7Key}
+    depends_on:
+      dev-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/v1/auth/health || exit 1"]
+      interval: 4s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    networks:
+      - bevadmin-network
+
+  # Frontend SPA Angular 21 servida por Nginx Alpine
+  dev-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        ENV: ${FRONTEND_ENV:-production}
+    image: dev-frontend
+    container_name: dev-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      dev-postgres:
+        condition: service_healthy
+      dev-backend:
+        condition: service_healthy
+    networks:
+      - bevadmin-network
+
+volumes:
+  postgres-data:
+    external: false
+
+networks:
+  bevadmin-network:
+    name: bevadmin-network
+    external: true

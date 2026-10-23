@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura Cloud Empresarial en Google Cloud Platform (GCP)",
+    "locale": "es",
+    "output": "cloud/02_arquitectura_cloud_gcp.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Clientes y Cajeros POS",
+      "sublabel": "Navegadores & Tablets",
+      "pos": [40, 70],
+      "size": [150, 60]
+    },
+    {
+      "id": "cloud_armor",
+      "type": "cloud",
+      "label": "Cloud Armor + CDN",
+      "sublabel": "WAF OWASP + SSL",
+      "pos": [40, 180],
+      "size": [150, 60],
+      "tag": "HTTPS Load Balancer"
+    },
+    {
+      "id": "fe_run",
+      "type": "frontend",
+      "label": "Frontend Cloud Run",
+      "sublabel": "Angular 21 + Nginx",
+      "pos": [260, 70],
+      "size": [180, 60],
+      "tag": "Serverless Container"
+    },
+    {
+      "id": "be_run",
+      "type": "backend",
+      "label": "Backend Cloud Run",
+      "sublabel": "Spring Boot 4 / Java 21",
+      "pos": [260, 180],
+      "size": [180, 60],
+      "tag": "Virtual Threads"
+    },
+    {
+      "id": "cloud_sql",
+      "type": "database",
+      "label": "Cloud SQL PostgreSQL",
+      "sublabel": "PostgreSQL 17 Multi-Zone",
+      "pos": [260, 290],
+      "size": [180, 60],
+      "tag": "Private IP VPC"
+    },
+    {
+      "id": "secrets",
+      "type": "security",
+      "label": "Secret Manager",
+      "sublabel": "JWT & DB Credentials",
+      "pos": [500, 70],
+      "size": [180, 60],
+      "tag": "IAM Service Account"
+    },
+    {
+      "id": "gcs",
+      "type": "cloud",
+      "label": "Cloud Storage (GCS)",
+      "sublabel": "Backups & Comprobantes",
+      "pos": [500, 290],
+      "size": [180, 60],
+      "tag": "Geo-Redundant"
+    },
+    {
+      "id": "cloud_build",
+      "type": "cloud",
+      "label": "Cloud Build / GitHub",
+      "sublabel": "Test + Sonar + Trivy",
+      "pos": [740, 70],
+      "size": [180, 60],
+      "tag": "Shift-Left"
+    },
+    {
+      "id": "artifact_reg",
+      "type": "cloud",
+      "label": "Artifact Registry",
+      "sublabel": "Imágenes Hardened",
+      "pos": [740, 180],
+      "size": [180, 60],
+      "tag": "Container Analysis"
+    },
+    {
+      "id": "cloud_ops",
+      "type": "security",
+      "label": "Cloud Operations Suite",
+      "sublabel": "Logging + Monitoring",
+      "pos": [740, 290],
+      "size": [180, 60],
+      "tag": "OpenTelemetry"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Perímetro Edge y Seguridad (Google)",
+      "wraps": ["cloud_armor"]
+    },
+    {
+      "kind": "region",
+      "label": "Google Virtual Private Cloud (VPC Privada 10.10.0.0/16)",
+      "wraps": ["fe_run", "be_run", "cloud_sql", "secrets", "gcs"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Plataforma CI/CD y Observabilidad",
+      "wraps": ["cloud_build", "artifact_reg", "cloud_ops"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-cloud_armor",
+      "from": "users",
+      "to": "cloud_armor",
+      "label": "HTTPS :443 TLS 1.3",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cloud_armor-fe_run",
+      "from": "cloud_armor",
+      "to": "fe_run",
+      "label": "Ruta Web /*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cloud_armor-be_run",
+      "from": "cloud_armor",
+      "to": "be_run",
+      "label": "Ruta API /api/v1/*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "be_run-secrets",
+      "from": "be_run",
+      "to": "secrets",
+      "label": "IAM Auth",
+      "variant": "security"
+    },
+    {
+      "id": "be_run-cloud_sql",
+      "from": "be_run",
+      "to": "cloud_sql",
+      "label": "JDBC :5432 SSL",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cloud_sql-gcs",
+      "from": "cloud_sql",
+      "to": "gcs",
+      "label": "Backups WAL",
+      "variant": "dashed"
+    },
+    {
+      "id": "cloud_build-artifact_reg",
+      "from": "cloud_build",
+      "to": "artifact_reg",
+      "label": "Push Imagen",
+      "variant": "emphasis"
+    },
+    {
+      "id": "artifact_reg-be_run",
+      "from": "artifact_reg",
+      "to": "be_run",
+      "label": "Zero-Downtime",
+      "variant": "dashed"
+    },
+    {
+      "id": "be_run-cloud_ops",
+      "from": "be_run",
+      "to": "cloud_ops",
+      "label": "OpenTelemetry",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Seguridad Perimetral y Zero-Trust",
+      "items": [
+        "Google Cloud Armor proporciona protección activa contra ataques DDoS y reglas administradas OWASP Top 10.",
+        "Cloud SQL está aislado con IP privada en la VPC, sin acceso a Internet público.",
+        "Autenticación segura sin credenciales estáticas usando IAM Workload Identity y Secret Manager."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Cómputo Serverless Cloud Run",
+      "items": [
+        "Despliegue de Frontend y Backend en Google Cloud Run con escalado automático de 1 a N instancias.",
+        "Aprovechamiento de hilos virtuales de Java 21 para alta concurrencia con bajo consumo de memoria y CPU.",
+        "Serverless VPC Connector garantiza conectividad segura y de baja latencia entre Cloud Run y Cloud SQL."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Pipeline CI/CD DevSecOps",
+      "items": [
+        "Pipeline continuo con Cloud Build y escaneo automático de vulnerabilidades en Artifact Registry.",
+        "Migraciones Flyway ejecutadas como Cloud Run Job antes de habilitar tráfico a la nueva versión.",
+        "Compromisos de uso (CUD) a 1 y 3 años con ahorros de hasta 45% en Cloud SQL y Cómputo."
+      ]
+    }
+  ]
+}

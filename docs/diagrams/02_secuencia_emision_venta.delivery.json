@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "151c4dd2-c3e1-40fe-999e-58ad37e653ad",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\02_secuencia_emision_venta.sequence.json",
+  "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\02_secuencia_emision_venta.html",
+  "specification": {
+    "sha256": "d1396b69efd4ec9cce203da08c4bb4a25f3bdac9cc29c94502f76f1fc272fb3e",
+    "bytes": 3697
+  },
+  "artifact": {
+    "sha256": "93bd02ac33fc42944b6cf686387c13a60241bca00d58bbdc172c866138e612ba",
+    "bytes": 822116
+  }
+}

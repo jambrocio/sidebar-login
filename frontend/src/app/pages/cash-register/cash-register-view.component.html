@@ -1,0 +1,116 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Arqueo y Cierre de Caja por Local</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+        — Cajero: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">
+      Ejecutar Arqueo de Caja de tu Local Asignado ({{ assignedBranch() }})
+    </h2>
+    <form (ngSubmit)="registerCashRegisterClose()" class="grid-form">
+      <div class="form-group">
+        <label>Local / Tienda Asignado (Bloqueado)</label>
+        <input type="text" [value]="assignedBranch()" readonly />
+      </div>
+      <div class="form-group">
+        <label>Turno Laboral</label>
+        <select name="cashShift" [(ngModel)]="newCashAudit.shift">
+          <option value="Turno Mañana (08:00 - 16:00)">Turno Mañana (08:00 - 16:00)</option>
+          <option value="Turno Tarde/Cierre (14:00 - 22:00)">Turno Tarde/Cierre (14:00 - 22:00)</option>
+          <option value="Jornada Completa">Jornada Completa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fondo Inicial de Apertura ($)</label>
+        <input type="number" name="cashOpen" [(ngModel)]="newCashAudit.openingBalance" />
+      </div>
+      <div class="form-group">
+        <label>Ventas en Efectivo del Turno ($)</label>
+        <input type="number" name="cashSales" [(ngModel)]="newCashAudit.cashSales" />
+      </div>
+      <div class="form-group">
+        <label>Cobros Digitales (Yape / POS) ($)</label>
+        <input type="number" name="digSales" [(ngModel)]="newCashAudit.digitalSales" />
+      </div>
+      <div class="form-group">
+        <label>Egresos / Gastos Menores ($)</label>
+        <input type="number" name="cashExp" [(ngModel)]="newCashAudit.expenses" />
+      </div>
+      <div class="form-group">
+        <label>Efectivo Esperado en Sistema ($)</label>
+        <input type="text" [value]="'$' + getExpectedCash().toFixed(2)" readonly />
+      </div>
+      <div class="form-group">
+        <label>Efectivo Físico Contado ($)</label>
+        <input type="number" name="cashCounted" [(ngModel)]="newCashAudit.countedCash" />
+      </div>
+      <div class="form-group">
+        <label>Diferencia de Arqueo ($)</label>
+        <input
+          type="text"
+          [value]="(getCashDifference() >= 0 ? '+' : '') + '$' + getCashDifference().toFixed(2)"
+          readonly
+        />
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-shield-check"></i>
+          <span>Cerrar Turno y Firmar Acta de Arqueo</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Historial de Arqueos de Caja del Negocio</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° Acta</th>
+            <th>Local del Negocio</th>
+            <th>Turno</th>
+            <th>Esperado</th>
+            <th>Contado Físico</th>
+            <th>Estado Cuadre</th>
+            <th>Cajero (Auditoría)</th>
+            <th>Cierre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let arq of cashAuditsList()">
+            <td><code>{{ arq.id }}</code></td>
+            <td><strong>{{ arq.branchName }}</strong></td>
+            <td>{{ arq.shift }}</td>
+            <td><strong>\${{ arq.expectedCash.toFixed(2) }}</strong></td>
+            <td><strong>\${{ arq.countedCash.toFixed(2) }}</strong></td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-success]="arq.status === 'Cuadre Exacto'"
+                [class.badge-info]="arq.status === 'Sobrante'"
+                [class.badge-danger]="arq.status === 'Faltante'"
+              >
+                {{ arq.status }} ({{ arq.difference >= 0 ? '+' : '' }}\${{ arq.difference }})
+              </span>
+            </td>
+            <td><code>{{ arq.cashierUser }}</code></td>
+            <td class="text-muted">{{ arq.closedAt }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

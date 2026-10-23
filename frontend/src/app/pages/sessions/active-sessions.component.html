@@ -1,0 +1,699 @@
+<div class="sessions-container">
+  
+  <!-- CABECERA PRINCIPAL -->
+  <header class="page-header">
+    <div>
+      <div class="header-badge">
+        <i class="bi bi-shield-lock-fill"></i> SEGURIDAD & AUDITORÍA EN TIEMPO REAL
+      </div>
+      <h1 class="page-title">Monitor de Sesiones Activas y Auditoría de Red</h1>
+      <p class="page-subtitle">
+        Supervisión en vivo de direcciones IP, navegadores y geolocalización de usuarios conectados.
+        Permite el cierre remoto forzado de sesiones y el bloqueo inmediato de intrusos.
+      </p>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="openLocationMap()">
+        <i class="bi bi-geo-alt-fill text-danger"></i> Ver Mapa de Conexiones
+      </button>
+      <button class="btn btn-primary" (click)="loadSessions(true)" [disabled]="isLoading()">
+        <i class="bi bi-arrow-clockwise" [class.spin]="isLoading()"></i> Actualizar en Vivo
+      </button>
+    </div>
+  </header>
+
+  <!-- ALERTA DE ACCIÓN -->
+  <div *ngIf="alertMessage()" class="alert-banner" [ngClass]="'alert-' + alertMessage()!.type">
+    <i class="bi bi-info-circle-fill"></i>
+    <span>{{ alertMessage()!.text }}</span>
+    <button class="alert-close" (click)="alertMessage.set(null)">×</button>
+  </div>
+
+  <!-- TARJETAS DE MÉTRICAS SEMAFORIZADAS (KPIs) -->
+  <section class="kpi-grid">
+    
+    <div class="kpi-card" (click)="statusFilter.set('ALL')" [class.active-filter]="statusFilter() === 'ALL'">
+      <div class="kpi-icon total">
+        <i class="bi bi-laptop"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Total Sesiones</span>
+        <span class="kpi-value">{{ totalSessionsCount() }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="statusFilter.set('ONLINE')" [class.active-filter]="statusFilter() === 'ONLINE'">
+      <div class="kpi-icon online">
+        <span class="semaphore-dot online pulse"></span>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">🟢 En Línea (Activos)</span>
+        <span class="kpi-value text-success">{{ onlineCount() }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="statusFilter.set('IDLE')" [class.active-filter]="statusFilter() === 'IDLE'">
+      <div class="kpi-icon idle">
+        <span class="semaphore-dot idle"></span>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">🟡 Ausentes / Inactivos</span>
+        <span class="kpi-value text-warning">{{ idleCount() }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="statusFilter.set('DISCONNECTED')" [class.active-filter]="statusFilter() === 'DISCONNECTED'">
+      <div class="kpi-icon disconnected">
+        <span class="semaphore-dot disconnected"></span>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">🔴 Revocados / Cerrados</span>
+        <span class="kpi-value text-danger">{{ disconnectedCount() }}</span>
+      </div>
+    </div>
+
+    <div
+      class="kpi-card suspicious"
+      *ngIf="suspiciousCount() > 0"
+      (click)="statusFilter.set('SUSPICIOUS')"
+      [class.active-filter]="statusFilter() === 'SUSPICIOUS'"
+      role="button"
+      tabindex="0"
+      title="Haga clic para filtrar únicamente las sesiones sospechosas o de infiltrados"
+    >
+      <div class="kpi-icon alert-intruder">
+        <i class="bi bi-shield-exclamation text-danger"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label text-danger">⚠️ Alerta de Infiltrados</span>
+        <span class="kpi-value text-danger">{{ suspiciousCount() }} Sospechoso(s)</span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+  <div class="toolbar-card">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        placeholder="Buscar por usuario, nombre, IP, navegador, sede o ubicación..."
+        [ngModel]="searchFilter()"
+        (ngModelChange)="searchFilter.set($event)"
+      />
+      <button *ngIf="searchFilter()" class="clear-btn" (click)="searchFilter.set('')">×</button>
+    </div>
+
+    <div class="filter-pills">
+      <span class="filter-label">Semáforo:</span>
+      <button class="pill-btn" [class.active]="statusFilter() === 'ALL'" (click)="statusFilter.set('ALL')">
+        Todos ({{ totalSessionsCount() }})
+      </button>
+      <button class="pill-btn pill-online" [class.active]="statusFilter() === 'ONLINE'" (click)="statusFilter.set('ONLINE')">
+        🟢 En Línea ({{ onlineCount() }})
+      </button>
+      <button class="pill-btn pill-idle" [class.active]="statusFilter() === 'IDLE'" (click)="statusFilter.set('IDLE')">
+        🟡 Ausentes ({{ idleCount() }})
+      </button>
+      <button class="pill-btn pill-disconnected" [class.active]="statusFilter() === 'DISCONNECTED'" (click)="statusFilter.set('DISCONNECTED')">
+        🔴 Desconectados ({{ disconnectedCount() }})
+      </button>
+      <button
+        *ngIf="suspiciousCount() > 0"
+        class="pill-btn pill-suspicious"
+        [class.active]="statusFilter() === 'SUSPICIOUS'"
+        (click)="statusFilter.set('SUSPICIOUS')"
+        title="Ver sesiones de infiltrados o IPs no reconocidas"
+      >
+        ⚠️ Infiltrados ({{ suspiciousCount() }})
+      </button>
+    </div>
+  </div>
+
+  <!-- TABLA DE AUDITORÍA DE CONEXIONES -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="sessions-table">
+        <thead>
+          <tr>
+            <th>Estado</th>
+            <th>Usuario & Rol</th>
+            <th>Sede Asignada</th>
+            <th>Dirección IP</th>
+            <th>Navegador & Dispositivo</th>
+            <th>Ubicación Estimada</th>
+            <th>Actividad</th>
+            <th class="text-end">Acciones de Seguridad</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr *ngIf="filteredSessions().length === 0 && !isLoading()">
+            <td colspan="8" class="empty-state">
+              <i class="bi bi-inbox text-muted"></i>
+              <p>No se encontraron sesiones que coincidan con los filtros aplicados.</p>
+            </td>
+          </tr>
+
+          <tr *ngFor="let s of filteredSessions()" [class.row-revoked]="s.isRevoked" [class.row-suspicious]="s.ipAddress.startsWith('45.')">
+            
+            <!-- SEMÁFORO -->
+            <td>
+              <div class="semaphore-indicator-box" [title]="'Estado: ' + getSemaphoreLabel(s.connectionStatus)">
+                <span class="semaphore-dot" [ngClass]="getSemaphoreClass(s.connectionStatus)" [class.pulse]="s.connectionStatus === 'ONLINE'"></span>
+                <span class="semaphore-text">{{ getSemaphoreLabel(s.connectionStatus) }}</span>
+              </div>
+            </td>
+
+            <!-- USUARIO -->
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar" [class.avatar-locked]="s.userStatus === 'LOCKED'">
+                  {{ s.fullName.charAt(0) }}
+                </div>
+                <div>
+                  <div class="user-name">
+                    {{ s.fullName }}
+                    <span *ngIf="s.userStatus === 'LOCKED'" class="badge badge-locked">BLOQUEADO</span>
+                  </div>
+                  <div class="user-meta">
+                    <span class="user-login">&#64;{{ s.username }}</span>
+                    <span class="role-badge" [ngClass]="'role-' + s.roleCode.toLowerCase()">{{ s.roleName }}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- SEDE -->
+            <td>
+              <div class="branch-cell">
+                <i class="bi bi-building"></i>
+                <span>{{ s.branchName }}</span>
+              </div>
+            </td>
+
+            <!-- IP -->
+            <td>
+              <div class="ip-cell">
+                <span class="ip-badge" [class.ip-suspicious]="s.ipAddress.startsWith('45.')">
+                  <code>{{ s.ipAddress }}</code>
+                </span>
+                <span class="ip-type-label" *ngIf="s.ipAddress === '127.0.0.1' || s.ipAddress.startsWith('190.236')">Red Matriz</span>
+                <span class="ip-type-label text-danger font-bold" *ngIf="s.ipAddress.startsWith('45.')">⚠️ IP Externa</span>
+              </div>
+            </td>
+
+            <!-- NAVEGADOR & DISPOSITIVO -->
+            <td>
+              <div class="device-cell">
+                <div class="browser-info">
+                  <i [ngClass]="getBrowserIcon(s.browserName)"></i>
+                  <span>{{ s.browserName }}</span>
+                </div>
+                <div class="os-info">
+                  <i [ngClass]="getDeviceIcon(s.deviceType)"></i>
+                  <span>{{ s.deviceType }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- UBICACIÓN -->
+            <td>
+              <div class="location-cell">
+                <div class="location-text">
+                  <i class="bi bi-geo-alt-fill text-danger"></i>
+                  <span>{{ s.locationName }}</span>
+                </div>
+                <button class="btn-location-map" (click)="openLocationMap(s)" title="Ver coordenadas en mapa">
+                  <i class="bi bi-pin-map"></i> Mapa
+                </button>
+              </div>
+            </td>
+
+            <!-- ACTIVIDAD -->
+            <td>
+              <div class="time-cell">
+                <span class="time-label">Inicio:</span> {{ s.loginAt | date:'HH:mm:ss' }}
+                <div class="last-seen">
+                  <span class="time-label">Último latido:</span>
+                  <span class="activity-timestamp">{{ s.lastActivityAt | date:'HH:mm:ss' }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- ACCIONES -->
+            <td class="text-end">
+              <div class="actions-cell">
+                
+                <!-- BOTÓN CERRAR SESIÓN REMOTAMENTE -->
+                <button
+                  *ngIf="!s.isRevoked"
+                  class="btn-action btn-kill"
+                  (click)="openRevokeModal(s)"
+                  title="Cerrar esta sesión remotamente e invalidar su token"
+                >
+                  <i class="bi bi-power"></i> Cerrar Sesión
+                </button>
+
+                <!-- BOTÓN BLOQUEAR USUARIO INFILTRADO -->
+                <button
+                  *ngIf="s.userStatus !== 'LOCKED'"
+                  class="btn-action btn-lock"
+                  (click)="lockUserInfiltrator(s)"
+                  title="Bloquear cuenta de usuario y expulsar todas sus conexiones"
+                >
+                  <i class="bi bi-lock-fill"></i> Bloquear
+                </button>
+
+                <!-- BADGE SI YA ESTÁ REVOCADA -->
+                <span *ngIf="s.isRevoked" class="badge-revoked">
+                  <i class="bi bi-shield-x"></i> Sesión Revocada
+                </span>
+
+              </div>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMACIÓN DE CIERRE REMOTO DE SESIÓN -->
+  <div class="modal-backdrop" *ngIf="sessionToRevoke()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon text-danger">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div>
+          <h3 class="modal-title">Cierre Remoto Forzado de Sesión</h3>
+          <p class="modal-subtitle">Invalidar token y expulsar al usuario en tiempo real</p>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-prompt">
+          ¿Deseas finalizar inmediatamente la sesión de <strong>{{ sessionToRevoke()?.fullName }}</strong> (&#64;{{ sessionToRevoke()?.username }})?
+        </p>
+
+        <div class="session-detail-summary">
+          <div><strong>Dirección IP:</strong> <code>{{ sessionToRevoke()?.ipAddress }}</code></div>
+          <div><strong>Navegador:</strong> {{ sessionToRevoke()?.browserName }} ({{ sessionToRevoke()?.deviceType }})</div>
+          <div><strong>Ubicación:</strong> {{ sessionToRevoke()?.locationName }}</div>
+        </div>
+
+        <label class="input-label" for="revokeReasonInput">Motivo del Cierre Remoto (para auditoría):</label>
+        <input
+          id="revokeReasonInput"
+          type="text"
+          class="form-control"
+          [(ngModel)]="revokeReason"
+          placeholder="Ej. Sospecha de infiltrado, IP desconocida..."
+        />
+        <small class="form-hint">Este motivo quedará registrado de forma inmutable en la bitácora <code>auth_audit_logs</code>.</small>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeRevokeModal()" [disabled]="isRevoking()">
+          Cancelar
+        </button>
+        <button class="btn btn-danger" (click)="confirmRevokeSession()" [disabled]="isRevoking()">
+          <i class="bi bi-power" *ngIf="!isRevoking()"></i>
+          <span *ngIf="isRevoking()">Revocando...</span>
+          <span *ngIf="!isRevoking()">Confirmar Cierre Remoto</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VISOR DE MAPA Y GEOLOCALIZACIÓN -->
+  <div class="modal-backdrop" *ngIf="showMapModal()">
+    <div class="modal-card map-modal">
+      <div class="modal-header">
+        <div class="modal-icon text-primary">
+          <i class="bi bi-pin-map-fill"></i>
+        </div>
+        <div>
+          <h3 class="modal-title">Ubicación Geográfica de Conexiones</h3>
+          <p class="modal-subtitle">Puntos de acceso, geolocalización IP y auditoría de nodos en tiempo real</p>
+        </div>
+
+        <!-- SELECTOR DE VISTA CARTOGRÁFICA -->
+        <div class="map-view-switcher">
+          <button
+            type="button"
+            class="switcher-btn"
+            [class.active]="mapViewMode() === 'WORLD'"
+            (click)="mapViewMode.set('WORLD')"
+            title="Ver proyección cartográfica mundial completa"
+          >
+            <i class="bi bi-globe-americas"></i> Vista Mundial
+          </button>
+          <button
+            type="button"
+            class="switcher-btn"
+            [class.active]="mapViewMode() === 'PERU'"
+            (click)="mapViewMode.set('PERU')"
+            title="Ver mapa territorial de sedes en Perú"
+          >
+            <i class="bi bi-geo-alt-fill"></i> Sedes Perú
+          </button>
+        </div>
+
+        <button class="modal-close-btn" (click)="closeLocationMap()" title="Cerrar modal">×</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- BARRA DE CONTROLES: TIPO DE CONEXIÓN Y SELECCIÓN DE USUARIO -->
+        <div class="map-controls-toolbar">
+          <div class="map-filter-group">
+            <span class="map-filter-label"><i class="bi bi-funnel"></i> Tipo de Conexión:</span>
+            <div class="map-pills-bar">
+              <button
+                type="button"
+                class="map-pill-btn"
+                [class.active]="mapStatusFilter() === 'ALL'"
+                (click)="setMapStatusFilter('ALL')"
+              >
+                Todos ({{ totalSessionsCount() }})
+              </button>
+              <button
+                type="button"
+                class="map-pill-btn pill-online"
+                [class.active]="mapStatusFilter() === 'ONLINE'"
+                (click)="setMapStatusFilter('ONLINE')"
+              >
+                <span class="semaphore-dot online"></span> En Línea ({{ onlineCount() }})
+              </button>
+              <button
+                type="button"
+                class="map-pill-btn pill-idle"
+                [class.active]="mapStatusFilter() === 'IDLE'"
+                (click)="setMapStatusFilter('IDLE')"
+              >
+                <span class="semaphore-dot idle"></span> Ausentes ({{ idleCount() }})
+              </button>
+              <button
+                type="button"
+                class="map-pill-btn pill-disconnected"
+                [class.active]="mapStatusFilter() === 'DISCONNECTED'"
+                (click)="setMapStatusFilter('DISCONNECTED')"
+              >
+                <span class="semaphore-dot disconnected"></span> Desconectados ({{ disconnectedCount() }})
+              </button>
+              <button
+                *ngIf="suspiciousCount() > 0"
+                type="button"
+                class="map-pill-btn pill-suspicious"
+                [class.active]="mapStatusFilter() === 'SUSPICIOUS'"
+                (click)="setMapStatusFilter('SUSPICIOUS')"
+                title="Filtrar sesiones sospechosas o de infiltrados"
+              >
+                <i class="bi bi-shield-exclamation text-danger"></i> Infiltrados ({{ suspiciousCount() }})
+              </button>
+            </div>
+          </div>
+
+          <div class="map-user-select-group">
+            <label class="map-filter-label" for="mapUserSelect">
+              <i class="bi bi-person-badge"></i> Seleccionar Usuario Conectado:
+            </label>
+            <select
+              id="mapUserSelect"
+              class="map-user-select"
+              [ngModel]="mapModalSession()?.sessionId || ''"
+              (ngModelChange)="onSelectMapUser($event)"
+            >
+              <option value="">-- Ver todos los nodos (Haga clic en un pin o elija un usuario) --</option>
+              <option *ngFor="let s of mapFilteredSessions()" [value]="s.sessionId">
+                {{ s.fullName }} (@{{ s.username }}) — {{ s.locationName }} [{{ getSemaphoreLabel(s.connectionStatus) }}]
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- MAPA VISUAL ESTILIZADO -->
+        <div class="styled-map-container" [class.mode-peru]="mapViewMode() === 'PERU'">
+          
+          <!-- VISTA 1: PROYECCIÓN CARTOGRÁFICA MUNDIAL -->
+          <svg
+            *ngIf="mapViewMode() === 'WORLD'"
+            class="vector-map-svg"
+            viewBox="0 0 1000 500"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0a1329" />
+                <stop offset="50%" stop-color="#0e1a38" />
+                <stop offset="100%" stop-color="#080e1e" />
+              </linearGradient>
+              <linearGradient id="oceanGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#e0f2fe" />
+                <stop offset="50%" stop-color="#f0f9ff" />
+                <stop offset="100%" stop-color="#dbeafe" />
+              </linearGradient>
+              <radialGradient id="hqSonar" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(16, 185, 129, 0.6)" />
+                <stop offset="100%" stop-color="rgba(16, 185, 129, 0)" />
+              </radialGradient>
+              <radialGradient id="intruderRadar" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(239, 68, 68, 0.7)" />
+                <stop offset="100%" stop-color="rgba(239, 68, 68, 0)" />
+              </radialGradient>
+            </defs>
+
+            <!-- OCÉANOS Y FONDO -->
+            <rect width="1000" height="500" class="ocean-bg" />
+
+            <!-- LÍNEAS DE COORDENADAS / RED GEOGRÁFICA -->
+            <g class="geo-grid">
+              <!-- Círculo Polar Ártico (66.5°N -> y=65) -->
+              <line x1="0" y1="65" x2="1000" y2="65" class="geo-grid-line polar" />
+              <!-- Trópico de Cáncer (23.5°N -> y=185) -->
+              <line x1="0" y1="185" x2="1000" y2="185" class="geo-grid-line tropic" />
+              <!-- Ecuador (0° -> y=250) -->
+              <line x1="0" y1="250" x2="1000" y2="250" class="geo-grid-line geo-equator" />
+              <!-- Trópico de Capricornio (23.5°S -> y=315) -->
+              <line x1="0" y1="315" x2="1000" y2="315" class="geo-grid-line tropic" />
+              <!-- Círculo Polar Antártico (66.5°S -> y=435) -->
+              <line x1="0" y1="435" x2="1000" y2="435" class="geo-grid-line polar" />
+
+              <!-- Meridianos -->
+              <line x1="167" y1="0" x2="167" y2="500" class="geo-grid-line" /> <!-- 120°W -->
+              <line x1="333" y1="0" x2="333" y2="500" class="geo-grid-line" /> <!-- 60°W -->
+              <line x1="500" y1="0" x2="500" y2="500" class="geo-grid-line geo-greenwich" /> <!-- 0° Greenwich -->
+              <line x1="667" y1="0" x2="667" y2="500" class="geo-grid-line" /> <!-- 60°E -->
+              <line x1="833" y1="0" x2="833" y2="500" class="geo-grid-line" /> <!-- 120°E -->
+            </g>
+
+            <!-- CONTINENTES DEL MUNDO (POLÍGONOS CARTOGRÁFICOS) -->
+            <g class="continents-layer">
+              <!-- América del Norte -->
+              <path class="continent-land" d="M 60,90 L 95,72 L 130,68 L 175,60 L 225,62 L 255,75 L 245,100 L 225,98 L 220,118 L 240,118 L 260,100 L 285,100 L 295,120 L 285,140 L 275,170 L 265,215 L 245,210 L 225,200 L 205,225 L 185,220 L 165,195 L 155,145 L 140,115 L 90,115 L 50,115 Z" />
+              <!-- Groenlandia -->
+              <path class="continent-land" d="M 335,45 L 390,30 L 420,50 L 395,95 L 350,80 Z" />
+              <!-- América Central y Caribe -->
+              <path class="continent-land" d="M 195,225 L 220,240 L 250,258 L 245,268 L 220,255 L 195,235 Z" />
+              
+              <!-- América del Sur -->
+              <path class="continent-land" d="M 250,258 L 275,248 L 305,248 L 335,255 L 365,268 L 395,305 L 380,355 L 365,395 L 340,420 L 320,460 L 305,485 L 295,465 L 300,410 L 292,360 L 302,323 L 305,310 L 305,290 L 295,275 L 290,260 L 268,267 L 260,255 Z" />
+              <!-- Resaltado Territorial de Perú -->
+              <path class="peru-highlight" d="M 268,267 L 278,274 L 286,283 L 288,305 L 301,315 L 302,323 L 305,310 L 305,290 L 295,275 L 290,260 Z" />
+
+              <!-- Europa -->
+              <path class="continent-land" d="M 455,170 L 450,150 L 470,140 L 485,130 L 475,125 L 505,115 L 525,95 L 550,95 L 584,83 L 600,60 L 590,160 L 560,165 L 535,155 L 510,145 L 480,155 L 465,175 Z" />
+              <!-- Islas Británicas -->
+              <path class="continent-land" d="M 470,95 L 485,90 L 485,115 L 470,120 Z M 458,100 L 465,105 L 460,118 Z" />
+              <!-- Escandinavia -->
+              <path class="continent-land" d="M 525,75 L 545,55 L 565,60 L 555,95 L 535,95 Z" />
+
+              <!-- África -->
+              <path class="continent-land" d="M 465,175 L 500,165 L 550,170 L 585,175 L 635,235 L 620,280 L 610,340 L 555,385 L 535,330 L 510,275 L 485,250 L 450,245 L 430,215 L 445,190 Z" />
+              <!-- Madagascar -->
+              <path class="continent-land" d="M 625,330 L 635,345 L 620,370 Z" />
+
+              <!-- Asia y Eurasia -->
+              <path class="continent-land" d="M 584,83 L 650,50 L 750,45 L 850,48 L 920,65 L 900,105 L 870,115 L 860,155 L 840,190 L 820,220 L 810,250 L 800,275 L 765,240 L 730,240 L 720,255 L 700,220 L 680,205 L 655,205 L 635,235 L 615,210 L 595,175 L 590,160 L 620,145 L 660,110 L 620,75 Z" />
+              <!-- Japón e Islas del Pacífico -->
+              <path class="continent-land" d="M 880,145 L 895,155 L 885,180 L 870,175 Z M 840,230 L 850,260 L 840,270 Z M 790,285 L 830,290 L 860,295 L 820,310 Z" />
+
+              <!-- Australia y Oceanía -->
+              <path class="continent-land" d="M 870,315 L 905,375 L 890,405 L 865,395 L 815,380 L 815,335 L 850,315 Z M 885,425 L 895,435 Z M 950,410 L 965,435 Z" />
+
+              <!-- Antártida -->
+              <path class="continent-land" d="M 100,485 L 500,480 L 900,485 L 1000,490 L 1000,500 L 0,500 L 0,490 Z" />
+            </g>
+
+            <!-- ETIQUETAS GEOGRÁFICAS -->
+            <g class="geo-labels">
+              <text x="286" y="275" class="map-text-country">PERÚ (HQ)</text>
+              <text x="180" y="160" class="map-text-ocean">AMÉRICA DEL NORTE</text>
+              <text x="330" y="340" class="map-text-ocean">AMÉRICA DEL SUR</text>
+              <text x="510" y="105" class="map-text-ocean">EUROPA</text>
+              <text x="520" y="260" class="map-text-ocean">ÁFRICA</text>
+              <text x="750" y="130" class="map-text-ocean">ASIA</text>
+              <text x="860" y="365" class="map-text-ocean">AUSTRALIA</text>
+              <text x="584" y="75" class="map-text-alert">🇷🇺 SAN PETERSBURGO</text>
+
+              <!-- Coordenadas HUD -->
+              <text x="8" y="246" class="map-text-hud">0° ECUADOR</text>
+              <text x="504" y="15" class="map-text-hud">0° GREENWICH</text>
+            </g>
+
+            <!-- ARCOS DE TELEMETRÍA Y CONEXIÓN -->
+            <!-- Arco Lima HQ -> San Petersburgo (Rusia) (Infiltración detectada) -->
+            <path
+              *ngIf="suspiciousCount() > 0"
+              class="telemetry-arc-rogue"
+              d="M 286,283 Q 410,100 584,83"
+            />
+            <!-- Arcos Nacionales Lima HQ -> Trujillo y Arequipa -->
+            <path class="telemetry-arc-secure" d="M 286,283 Q 278,276 280,272" />
+            <path class="telemetry-arc-secure" d="M 286,283 Q 295,290 301,295" />
+
+            <!-- Radares concéntricos sobre Lima HQ -->
+            <circle cx="286" cy="283" r="14" class="radar-circle-outer" />
+            <circle cx="286" cy="283" r="28" class="radar-circle-middle" />
+            <circle cx="286" cy="283" r="6" fill="#10b981" />
+          </svg>
+
+          <!-- VISTA 2: TERRITORIO NACIONAL (PERÚ Y SEDES) -->
+          <svg
+            *ngIf="mapViewMode() === 'PERU'"
+            class="vector-map-svg peru-map-svg"
+            viewBox="0 0 600 650"
+            preserveAspectRatio="none"
+          >
+            <!-- FONDO OCÉANO PACÍFICO PERUANO -->
+            <rect width="600" height="650" class="ocean-bg" />
+
+            <!-- LÍNEAS COSTERAS Y DEPARTAMENTALES -->
+            <g class="peru-territory-group">
+              <!-- Silueta del Territorio de la República del Perú -->
+              <path
+                class="peru-land-detailed"
+                d="M 120,100 L 140,160 L 190,240 L 230,310 L 280,390 L 320,460 L 390,530 L 460,580 L 500,610 L 530,590 L 510,520 L 530,470 L 480,380 L 440,300 L 430,210 L 360,160 L 280,130 L 210,120 Z"
+              />
+
+              <!-- División de Regiones Naturales (Costa, Sierra, Selva) -->
+              <path
+                class="peru-region-divider"
+                d="M 130,120 Q 200,270 290,410 Q 380,510 470,590"
+              />
+              <path
+                class="peru-region-divider-east"
+                d="M 230,120 Q 300,250 380,380 Q 450,460 510,540"
+              />
+            </g>
+
+            <!-- ANOTACIONES Y SEDES PRINCIPALES -->
+            <g class="peru-annotations">
+              <text x="30" y="320" class="map-text-ocean">OCÉANO PACÍFICO</text>
+              <text x="360" y="240" class="map-text-region">AMAZONÍA / ORIENTE</text>
+              <text x="280" y="270" class="map-text-region">SIERRA CENTRAL</text>
+              <text x="140" y="230" class="map-text-branch">📍 Sede Trujillo (Norte)</text>
+              <text x="210" y="395" class="map-text-branch-hq">★ Sede Central Lima Matriz</text>
+              <text x="390" y="525" class="map-text-branch">📍 Sede Arequipa (Sur)</text>
+            </g>
+
+            <!-- ENLACES DE RED ENTRE SEDES -->
+            <line x1="280" y1="390" x2="190" y2="240" class="telemetry-arc-secure" />
+            <line x1="280" y1="390" x2="390" y2="530" class="telemetry-arc-secure" />
+          </svg>
+
+          <!-- ALERTA HUD: NODO FORÁNEO DETECTADO (SI SE FILTRA POR SUSPICIOUS O EL NODO SELECCIONADO ES SOSPECHOSO) -->
+          <div class="hud-alert-badge" *ngIf="mapStatusFilter() === 'SUSPICIOUS' || (mapModalSession() && isSuspiciousSession(mapModalSession()!))">
+            <div class="hud-alert-icon">⚠️</div>
+            <div>
+              <span class="hud-alert-title">ALERTA NOC: Nodo Foráneo Sospechoso</span>
+              <span class="hud-alert-desc">Conexión no reconocida desde San Petersburgo, Federación Rusa (IP 45.154.255.89)</span>
+            </div>
+            <button
+              class="btn btn-sm btn-danger ml-auto"
+              (click)="statusFilter.set('SUSPICIOUS'); closeLocationMap()"
+            >
+              Inspeccionar
+            </button>
+          </div>
+
+          <!-- PUNTOS DE CONEXIÓN CONSOLIDADOS EN EL MAPA -->
+          <div
+            *ngFor="let p of mapPoints()"
+            class="map-pin-point"
+            [class.pin-online]="p.hasOnline"
+            [class.pin-idle]="!p.hasOnline && p.hasIdle"
+            [class.pin-disconnected]="!p.hasOnline && !p.hasIdle && p.hasDisconnected"
+            [class.pin-suspicious]="p.isSuspicious"
+            [style.left]="p.left"
+            [style.top]="p.top"
+            (click)="mapModalSession.set(p.primarySession)"
+            [title]="p.primarySession.fullName + ' (' + p.primarySession.locationName + ')'"
+          >
+            <div class="pin-pulse"></div>
+            <div class="pin-marker">
+              <i
+                [class]="p.isSuspicious ? 'bi bi-shield-exclamation text-white' : (p.primarySession.deviceType.includes('Mobile') ? 'bi bi-phone' : 'bi bi-laptop')"
+              ></i>
+              <span class="pin-badge" *ngIf="p.count > 1">{{ p.count }}</span>
+            </div>
+            <span class="pin-label">
+              <span class="semaphore-dot" [ngClass]="getSemaphoreClass(p.primarySession.connectionStatus)"></span>
+              {{ p.primarySession.username }}
+              <strong *ngIf="p.count > 1">({{ p.count }})</strong>
+            </span>
+          </div>
+
+          <!-- TARJETA INFORMATIVA FLOTANTE DE LA SESIÓN SELECCIONADA -->
+          <div class="floating-pin-card" *ngIf="mapModalSession()">
+            <button class="floating-close-btn" (click)="mapModalSession.set(null)" title="Cerrar detalle de conexión">&times;</button>
+            <div class="floating-header">
+              <span class="semaphore-dot" [ngClass]="getSemaphoreClass(mapModalSession()!.connectionStatus)"></span>
+              <strong>{{ mapModalSession()!.fullName }}</strong> (&#64;{{ mapModalSession()!.username }})
+              <span class="badge-role ml-auto">{{ mapModalSession()!.roleName }}</span>
+            </div>
+            <div class="floating-meta">
+              <div><i class="bi bi-geo-alt-fill"></i> <strong>Lugar:</strong> {{ mapModalSession()!.locationName }}</div>
+              <div><i class="bi bi-router-fill"></i> <strong>IP:</strong> <code>{{ mapModalSession()!.ipAddress }}</code></div>
+              <div><i class="bi bi-building"></i> <strong>Sede:</strong> {{ mapModalSession()!.branchName }} ({{ mapModalSession()!.branchCode }})</div>
+              <div><i class="bi bi-globe"></i> <strong>Navegador:</strong> {{ mapModalSession()!.browserName }}</div>
+              <div><i class="bi bi-laptop"></i> <strong>Equipo:</strong> {{ mapModalSession()!.deviceType }}</div>
+              <div><i class="bi bi-compass"></i> <strong>Coordenadas:</strong> Lat {{ mapModalSession()!.latitude }}, Lon {{ mapModalSession()!.longitude }}</div>
+              <div><i class="bi bi-clock-history"></i> <strong>Último Latido:</strong> {{ mapModalSession()!.lastActivityAt | date:'HH:mm:ss dd/MM/yyyy' }}</div>
+            </div>
+            <div class="floating-actions" *ngIf="!mapModalSession()!.isRevoked">
+              <button class="btn btn-danger btn-sm" (click)="openRevokeModal(mapModalSession()!)">
+                <i class="bi bi-power"></i> Cerrar Sesión
+              </button>
+              <button
+                *ngIf="isSuspiciousSession(mapModalSession()!)"
+                class="btn btn-warning btn-sm"
+                (click)="lockUserInfiltrator(mapModalSession()!)"
+              >
+                <i class="bi bi-slash-circle"></i> Bloquear Usuario
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <div class="map-legend">
+          <span class="legend-item"><span class="semaphore-dot online"></span> En Línea</span>
+          <span class="legend-item"><span class="semaphore-dot idle"></span> Ausente</span>
+          <span class="legend-item"><span class="semaphore-dot disconnected"></span> Desconectado</span>
+          <span class="legend-item"><span class="semaphore-dot suspicious"></span> Infiltrado / IP Foránea</span>
+          <span class="legend-item"><span class="pin-badge-sample">#</span> Múltiples Sesiones</span>
+        </div>
+        <button class="btn btn-primary" (click)="closeLocationMap()">Cerrar Mapa</button>
+      </div>
+    </div>
+  </div>
+
+</div>

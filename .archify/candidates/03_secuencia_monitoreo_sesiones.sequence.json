@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Secuencia: Auditoría NOC y Kill Session en Tiempo Real",
+    "locale": "es",
+    "output": "docs/diagrams/03_secuencia_monitoreo_sesiones.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "operador", "type": "external", "label": "Operador NOC", "sublabel": "CISO / Auditor" },
+    { "id": "monitor", "type": "frontend", "label": "NOC Monitor", "sublabel": "Angular 21 Leaflet" },
+    { "id": "api", "type": "backend", "label": "Session API", "sublabel": "Spring Boot 4" },
+    { "id": "db", "type": "database", "label": "PostgreSQL 17", "sublabel": "sesiones_activas" },
+    { "id": "audit", "type": "database", "label": "Audit Store", "sublabel": "auditoria_accesos" },
+    { "id": "cliente", "type": "external", "label": "Cliente Remoto", "sublabel": "Sesión Sospechosa" }
+  ],
+  "segments": [
+    { "from": 140, "to": 340, "label": "Inspección y Filtrado de Conexiones Concurrentes" },
+    { "from": 352, "to": 600, "label": "Kill Session, Invalidación y Auditoría Inmutable" }
+  ],
+  "messages": [
+    {
+      "from": "operador",
+      "to": "monitor",
+      "label": "1. Selecciona tipo de conexión y usuario en mapa",
+      "y": 160
+    },
+    {
+      "from": "monitor",
+      "to": "api",
+      "label": "2. GET /api/v1/sessions/active?estado=ACTIVO",
+      "y": 200
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "label": "3. SELECT * FROM vw_sesiones_activas_usuario",
+      "y": 240
+    },
+    {
+      "from": "db",
+      "to": "api",
+      "label": "4. Registros con IP, país, ciudad y semáforo único",
+      "y": 280
+    },
+    {
+      "from": "api",
+      "to": "monitor",
+      "label": "5. 200 OK: Lista de sesiones y metadatos de riesgo",
+      "y": 320
+    },
+    {
+      "from": "operador",
+      "to": "monitor",
+      "label": "6. Pulsa botón 'Revocar Sesión' para IP anómala",
+      "y": 370
+    },
+    {
+      "from": "monitor",
+      "to": "api",
+      "label": "7. POST /api/v1/sessions/{id}/revoke (Token JWT)",
+      "y": 410
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "label": "8. UPDATE sesiones_activas SET estado='REVOCADO'",
+      "y": 450
+    },
+    {
+      "from": "api",
+      "to": "audit",
+      "label": "9. INSERT INTO auditoria_accesos (KILL_SESSION)",
+      "y": 490
+    },
+    {
+      "from": "api",
+      "to": "cliente",
+      "label": "10. Evento SSE/Push: SESSION_REVOKED (Cierre Inmediato)",
+      "y": 530
+    },
+    {
+      "from": "api",
+      "to": "monitor",
+      "label": "11. 200 OK: Confirmación de revocación y nuevo estado",
+      "y": 570
+    }
+  ]
+}

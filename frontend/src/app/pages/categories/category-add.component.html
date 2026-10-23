@@ -1,0 +1,56 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Nueva Línea de Bebidas</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/dashboard/categories" class="btn-secondary">
+        <i class="bi bi-list-task"></i>
+        <span>Listar Categorías</span>
+      </a>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <div class="card form-card">
+    <h2 class="section-title">Registrar Nueva Línea de Bebidas</h2>
+    <form (ngSubmit)="saveCategory()" class="grid-form">
+      <div class="form-group">
+        <label>Nombre de la Línea</label>
+        <input
+          type="text"
+          name="catName"
+          [(ngModel)]="newCategory.name"
+          placeholder="Ej. Energizantes e Hidratantes"
+        />
+      </div>
+      <div class="form-group">
+        <label>Slug URL</label>
+        <input
+          type="text"
+          name="catSlug"
+          [(ngModel)]="newCategory.slug"
+          placeholder="energizantes-hidratantes"
+        />
+      </div>
+      <div class="form-group full-width">
+        <label>Margen Mayorista Objetivo</label>
+        <input type="text" name="catMargin" [(ngModel)]="newCategory.wholesaleMargin" />
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-folder-plus"></i>
+          <span>Crear Línea</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

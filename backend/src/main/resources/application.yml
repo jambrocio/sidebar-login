@@ -1,0 +1,65 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: bevadmin-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # ARQUITECTURA IMPERATIVA / SÍNCRONA (NO REACTIVA)
+  # Se fuerza explícitamente el motor Servlet tradicional (Spring MVC + Tomcat),
+  # descartando por completo programación reactiva (WebFlux / Mono / Flux).
+  main:
+    web-application-type: servlet
+
+  # Habilitación de Hilos Virtuales (Java 21 LTS) manteniendo código 100% síncrono y secuencial
+  threads:
+    virtual:
+      enabled: true
+
+  # Conexión Síncrona JDBC / HikariCP a PostgreSQL 14+ (Sincronizada con la carpeta ../sql)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/admin_dashboard_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # Migraciones automáticas de base de datos con Flyway (empaquetadas en el JAR)
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 7
+    locations: classpath:db/migration
+
+# Configuración de Seguridad JWT y CORS para el Frontend en Angular 21
+bevadmin:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:ElRobleBebidasMayorYMenorClaveSecretaCorporativa2026SpringSecurity7Key}
+      access-token-expiration-minutes: 30
+      refresh-token-expiration-days: 7
+    cors:
+      allowed-origins:
+        - "http://localhost:4200"
+        - "http://127.0.0.1:4200"
+
+# Configuración de Documentación Web Interactiva (Swagger UI / OpenAPI 3.1)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha

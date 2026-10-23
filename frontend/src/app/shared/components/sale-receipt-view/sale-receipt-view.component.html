@@ -1,0 +1,142 @@
+<div class="card" *ngIf="receipt">
+  <div class="toolbar">
+    <div>
+      <span class="badge badge-info">{{ receipt.documentType }}</span>
+      <h2 class="section-title" style="margin: 0.35rem 0 0">
+        Comprobante de Venta N° {{ receipt.id }}
+      </h2>
+    </div>
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="printRequested.emit(receipt.id)"
+      >
+        <i class="bi bi-printer-fill"></i>
+        <span>Imprimir / Descargar PDF</span>
+      </button>
+      <a
+        *ngIf="showHistoryShortcut"
+        routerLink="/dashboard/sales-history"
+        class="btn-secondary"
+      >
+        <i class="bi bi-clock-history"></i>
+        <span>Ir a Mi Historial de Ventas</span>
+      </a>
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="closed.emit()"
+      >
+        <i class="bi bi-x-lg"></i>
+        <span>Cerrar Vista</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Cabecera del Comprobante Electrónico con Datos del Negocio y del Local Emisor -->
+  <div class="kpi-grid" style="margin-bottom: 1.2rem">
+    <div class="card" style="padding: 1rem">
+      <span class="text-muted">NEGOCIO EMISOR / SUCURSAL</span>
+      <div style="margin-top: 0.3rem">
+        <strong>{{ business.legalName }}</strong>
+        <div class="text-muted">
+          {{ business.commercialName }} · RUC: {{ business.taxId }}
+        </div>
+        <div>Local Emisor: <code>{{ receipt.branchName }}</code></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 1rem">
+      <span class="text-muted">DATOS DEL CLIENTE Y PAGO</span>
+      <div style="margin-top: 0.3rem">
+        <strong>{{ receipt.clientName }}</strong>
+        <div>Medio de Pago: {{ receipt.paymentMethod }}</div>
+        <div class="text-muted">Fecha Emisión: {{ receipt.date }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 1rem">
+      <span class="text-muted">AUDITORÍA DE VENTA</span>
+      <div style="margin-top: 0.3rem">
+        <strong>Vendedor: {{ receipt.sellerUser }}</strong>
+        <div>Total Unidades/Cajas: {{ receipt.totalItemsCount }}</div>
+        <div>
+          Cupón:
+          <code *ngIf="receipt.couponCode">{{ receipt.couponCode }}</code>
+          <span *ngIf="!receipt.couponCode" class="text-muted">Ninguno</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle de Productos del Comprobante -->
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Código SKU</th>
+          <th>Descripción de Bebida / Licor</th>
+          <th>Modalidad</th>
+          <th>Presentación</th>
+          <th>Cant.</th>
+          <th>Precio Unit.</th>
+          <th>Importe Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let line of receipt.items">
+          <td><code>{{ line.sku }}</code></td>
+          <td><strong>{{ line.productName }}</strong></td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-info]="line.modality === 'Por Mayor'"
+              [class.badge-warning]="line.modality === 'Por Menor'"
+            >
+              {{ line.modality }}
+            </span>
+          </td>
+          <td>{{ line.unitLabel }}</td>
+          <td><strong>{{ line.quantity }}</strong></td>
+          <td>\${{ line.unitPrice.toFixed(2) }}</td>
+          <td><strong>\${{ line.lineSubtotal.toFixed(2) }}</strong></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" style="text-align: right">
+            <strong>Subtotal de Productos Agregados ({{ receipt.totalItemsCount }} ítems):</strong>
+          </td>
+          <td colspan="3">
+            <strong>\${{ receipt.subtotal.toFixed(2) }}</strong>
+          </td>
+        </tr>
+        <tr *ngIf="receipt.discountAmount > 0">
+          <td colspan="4" style="text-align: right">
+            <strong>Descuento por Cupón ({{ receipt.couponCode }}):</strong>
+          </td>
+          <td colspan="3">
+            <span class="badge badge-success">-\${{ receipt.discountAmount.toFixed(2) }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align: right">
+            <span class="text-muted">IGV Incluido (18% Referencial):</span>
+          </td>
+          <td colspan="3" class="text-muted">
+            \${{ receipt.taxIgv.toFixed(2) }}
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align: right; font-size: 1rem">
+            <strong>IMPORTE TOTAL DEL COMPROBANTE:</strong>
+          </td>
+          <td colspan="3" style="font-size: 1.1rem">
+            <strong>\${{ receipt.total.toFixed(2) }} USD</strong>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

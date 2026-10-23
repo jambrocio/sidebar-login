@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\04_secuencia_menu_dinamico_rbac.sequence.json",
+    "sha256": "7c307426bf82448116c5ae18dfe384ad1de91927cb848d49fed23b7aea6bd923",
+    "bytes": 2045
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\04_secuencia_menu_dinamico_rbac.html",
+    "sha256": "e5698466ade903ac035505e2377eeca6ec6dff0892aead84b6bade25bbb1705f",
+    "bytes": 813677
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\04_secuencia_menu_dinamico_rbac.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\04_secuencia_menu_dinamico_rbac.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\04_secuencia_menu_dinamico_rbac.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-23T15:37:03.513Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 8306,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

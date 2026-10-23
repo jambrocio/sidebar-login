@@ -1,0 +1,306 @@
+<header class="navbar">
+  <!-- Izquierda: Botón de colapso del Sidebar y Breadcrumbs dinámicos -->
+  <div class="navbar-left">
+    <button
+      type="button"
+      class="icon-btn toggle-button"
+      (click)="onToggleSidebar()"
+      title="Ocultar / Mostrar menú lateral"
+      aria-label="Alternar menú lateral"
+    >
+      <i class="bi bi-layout-sidebar-inset"></i>
+    </button>
+    <app-breadcrumb></app-breadcrumb>
+  </div>
+
+  <!-- Derecha: Indicador Negocio -> Local Asignado, Notificaciones y Menú de Perfil -->
+  <div class="navbar-right">
+    <!-- Indicador de Jerarquía: Negocio Matriz + Local Asignado al Usuario -->
+    <div
+      class="branch-selector"
+      title="Negocio Matriz y Local asignado a tu usuario"
+    >
+      <i class="bi bi-buildings-fill"></i>
+      <span>
+        <strong>{{ businessInfo().commercialName }}</strong> · Local:
+        {{ activeBranch() }}
+      </span>
+    </div>
+
+    <!-- Contenedor del Menú de Notificaciones (Estilo idéntico a Opciones de Usuario) -->
+    <div class="notifications-menu">
+      <button
+        type="button"
+        class="icon-btn notification-btn"
+        [class.active]="isNotificationsOpen()"
+        (click)="toggleNotifications()"
+        title="Centro de notificaciones y alertas"
+        aria-label="Abrir notificaciones"
+        [attr.aria-expanded]="isNotificationsOpen()"
+      >
+        <i class="bi bi-bell-fill"></i>
+        <span *ngIf="unreadNotifications() > 0" class="notification-badge">
+          {{ unreadNotifications() }}
+        </span>
+      </button>
+
+      <!-- Telón táctil para cerrar en dispositivos móviles y tablets -->
+      <div
+        class="dropdown-backdrop"
+        *ngIf="isNotificationsOpen()"
+        (click)="closeNotifications()"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Menú Desplegable de Notificaciones (Diseño Homogéneo) -->
+      <div class="dropdown-menu notifications-dropdown" *ngIf="isNotificationsOpen()" role="menu">
+        <!-- Cabecera del dropdown de notificaciones -->
+        <div class="dropdown-user-header notif-header">
+          <div class="user-avatar lg notif-avatar-icon">
+            <i class="bi bi-bell-fill"></i>
+          </div>
+          <div class="header-details">
+            <div class="notif-header-title-row">
+              <strong class="user-display-name">Notificaciones</strong>
+              <button
+                *ngIf="unreadNotifications() > 0"
+                type="button"
+                class="btn-mark-all"
+                (click)="markAllNotificationsAsRead()"
+                title="Marcar todas como leídas"
+              >
+                <i class="bi bi-check2-all"></i> Marcar leídas
+              </button>
+            </div>
+            <div class="user-badges-row">
+              <span
+                class="badge"
+                [class.badge-info]="unreadNotifications() > 0"
+                [class.badge-success]="unreadNotifications() === 0"
+              >
+                {{ unreadNotifications() > 0 ? unreadNotifications() + ' no leídas' : 'Todo al día' }}
+              </span>
+              <span class="badge branch-pill">
+                Total: {{ notifications().length }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pestañas de Filtro Rápido: Todas / No leídas -->
+        <div class="notif-tabs-row">
+          <button
+            type="button"
+            class="notif-pill-tab"
+            [class.active]="activeNotificationFilter() === 'all'"
+            (click)="setNotificationFilter('all')"
+          >
+            Todas ({{ notifications().length }})
+          </button>
+          <button
+            type="button"
+            class="notif-pill-tab"
+            [class.active]="activeNotificationFilter() === 'unread'"
+            (click)="setNotificationFilter('unread')"
+          >
+            No leídas ({{ unreadNotifications() }})
+          </button>
+        </div>
+
+        <div class="dropdown-divider"></div>
+
+        <!-- Lista scrollable de Notificaciones -->
+        <div class="notif-items-list">
+          <div
+            *ngFor="let item of filteredNotifications()"
+            class="notif-card-item"
+            [class.unread]="item.unread"
+            (click)="markNotificationAsRead(item.id)"
+          >
+            <div
+              class="menu-icon notif-icon-badge"
+              [class.type-success]="item.type === 'success'"
+              [class.type-info]="item.type === 'info'"
+              [class.type-warning]="item.type === 'warning'"
+              [class.type-danger]="item.type === 'danger'"
+            >
+              <i class="bi" [ngClass]="item.icon"></i>
+            </div>
+            <div class="menu-text notif-body">
+              <div class="notif-meta">
+                <span class="notif-badge-tag">{{ item.category }}</span>
+                <span class="notif-timestamp">{{ item.time }}</span>
+              </div>
+              <span class="title notif-item-title">{{ item.title }}</span>
+              <span class="desc notif-item-desc">{{ item.description }}</span>
+            </div>
+            <div class="notif-actions">
+              <span *ngIf="item.unread" class="unread-glow-dot" title="Sin leer"></span>
+              <button
+                type="button"
+                class="btn-dismiss-item"
+                title="Descartar notificación"
+                (click)="dismissNotification(item.id, $event)"
+              >
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Estado Vacío -->
+          <div *ngIf="filteredNotifications().length === 0" class="notif-empty-state">
+            <i class="bi bi-bell-slash"></i>
+            <span class="title">Bandeja al día</span>
+            <span class="desc">No tienes notificaciones pendientes de revisión.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vertical-divider" aria-hidden="true"></div>
+
+    <!-- Contenedor del Menú de Usuario -->
+    <div class="user-menu">
+      <button
+        type="button"
+        class="user-profile"
+        [class.active]="isDropdownOpen()"
+        (click)="toggleDropdown()"
+        [attr.aria-expanded]="isDropdownOpen()"
+        aria-haspopup="true"
+        title="Opciones de usuario: {{ currentUser().name }}"
+      >
+        <div class="user-avatar">
+          <span>{{ currentUser().initials }}</span>
+          <span class="status-dot" title="En línea"></span>
+        </div>
+        <div class="user-info">
+          <span class="user-name" [title]="currentUser().name">{{ currentUser().name }}</span>
+          <span class="user-role">{{ currentUser().role }}</span>
+        </div>
+        <i
+          class="bi bi-chevron-down dropdown-indicator"
+          [class.open]="isDropdownOpen()"
+        ></i>
+      </button>
+
+      <!-- Telón táctil para cerrar en dispositivos móviles y tablets -->
+      <div
+        class="dropdown-backdrop"
+        *ngIf="isDropdownOpen()"
+        (click)="closeDropdown()"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Menú Desplegable de Opciones del Usuario -->
+      <div class="dropdown-menu" *ngIf="isDropdownOpen()" role="menu">
+        <!-- Cabecera resumen de la cuenta del usuario -->
+        <div class="dropdown-user-header">
+          <div class="user-avatar lg">
+            <span>{{ currentUser().initials }}</span>
+            <span class="status-dot" title="En línea"></span>
+          </div>
+          <div class="header-details">
+            <strong class="user-display-name" [title]="currentUser().name">{{ currentUser().name }}</strong>
+            <span class="user-display-email" [title]="currentUser().email">{{ currentUser().email }}</span>
+            <div class="user-badges-row">
+              <span class="badge badge-info role-pill">{{ currentUser().role }}</span>
+              <span class="badge branch-pill" [title]="activeBranch()">
+                <i class="bi bi-geo-alt-fill"></i> {{ activeBranch() }}
+              </span>
+            </div>
+            <div class="password-status-info">
+              <i class="bi bi-shield-check"></i>
+              <span>Clave: <strong>{{ currentUser().passwordStatus }}</strong> ({{ currentUser().daysUntilExpiration }}d)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dropdown-divider"></div>
+
+        <!-- Opciones de cuenta y administración -->
+        <ul class="dropdown-list">
+          <li class="menu-section-label">Negocio y Cuenta</li>
+          <li>
+            <a
+              routerLink="/dashboard/settings"
+              routerLinkActive="active"
+              (click)="closeDropdown()"
+            >
+              <span class="menu-icon">
+                <i class="bi bi-sliders"></i>
+              </span>
+              <div class="menu-text">
+                <span class="title">Configuración</span>
+                <span class="desc">Negocio, local asignado y seguridad</span>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/dashboard/branches"
+              routerLinkActive="active"
+              (click)="closeDropdown()"
+            >
+              <span class="menu-icon">
+                <i class="bi bi-buildings-fill"></i>
+              </span>
+              <div class="menu-text">
+                <span class="title">Negocio y Locales</span>
+                <span class="desc">Sucursales asociadas al negocio</span>
+              </div>
+            </a>
+          </li>
+
+          <li class="dropdown-divider"></li>
+          <li class="menu-section-label">Apariencia</li>
+
+          <!-- Selector de Tema Claro / Oscuro integrado -->
+          <li>
+            <button
+              type="button"
+              class="theme-option-btn"
+              (click)="toggleDarkMode()"
+            >
+              <span class="menu-icon">
+                <i
+                  class="bi"
+                  [ngClass]="isDarkMode() ? 'bi-sun-fill' : 'bi-moon-stars-fill'"
+                ></i>
+              </span>
+              <div class="menu-text">
+                <span class="title">Tema de Interfaz</span>
+                <span class="desc">
+                  Activo: {{ isDarkMode() ? 'Modo Oscuro' : 'Modo Claro' }}
+                </span>
+              </div>
+              <span class="theme-pill" [class.dark]="isDarkMode()">
+                {{ isDarkMode() ? 'Oscuro' : 'Claro' }}
+              </span>
+            </button>
+          </li>
+
+          <li class="dropdown-divider"></li>
+
+          <!-- Cierre de sesión -->
+          <li>
+            <button
+              type="button"
+              class="logout-link-btn"
+              (click)="onLogout()"
+              title="Cerrar sesión actual de forma segura"
+            >
+              <span class="menu-icon danger">
+                <i class="bi bi-box-arrow-right"></i>
+              </span>
+              <div class="menu-text">
+                <span class="title">Cerrar Sesión</span>
+                <span class="desc">Finalizar sesión actual y salir</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>

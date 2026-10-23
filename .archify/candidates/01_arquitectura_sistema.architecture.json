@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura Corporativa y Despliegue en Contenedores",
+    "locale": "es",
+    "output": "docs/diagrams/01_arquitectura_sistema.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Usuarios del Negocio",
+      "sublabel": "Navegador / POS Terminal",
+      "pos": [40, 80],
+      "size": [150, 60]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "Nginx + Angular 21 SPA",
+      "sublabel": "Contenedor dev-frontend :4200",
+      "pos": [270, 80],
+      "size": [170, 60],
+      "tag": "Signals + PWA"
+    },
+    {
+      "id": "ls",
+      "type": "frontend",
+      "label": "Almacenamiento Local",
+      "sublabel": "localStorage / Cache Shell",
+      "pos": [520, 80],
+      "size": [160, 60]
+    },
+    {
+      "id": "backend",
+      "type": "backend",
+      "label": "Spring Boot 4 API",
+      "sublabel": "Contenedor dev-backend :8080",
+      "pos": [270, 220],
+      "size": [170, 60],
+      "tag": "Java 21 LTS"
+    },
+    {
+      "id": "security",
+      "type": "security",
+      "label": "Spring Security 7 + JWT",
+      "sublabel": "RBAC + Telemetría de Sesión",
+      "pos": [520, 220],
+      "size": [170, 60],
+      "tag": "OWASP Mitigado"
+    },
+    {
+      "id": "guard",
+      "type": "security",
+      "label": "Guardia Sede Asignada",
+      "sublabel": "BranchAccessGuard (Multi-Sede)",
+      "pos": [760, 220],
+      "size": [170, 60]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 17",
+      "sublabel": "Contenedor dev-postgres :5432",
+      "pos": [270, 360],
+      "size": [170, 60],
+      "tag": "admin_dashboard_db"
+    },
+    {
+      "id": "tables",
+      "type": "database",
+      "label": "19 Tablas en Español",
+      "sublabel": "usuarios, ventas, compras...",
+      "pos": [520, 360],
+      "size": [170, 60]
+    },
+    {
+      "id": "views",
+      "type": "database",
+      "label": "Vistas y Funciones SQL",
+      "sublabel": "fn_obtener_menu, vw_ventas...",
+      "pos": [760, 360],
+      "size": [170, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Entorno Orquestado Docker Compose (Red: bevadmin-network)",
+      "wraps": ["frontend", "ls", "backend", "security", "guard", "postgres", "tables", "views"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Seguridad y Aislamiento Multi-Sede",
+      "wraps": ["security", "guard"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-frontend",
+      "from": "users",
+      "to": "frontend",
+      "label": "HTTPS :4200",
+      "variant": "emphasis"
+    },
+    {
+      "id": "frontend-ls",
+      "from": "frontend",
+      "to": "ls",
+      "label": "Cache",
+      "variant": "dashed"
+    },
+    {
+      "id": "frontend-backend",
+      "from": "frontend",
+      "to": "backend",
+      "label": "REST API / Bearer JWT",
+      "variant": "emphasis"
+    },
+    {
+      "id": "backend-sec",
+      "from": "backend",
+      "to": "security",
+      "label": "Validar JWT",
+      "variant": "security"
+    },
+    {
+      "id": "sec-guard",
+      "from": "security",
+      "to": "guard",
+      "label": "Scope Sede"
+    },
+    {
+      "id": "backend-db",
+      "from": "backend",
+      "to": "postgres",
+      "label": "JDBC Síncrono :5432",
+      "variant": "emphasis"
+    },
+    {
+      "id": "postgres-tables",
+      "from": "postgres",
+      "to": "tables",
+      "label": "Esquema Físico"
+    },
+    {
+      "id": "tables-views",
+      "from": "tables",
+      "to": "views",
+      "label": "Vistas y Funciones"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Capa Cliente (Frontend)",
+      "items": [
+        "Angular 21 SPA servida por Nginx Alpine ultraligero en puerto 4200",
+        "18 componentes standalone con reactividad mediante Signals",
+        "Soporte Offline PWA con Service Worker y App Shell"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Capa de Negocio (Backend)",
+      "items": [
+        "Spring Boot 4 con Java 21 LTS y JDBC imperativo síncrono",
+        "Spring Security 7 con tokens Bearer JWT y control de sesiones",
+        "Guardia de acceso estricto a la Sede Asignada del operador"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Capa de Persistencia (PostgreSQL 17)",
+      "items": [
+        "19 tablas relacionales en español con auditoría y normalización 3FN",
+        "Función recursiva fn_obtener_menu_efectivo_usuario para RBAC híbrido",
+        "Volumen persistente postgres-data y scripts de inicialización /docker-entrypoint-initdb.d"
+      ]
+    }
+  ]
+}

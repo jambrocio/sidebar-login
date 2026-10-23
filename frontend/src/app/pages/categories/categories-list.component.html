@@ -1,0 +1,44 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Líneas de Bebidas y Licores</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/dashboard/categories/new" class="btn-primary">
+        <i class="bi bi-plus-circle-fill"></i>
+        <span>Nueva Categoría</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Línea de Bebidas</th>
+            <th>Slug</th>
+            <th>Productos</th>
+            <th>Rentabilidad Mayorista</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cat of categories()">
+            <td><code>{{ cat.code }}</code></td>
+            <td><strong>{{ cat.name }}</strong></td>
+            <td><code>/{{ cat.slug }}</code></td>
+            <td>{{ cat.totalProducts }} bebidas</td>
+            <td>{{ cat.wholesaleMargin }}</td>
+            <td><span class="badge badge-success">Activa</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

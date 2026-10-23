@@ -1,0 +1,173 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Flujo Operativo de Negocio: Ciclo de Venta y Arqueo POS",
+    "locale": "es",
+    "quality_profile": "showcase",
+    "output": "docs/diagrams/05_flujo_operativo_negocio.html"
+  },
+  "lanes": [
+    {
+      "id": "frontend",
+      "label": "Capa Cliente (Angular 21)"
+    },
+    {
+      "id": "backend",
+      "label": "Servicios API (Spring Boot 4)"
+    },
+    {
+      "id": "database",
+      "label": "Persistencia (PostgreSQL 17)"
+    }
+  ],
+  "phases": [
+    {
+      "id": "fase_acceso",
+      "label": "Autenticación y Turno",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "fase_venta",
+      "label": "Emisión POS y Descuentos",
+      "fromCol": 2,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "fase_cierre",
+      "label": "Arqueo y Conciliación",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "login",
+    "apertura",
+    "seleccion",
+    "cupon",
+    "emision",
+    "arqueo"
+  ],
+  "nodes": [
+    {
+      "id": "login",
+      "lane": "frontend",
+      "col": 0,
+      "type": "frontend",
+      "label": "Login Cajero",
+      "sublabel": "Auth JWT",
+      "tag": "acceso"
+    },
+    {
+      "id": "apertura",
+      "lane": "frontend",
+      "col": 1,
+      "type": "frontend",
+      "label": "Apertura Caja",
+      "sublabel": "Monto inicial",
+      "tag": "turno"
+    },
+    {
+      "id": "seleccion",
+      "lane": "frontend",
+      "col": 2,
+      "type": "frontend",
+      "label": "Venta POS",
+      "sublabel": "Items y cliente",
+      "tag": "carrito"
+    },
+    {
+      "id": "cupon",
+      "lane": "backend",
+      "col": 3,
+      "type": "backend",
+      "label": "Validar Cupón",
+      "sublabel": "Descuento",
+      "tag": "promo"
+    },
+    {
+      "id": "emision",
+      "lane": "backend",
+      "col": 4,
+      "type": "backend",
+      "label": "Comprobante",
+      "sublabel": "ACID y stock",
+      "tag": "factura"
+    },
+    {
+      "id": "arqueo",
+      "lane": "database",
+      "col": 5,
+      "type": "database",
+      "label": "Cierre Caja",
+      "sublabel": "Conciliación",
+      "tag": "balance"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_login_apertura",
+      "from": "login",
+      "to": "apertura",
+      "label": "Turno",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_apertura_seleccion",
+      "from": "apertura",
+      "to": "seleccion",
+      "label": "Vender",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_seleccion_cupon",
+      "from": "seleccion",
+      "to": "cupon",
+      "label": "Verificar",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_cupon_emision",
+      "from": "cupon",
+      "to": "emision",
+      "label": "Emitir",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_emision_arqueo",
+      "from": "emision",
+      "to": "arqueo",
+      "label": "Cerrar",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Apertura y Turno",
+      "items": [
+        "El cajero se autentica con token JWT y abre su turno en su sede asignada.",
+        "Se inicializa el registro en la tabla arqueos_caja con estado ABIERTO."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Transaccionalidad POS",
+      "items": [
+        "Selección de productos mayor/menor y aplicación atómica de cupones.",
+        "Generación de boleta o factura con persistencia transaccional ACID."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Arqueo y Cierre",
+      "items": [
+        "Conteo físico de efectivo y comparación con la sumatoria del sistema.",
+        "Cálculo de descuadre y cierre definitivo del turno en PostgreSQL."
+      ]
+    }
+  ]
+}

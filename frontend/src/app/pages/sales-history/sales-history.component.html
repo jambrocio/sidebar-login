@@ -1,0 +1,147 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Historial de Ventas Emitidas por el Usuario</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+        — Filtrado por Usuario: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a
+        *ngIf="!selectedReceipt()"
+        routerLink="/dashboard/sales"
+        class="btn-primary"
+      >
+        <i class="bi bi-cart-plus-fill"></i>
+        <span>Nueva Venta Mayor / Menor</span>
+      </a>
+      <button
+        *ngIf="selectedReceipt()"
+        type="button"
+        class="btn-secondary"
+        (click)="selectedReceipt.set(null)"
+      >
+        <i class="bi bi-arrow-left"></i>
+        <span>Volver a Mi Historial</span>
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <!-- Vista de Comprobante Seleccionado -->
+  <app-sale-receipt-view
+    *ngIf="selectedReceipt() as receipt"
+    [receipt]="receipt"
+    [business]="businessInfo()"
+    [showHistoryShortcut]="false"
+    (closed)="selectedReceipt.set(null)"
+    (printRequested)="feedbackMessage.set('Imprimiendo / Descargando PDF del comprobante ' + $event + '...')"
+  ></app-sale-receipt-view>
+
+  <!-- Listado de Ventas Emitidas por el Usuario Actual -->
+  <ng-container *ngIf="!selectedReceipt()">
+    <div class="kpi-grid">
+      <div class="card kpi-card">
+        <div class="kpi-icon">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">Vendedor / Usuario Filtrado</span>
+          <strong class="kpi-value" style="font-size: 1.15rem">{{ currentSessionUser() }}</strong>
+          <span class="kpi-trend">Solo se muestran tus ventas registradas</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon">
+          <i class="bi bi-receipt-cutoff"></i>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">Comprobantes Emitidos por Ti</span>
+          <strong class="kpi-value">{{ filteredMySalesHistory().length }}</strong>
+          <span class="kpi-trend">Local: {{ assignedBranch() }}</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon">
+          <i class="bi bi-cash-stack"></i>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">Total Facturado por tu Usuario</span>
+          <strong class="kpi-value">\${{ mySalesTotalAmount().toFixed(2) }}</strong>
+          <span class="kpi-trend">Acumulado neto</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 class="section-title" style="margin: 0">
+          Mis Ventas Emitidas (Registradas por {{ currentSessionUser() }})
+        </h2>
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por N° comprobante, cliente o bebida..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>N° Venta</th>
+              <th>Tipo Comprobante</th>
+              <th>Local del Negocio</th>
+              <th>Cliente</th>
+              <th>Resumen de Productos</th>
+              <th>Cupón</th>
+              <th>Total Neto</th>
+              <th>Registrado Por</th>
+              <th>Fecha</th>
+              <th>Comprobante</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sale of filteredMySalesHistory()">
+              <td><code>{{ sale.id }}</code></td>
+              <td><span class="badge badge-info">{{ sale.documentType }}</span></td>
+              <td>{{ sale.branchName }}</td>
+              <td><strong>{{ sale.clientName }}</strong></td>
+              <td>{{ sale.itemsSummary }}</td>
+              <td>
+                <code *ngIf="sale.couponCode">{{ sale.couponCode }} (-\${{ sale.discountAmount }})</code>
+                <span *ngIf="!sale.couponCode" class="text-muted">-</span>
+              </td>
+              <td><strong>\${{ sale.total.toFixed(2) }}</strong></td>
+              <td><code>{{ sale.sellerUser }}</code></td>
+              <td class="text-muted">{{ sale.date }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="selectedReceipt.set(sale)"
+                >
+                  <i class="bi bi-eye-fill"></i>
+                  <span>Ver Comprobante</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</section>

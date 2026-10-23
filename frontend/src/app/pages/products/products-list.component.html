@@ -1,0 +1,72 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Inventario de Licores, Cervezas y Gaseosas</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/dashboard/products/add" class="btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        <span>Registrar Bebida</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          placeholder="Buscar licor, cerveza o gaseosa por nombre o SKU..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Bebida / Licor</th>
+            <th>Línea</th>
+            <th>Formato Mayorista</th>
+            <th>Precio x Menor (Und.)</th>
+            <th>Precio x Mayor (Caja)</th>
+            <th>Stock Cajas</th>
+            <th>Registrado Por</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let prod of filteredProducts()">
+            <td><code>{{ prod.sku }}</code></td>
+            <td><strong>{{ prod.name }}</strong></td>
+            <td><span class="badge badge-info">{{ prod.category }}</span></td>
+            <td>{{ prod.presentation }}</td>
+            <td>\${{ prod.retailPrice.toFixed(2) }}</td>
+            <td><strong>\${{ prod.wholesalePrice.toFixed(2) }}</strong></td>
+            <td>{{ prod.stockBoxes }} cajas ({{ prod.stockUnits }} und.)</td>
+            <td><code>{{ prod.registeredByUser }}</code></td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-success]="prod.status === 'En Stock'"
+                [class.badge-warning]="prod.status === 'Stock Bajo'"
+                [class.badge-danger]="prod.status === 'Agotado'"
+              >
+                {{ prod.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

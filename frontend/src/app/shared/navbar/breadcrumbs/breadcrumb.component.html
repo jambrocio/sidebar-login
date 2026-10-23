@@ -1,0 +1,14 @@
+<nav aria-label="breadcrumb" *ngIf="breadcrumbs.length > 0">
+  <ol class="breadcrumb-list">
+    <li>
+      <a routerLink="/dashboard/inicio" title="Inicio">
+        <i class="bi bi-house-door-fill"></i>
+      </a>
+    </li>
+    <li *ngFor="let breadcrumb of breadcrumbs; let last = last" [attr.aria-current]="last ? 'page' : null">
+      <span class="separator">/</span>
+      <span *ngIf="!breadcrumb.url">{{ breadcrumb.label }}</span>
+      <a *ngIf="breadcrumb.url" [routerLink]="breadcrumb.url">{{ breadcrumb.label }}</a>
+    </li>
+  </ol>
+</nav>

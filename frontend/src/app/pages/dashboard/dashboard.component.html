@@ -1,0 +1,19 @@
+<div class="dashboard-layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <!-- Capa de superposición móvil para el Sidebar cuando está abierto en pantallas pequeñas -->
+  <div
+    *ngIf="!sidebarCollapsed()"
+    class="overlay mobile-sidebar-overlay"
+    (click)="toggleMainSidebar()"
+  ></div>
+
+  <app-sidebar (collapsed)="onSidebarCollapsed($event)"></app-sidebar>
+
+  <div class="main-content-wrapper">
+    <app-navbar
+      (toggleSidebar)="toggleMainSidebar()"
+    ></app-navbar>
+    <main class="dashboard-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

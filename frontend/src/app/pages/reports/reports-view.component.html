@@ -1,0 +1,55 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Reportes de Ventas y Rotación</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+      </p>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Reportes Consolidados del Negocio y Locales</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Reporte</th>
+            <th>Área</th>
+            <th>Fecha</th>
+            <th>Formato</th>
+            <th>Tamaño</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rep of reports()">
+            <td><code>{{ rep.id }}</code></td>
+            <td><strong>{{ rep.title }}</strong></td>
+            <td>{{ rep.module }}</td>
+            <td class="text-muted">{{ rep.date }}</td>
+            <td><span class="badge badge-info">{{ rep.format }}</span></td>
+            <td class="text-muted">{{ rep.size }}</td>
+            <td>
+              <button
+                type="button"
+                class="btn-secondary btn-sm"
+                (click)="feedbackMessage.set('Descargando ' + rep.title + ' (' + rep.format + ')...')"
+              >
+                <i class="bi bi-download"></i>
+                <span>Descargar</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

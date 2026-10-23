@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "b443c05b-94e2-4eb6-a2df-920e2b5107be",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\04_secuencia_menu_dinamico_rbac.sequence.json",
+  "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\04_secuencia_menu_dinamico_rbac.html",
+  "specification": {
+    "sha256": "7c307426bf82448116c5ae18dfe384ad1de91927cb848d49fed23b7aea6bd923",
+    "bytes": 2045
+  },
+  "artifact": {
+    "sha256": "e5698466ade903ac035505e2377eeca6ec6dff0892aead84b6bade25bbb1705f",
+    "bytes": 813677
+  }
+}

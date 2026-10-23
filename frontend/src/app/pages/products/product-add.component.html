@@ -1,0 +1,73 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Registrar Nueva Bebida o Licor</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Usuario: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/dashboard/products/list" class="btn-secondary">
+        <i class="bi bi-list-ul"></i>
+        <span>Ver Inventario Maestro</span>
+      </a>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <div class="card form-card">
+    <h2 class="section-title">Ficha Técnica de Nueva Bebida en Catálogo</h2>
+    <form (ngSubmit)="saveProduct()" class="grid-form">
+      <div class="form-group">
+        <label>Nombre de la Bebida / Licor</label>
+        <input
+          type="text"
+          name="prodName"
+          [(ngModel)]="newProduct.name"
+          placeholder="Ej. Pisco Queirolo Acholado 750ml"
+        />
+      </div>
+      <div class="form-group">
+        <label>Código SKU</label>
+        <input type="text" name="prodSku" [(ngModel)]="newProduct.sku" />
+      </div>
+      <div class="form-group">
+        <label>Línea de Bebida</label>
+        <select name="prodCat" [(ngModel)]="newProduct.category">
+          <option value="Licores">Licores y Destilados</option>
+          <option value="Cervezas">Cervezas</option>
+          <option value="Gaseosas">Gaseosas y Aguas</option>
+          <option value="Otros">Energizantes y Otros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Formato Mayorista</label>
+        <input type="text" name="prodPres" [(ngModel)]="newProduct.presentation" />
+      </div>
+      <div class="form-group">
+        <label>Precio por Menor — Unidad ($)</label>
+        <input type="number" name="prodRetail" [(ngModel)]="newProduct.retailPrice" step="0.1" />
+      </div>
+      <div class="form-group">
+        <label>Precio por Mayor — Caja ($)</label>
+        <input type="number" name="prodWholesale" [(ngModel)]="newProduct.wholesalePrice" step="0.5" />
+      </div>
+      <div class="form-group">
+        <label>Stock Inicial (Cajas)</label>
+        <input type="number" name="prodBoxes" [(ngModel)]="newProduct.stockBoxes" min="0" />
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-check2-circle"></i>
+          <span>Crear Ficha en Catálogo</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

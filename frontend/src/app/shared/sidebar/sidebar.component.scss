@@ -1,0 +1,251 @@
+/* Estilos del Sidebar Administrativo (Homogéneo con Login Claro/Oscuro) */
+
+.sidebar {
+  width: 256px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: width 0.25s ease, background-color 0.25s ease;
+}
+
+/* Cabecera con insignia idéntica a la tarjeta de Login */
+.sidebar-header {
+  height: 60px;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--sidebar-border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-sizing: border-box;
+
+  .brand-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(var(--primary-rgb, 0, 123, 255), 0.12);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .brand-text {
+    overflow: hidden;
+    white-space: nowrap;
+
+    h2 {
+      margin: 0;
+      color: var(--sidebar-text);
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    span {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--sidebar-muted-text);
+    }
+  }
+}
+
+/* Contenedor de navegación */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.85rem 0.65rem;
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+}
+
+/* Enlaces del menú con bordes redondeados tipo píldora (igual que inputs/botones del Login) */
+.sidebar-nav li a,
+.logout-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.68rem 0.85rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+
+  &:hover {
+    background: var(--sidebar-hover-bg);
+    color: var(--primary-color);
+  }
+
+  .item-icon {
+    font-size: 1.12rem;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sidebar-muted-text);
+    transition: color 0.2s;
+  }
+
+  &:hover .item-icon {
+    color: var(--primary-color);
+  }
+}
+
+.submenu-indicator {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: var(--sidebar-muted-text);
+  transition: transform 0.25s ease;
+}
+
+.sidebar-nav li.expanded > a {
+  color: var(--primary-color);
+  font-weight: 600;
+
+  .item-icon,
+  .submenu-indicator {
+    color: var(--primary-color);
+  }
+
+  .submenu-indicator {
+    transform: rotate(-180deg);
+  }
+}
+
+/* Submenús multinivel con línea guía lateral */
+.submenu {
+  margin: 0.2rem 0 0.25rem 1.35rem !important;
+  padding-left: 0.65rem !important;
+  border-left: 1.5px solid var(--sidebar-border);
+
+  li a {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+
+    .item-icon {
+      font-size: 1rem;
+    }
+  }
+}
+
+/* Estado activo principal */
+.sidebar-nav li.active > a {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(var(--primary-rgb, 0, 123, 255), 0.22);
+
+  .item-icon {
+    color: var(--sidebar-active-text);
+  }
+}
+
+/* Pie del sidebar */
+.sidebar-footer {
+  padding: 0.75rem 0.65rem;
+  border-top: 1px solid var(--sidebar-border);
+
+  .logout-item {
+    color: var(--sidebar-footer-text);
+
+    .item-icon {
+      color: var(--sidebar-footer-text);
+    }
+
+    &:hover {
+      background: var(--danger-bg);
+      color: var(--danger-color);
+    }
+  }
+}
+
+/* Modo Colapsado (80px) */
+.sidebar.collapsed {
+  width: 78px;
+
+  .sidebar-header {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sidebar-nav {
+    overflow: visible;
+  }
+
+  .sidebar-nav li a,
+  .logout-item {
+    justify-content: center;
+    padding: 0.72rem 0;
+
+    .item-label,
+    .submenu-indicator {
+      display: none;
+    }
+  }
+
+  .submenu {
+    display: none !important;
+  }
+}
+
+/* Tooltips flotantes en modo colapsado */
+.sidebar.collapsed [data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.4rem 0.75rem;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 1002;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+/* Comportamiento Drawer Responsivo en Móviles */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1005;
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.2);
+  }
+  .sidebar.collapsed {
+    width: 0;
+    border-right: none;
+    overflow: hidden;
+    transform: translateX(-100%);
+  }
+}

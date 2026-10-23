@@ -1,0 +1,139 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Configuración del Negocio, Local Asignado y Seguridad de Clave</h1>
+      <p class="subtitle">
+        Negocio:
+        <strong>{{ businessInfo().legalName }} (RUC: {{ businessInfo().taxId }})</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+      </p>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <!-- 1. Configuración del Negocio Matriz y Local Asignado -->
+  <div class="card form-card">
+    <h2 class="section-title">
+      Configuración del Negocio Matriz y Local Asignado al Usuario
+    </h2>
+    <form (ngSubmit)="saveSettingsConfiguration()" class="grid-form">
+      <div class="form-group">
+        <label>Nombre Comercial del Negocio</label>
+        <input
+          type="text"
+          name="commName"
+          [(ngModel)]="settingsModel.commercialName"
+        />
+      </div>
+      <div class="form-group">
+        <label>Razón Social del Negocio</label>
+        <input
+          type="text"
+          name="compName"
+          [(ngModel)]="settingsModel.companyName"
+        />
+      </div>
+      <div class="form-group">
+        <label>RUC del Negocio</label>
+        <input type="text" name="taxId" [(ngModel)]="settingsModel.taxId" />
+      </div>
+      <div class="form-group">
+        <label>
+          Local / Sucursal Asignado a este Usuario (de los
+          {{ availableBranches().length }} locales del negocio)
+        </label>
+        <select name="cfgBranch" [(ngModel)]="settingsModel.assignedBranch">
+          <option
+            *ngFor="let branch of availableBranches()"
+            [value]="branch"
+          >
+            {{ branch }}
+          </option>
+        </select>
+      </div>
+      <div class="form-group full-width">
+        <label>Correo Corporativo del Negocio</label>
+        <input
+          type="email"
+          name="supEmail"
+          [(ngModel)]="settingsModel.supportEmail"
+        />
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-save"></i>
+          <span>Guardar Datos del Negocio y Local Asignado</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. Estado de Expiración y Renovación de Contraseña del Usuario Activo -->
+  <div class="card form-card">
+    <h2 class="section-title">
+      Seguridad y Vigencia de Contraseña del Usuario en Sesión ({{
+        currentUserProfile().name
+      }})
+    </h2>
+    <p class="text-muted" style="margin-top: -0.4rem; margin-bottom: 1rem">
+      Estado actual:
+      <strong>{{ currentUserProfile().passwordStatus }}</strong> · Fecha de
+      expiración:
+      <strong>{{ currentUserProfile().passwordExpiresAt }}</strong> ({{
+        currentUserProfile().daysUntilExpiration
+      }}
+      días restantes · Rotación corporativa cada
+      {{ passwordPolicy().rotationDays }} días).
+    </p>
+
+    <form (ngSubmit)="updateActiveUserPassword()" class="grid-form">
+      <div class="form-group">
+        <label>Usuario / Correo en Sesión</label>
+        <input
+          type="text"
+          name="secEmail"
+          [value]="currentUserProfile().email"
+          readonly
+          disabled
+        />
+      </div>
+      <div class="form-group">
+        <label>Contraseña Actual</label>
+        <input
+          type="password"
+          name="secCurrPass"
+          [(ngModel)]="passwordForm.currentPassword"
+          placeholder="Ingresa tu contraseña actual"
+        />
+      </div>
+      <div class="form-group">
+        <label>Nueva Contraseña (Vigencia 90 días)</label>
+        <input
+          type="password"
+          name="secNewPass"
+          [(ngModel)]="passwordForm.newPassword"
+          placeholder="Mínimo 8 caracteres, mayúscula, número y símbolo"
+        />
+      </div>
+      <div class="form-group">
+        <label>Confirmar Nueva Contraseña</label>
+        <input
+          type="password"
+          name="secConfPass"
+          [(ngModel)]="passwordForm.confirmPassword"
+          placeholder="Repite la nueva contraseña"
+        />
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-key-fill"></i>
+          <span>Renovar Contraseña por 90 Días</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

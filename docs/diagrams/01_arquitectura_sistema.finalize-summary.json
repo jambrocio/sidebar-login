@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
+    "sha256": "f8b8acde1a041867177dbe0a2a19ea6972d2ea21e8a729f59dd0a31fcab70fdb",
+    "bytes": 4713
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+    "sha256": "6df899b225b92495820b02833e00798084ec6614cc4f339480594ff3ed4541b6",
+    "bytes": 831251
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-23T15:37:03.513Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6750,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "tables-views",
+            "from": "tables",
+            "to": "views",
+            "label": "Vistas y Funciones",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "bends": 3,
+          "stretch": 1.259
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "tables → views needs 3 bends: move node tables or views so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

@@ -1,0 +1,68 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed()">
+  <!-- Cabecera con identidad del Negocio Matriz y cantidad de Locales asociados -->
+  <div class="sidebar-header">
+    <div class="brand-badge" aria-hidden="true">
+      <i class="bi bi-buildings-fill"></i>
+    </div>
+    <div class="brand-text" *ngIf="!isCollapsed()">
+      <h2>{{ businessInfo().commercialName }}</h2>
+      <span>Negocio · {{ branches().length }} Locales</span>
+    </div>
+  </div>
+
+  <!-- Navegación principal multinivel cargada desde json/sidebar-menu.json -->
+  <nav class="sidebar-nav" aria-label="Menú principal">
+    <ul>
+      <!-- Plantilla recursiva para renderizar múltiples niveles de submenú -->
+      <ng-template #menuItemTemplate let-item="item">
+        <li
+          [class.expanded]="hasSubMenu(item) && item.expanded"
+          [routerLinkActive]="hasSubMenu(item) ? 'parent-active' : 'active'"
+          [routerLinkActiveOptions]="{ exact: !hasSubMenu(item) }"
+        >
+          <a
+            [routerLink]="item.routerLink"
+            (click)="onItemClick(item, $event)"
+            [attr.data-tooltip]="isCollapsed() ? item.label : null"
+          >
+            <i class="item-icon" [class]="item.icon"></i>
+            <span class="item-label">{{ item.label }}</span>
+            <i
+              *ngIf="hasSubMenu(item)"
+              class="bi bi-chevron-down submenu-indicator"
+            ></i>
+          </a>
+
+          <!-- Submenú anidado recursivo: solo si contiene subopciones reales -->
+          <ul *ngIf="hasSubMenu(item) && item.expanded" class="submenu">
+            <ng-container *ngFor="let child of item.children">
+              <ng-container
+                *ngTemplateOutlet="menuItemTemplate; context: { item: child }"
+              ></ng-container>
+            </ng-container>
+          </ul>
+        </li>
+      </ng-template>
+
+      <ng-container *ngFor="let item of navItems()">
+        <ng-container
+          *ngTemplateOutlet="menuItemTemplate; context: { item: item }"
+        ></ng-container>
+      </ng-container>
+    </ul>
+  </nav>
+
+  <!-- Pie del Sidebar con acción rápida de salida -->
+  <div class="sidebar-footer">
+    <button
+      type="button"
+      (click)="onLogout()"
+      class="logout-item"
+      [attr.data-tooltip]="isCollapsed() ? 'Cerrar Sesión' : null"
+      title="Cerrar sesión y salir"
+    >
+      <i class="bi bi-box-arrow-right item-icon"></i>
+      <span class="item-label">Cerrar Sesión</span>
+    </button>
+  </div>
+</aside>

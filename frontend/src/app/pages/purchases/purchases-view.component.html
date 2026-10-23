@@ -1,0 +1,98 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Compras y Abastecimiento de Bebidas</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+        — Usuario: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">
+      Registrar Orden de Compra en tu Local Asignado ({{ assignedBranch() }})
+    </h2>
+    <form (ngSubmit)="registerBeveragePurchase()" class="grid-form">
+      <div class="form-group">
+        <label>Local / Almacén Asignado del Negocio (Bloqueado)</label>
+        <input type="text" [value]="assignedBranch()" readonly />
+      </div>
+      <div class="form-group">
+        <label>Proveedor Oficial</label>
+        <select name="purSupplier" [(ngModel)]="newPurchase.supplier">
+          <option value="Unión de Cervecerías Backus y Johnston">Unión de Cervecerías Backus y Johnston</option>
+          <option value="Diageo / Importadora Premium Licores">Diageo / Importadora Premium Licores</option>
+          <option value="Arca Continental Lindley (Coca-Cola / Inca Kola)">Arca Continental Lindley (Coca-Cola / Inca Kola)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Línea de Bebida</label>
+        <select name="purCat" [(ngModel)]="newPurchase.category">
+          <option value="Cervezas">Cervezas</option>
+          <option value="Licores">Licores y Destilados</option>
+          <option value="Gaseosas">Gaseosas y Aguas</option>
+          <option value="Otros">Energizantes y Otros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Producto Existente a Reabastecer</label>
+        <input type="text" name="purProd" [(ngModel)]="newPurchase.productDetail" />
+      </div>
+      <div class="form-group">
+        <label>Cantidad de Cajas Compradas</label>
+        <input type="number" name="purBoxes" [(ngModel)]="newPurchase.boxesQty" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Costo por Caja ($)</label>
+        <input type="number" name="purCost" [(ngModel)]="newPurchase.boxCost" step="0.5" />
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-box-arrow-in-down"></i>
+          <span>Registrar Compra e Incrementar Stock</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Historial de Compras Auditadas por Usuario y Local</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° Orden</th>
+            <th>Local Asignado</th>
+            <th>Proveedor</th>
+            <th>Mercadería</th>
+            <th>Cajas</th>
+            <th>Inversión Total</th>
+            <th>Registrado Por (Auditoría)</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pur of purchasesList()">
+            <td><code>{{ pur.id }}</code></td>
+            <td>{{ pur.branchName }}</td>
+            <td><strong>{{ pur.supplier }}</strong></td>
+            <td>{{ pur.productDetail }}</td>
+            <td>{{ pur.boxesQty }} cajas</td>
+            <td><strong>\${{ pur.totalCost.toFixed(2) }}</strong></td>
+            <td><code>{{ pur.buyerUser }}</code></td>
+            <td><span class="badge badge-success">{{ pur.status }}</span></td>
+            <td class="text-muted">{{ pur.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

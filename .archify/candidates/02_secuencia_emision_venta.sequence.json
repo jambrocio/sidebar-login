@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Secuencia: Emisión de Venta Mayor/Menor en POS",
+    "locale": "es",
+    "output": "docs/diagrams/02_secuencia_emision_venta.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "cajero", "type": "external", "label": "Cajero", "sublabel": "Sede Asignada" },
+    { "id": "pos", "type": "frontend", "label": "Sales POS", "sublabel": "Angular 21" },
+    { "id": "api", "type": "backend", "label": "Sales API", "sublabel": "Spring Boot 4" },
+    { "id": "guard", "type": "security", "label": "Branch Guard", "sublabel": "Aislamiento Sede" },
+    { "id": "coupons", "type": "database", "label": "Cupones", "sublabel": "cupones_descuento" },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "ventas / detalles" }
+  ],
+  "segments": [
+    { "from": 150, "to": 280, "label": "Preparación y Validación de Sede" },
+    { "from": 290, "to": 420, "label": "Verificación de Cupón y Persistencia Transaccional" },
+    { "from": 430, "to": 560, "label": "Confirmación y Emisión de Comprobante" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "cajero", "to": "pos", "y": 160, "label": "Selecciona productos y aplica cupón", "variant": "default" },
+    { "id": "m2", "from": "pos", "to": "api", "y": 195, "label": "POST /api/v1/sales (Payload Venta)", "variant": "emphasis" },
+    { "id": "m3", "from": "api", "to": "guard", "y": 230, "label": "Validar sede asignada del operador", "variant": "security" },
+    { "id": "m4", "from": "guard", "to": "api", "y": 265, "label": "Sede autorizada (LOC-01)", "variant": "return" },
+    { "id": "m5", "from": "api", "to": "coupons", "y": 300, "label": "Validar cupón activo y monto mínimo", "variant": "default" },
+    { "id": "m6", "from": "coupons", "to": "api", "y": 335, "label": "Cupón válido (% de descuento calculado)", "variant": "return" },
+    { "id": "m7", "from": "api", "to": "db", "y": 370, "label": "INSERT INTO ventas (cabecera comprobante)", "variant": "emphasis" },
+    { "id": "m8", "from": "api", "to": "db", "y": 405, "label": "INSERT INTO detalles_venta (líneas del carrito)", "variant": "emphasis" },
+    { "id": "m9", "from": "db", "to": "api", "y": 440, "label": "Transacción confirmada (COMMIT)", "variant": "return" },
+    { "id": "m10", "from": "api", "to": "coupons", "y": 475, "label": "Incrementar usos_actuales del cupón", "variant": "dashed" },
+    { "id": "m11", "from": "api", "to": "pos", "y": 510, "label": "201 Created (Comprobante emitido)", "variant": "return" },
+    { "id": "m12", "from": "pos", "to": "cajero", "y": 545, "label": "Visualiza Factura/Boleta e imprime PDF", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "pos", "from": 160, "to": 550, "type": "frontend" },
+    { "participant": "api", "from": 195, "to": 515, "type": "backend" },
+    { "participant": "guard", "from": 230, "to": 270, "type": "security" },
+    { "participant": "coupons", "from": 300, "to": 340, "type": "database" },
+    { "participant": "db", "from": 370, "to": 445, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Aislamiento por Sede",
+      "items": [
+        "El operador sólo puede emitir ventas en la Sede Asignada inyectada en su token JWT",
+        "BranchAccessGuard intercepta y previene ventas cruzadas no autorizadas"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Consistencia Transaccional",
+      "items": [
+        "Cabecera (ventas) y detalle (detalles_venta) se registran en una sola transacción ACID",
+        "Si falla cualquier línea, se ejecuta ROLLBACK automático sin inconsistencias"
+      ]
+    }
+  ]
+}

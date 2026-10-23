@@ -1,0 +1,238 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Ventas por Mayor y por Menor</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+        — Vendedor: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a
+        *ngIf="!selectedReceipt()"
+        routerLink="/dashboard/sales-history"
+        class="btn-secondary"
+      >
+        <i class="bi bi-receipt-cutoff"></i>
+        <span>Mi Historial de Ventas Emitidas</span>
+      </a>
+      <button
+        *ngIf="selectedReceipt()"
+        type="button"
+        class="btn-secondary"
+        (click)="selectedReceipt.set(null)"
+      >
+        <i class="bi bi-arrow-left"></i>
+        <span>Volver al Punto de Venta</span>
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <!-- Vista de Comprobante Electrónico Emitido -->
+  <app-sale-receipt-view
+    *ngIf="selectedReceipt() as receipt"
+    [receipt]="receipt"
+    [business]="businessInfo()"
+    [showHistoryShortcut]="true"
+    (closed)="selectedReceipt.set(null)"
+    (printRequested)="feedbackMessage.set('Imprimiendo / Descargando PDF del comprobante ' + $event + '...')"
+  ></app-sale-receipt-view>
+
+  <!-- Constructor de Venta Multiproducto -->
+  <ng-container *ngIf="!selectedReceipt()">
+    <div class="card">
+      <h2 class="section-title">
+        1. Datos del Cliente y Selección de Bebidas (Por Mayor y por Menor)
+      </h2>
+      <div class="grid-form">
+        <div class="form-group">
+          <label>Negocio Matriz</label>
+          <input
+            type="text"
+            [value]="businessInfo().commercialName + ' (RUC ' + businessInfo().taxId + ')'"
+            readonly
+          />
+        </div>
+        <div class="form-group">
+          <label>Local Asignado al Usuario (Bloqueado)</label>
+          <input type="text" [value]="assignedBranch()" readonly />
+        </div>
+        <div class="form-group">
+          <label>Tipo de Comprobante</label>
+          <select name="docType" [(ngModel)]="newSale.documentType">
+            <option value="FACTURA ELECTRÓNICA">FACTURA ELECTRÓNICA</option>
+            <option value="BOLETA DE VENTA ELECTRÓNICA">BOLETA DE VENTA ELECTRÓNICA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cliente</label>
+          <select name="saleClient" [(ngModel)]="newSale.clientName">
+            <option value="Licorería El Brindis S.A.C.">Licorería El Brindis S.A.C. (Mayorista)</option>
+            <option value="Restaurante & Bar La Esquina">Restaurante & Bar La Esquina (Mayorista)</option>
+            <option value="Bodega Mayorista Don Pepe">Bodega Mayorista Don Pepe (Mayorista)</option>
+            <option value="Cliente Mostrador (Juan Pérez)">Cliente Mostrador — Juan Pérez (Minorista)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Medio de Pago</label>
+          <select name="salePayment" [(ngModel)]="newSale.paymentMethod">
+            <option value="Efectivo">Efectivo en Caja</option>
+            <option value="Transferencia / Yape">Transferencia / Yape / Plin</option>
+            <option value="Tarjeta">Tarjeta POS</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Seleccionar Bebida / Licor</label>
+          <select
+            name="saleSku"
+            [(ngModel)]="newSale.selectedSku"
+            (ngModelChange)="onSaleProductOrModalityChange()"
+          >
+            <option *ngFor="let p of products()" [value]="p.sku">
+              {{ p.name }} ({{ p.category }})
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Modalidad de Venta</label>
+          <select
+            name="saleModality"
+            [(ngModel)]="newSale.modality"
+            (ngModelChange)="onSaleProductOrModalityChange()"
+          >
+            <option value="Por Mayor">Venta por Mayor (Cajas / Packs)</option>
+            <option value="Por Menor">Venta por Menor (Unidades / Botellas)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cantidad ({{ newSale.modality === 'Por Mayor' ? 'Cajas' : 'Unidades' }})</label>
+          <input type="number" name="saleQty" [(ngModel)]="newSale.quantity" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Precio Unitario / Caja ($)</label>
+          <input type="number" name="salePrice" [(ngModel)]="newSale.unitPrice" step="0.5" />
+        </div>
+
+        <div class="form-actions full-width">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="addItemToSaleCart()"
+          >
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>Agregar Producto a la Venta</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Productos Agregados y Total General -->
+    <div class="card">
+      <div class="toolbar">
+        <h2 class="section-title" style="margin: 0">
+          2. Productos Agregados a la Venta ({{ saleCart().length }} líneas / {{ cartTotalItemsCount() }} ítems)
+        </h2>
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem">
+          <label style="margin: 0">Cupón de Descuento:</label>
+          <input
+            type="text"
+            name="saleCoupon"
+            [(ngModel)]="newSale.couponCode"
+            placeholder="Ej. MAYORISTA15"
+            style="width: 150px; padding: 0.45rem 0.65rem"
+          />
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Bebida / Licor</th>
+              <th>Modalidad</th>
+              <th>Formato</th>
+              <th>Cantidad</th>
+              <th>Precio Aplicado</th>
+              <th>Subtotal Línea</th>
+              <th>Quitar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of saleCart(); let idx = index">
+              <td><code>{{ item.sku }}</code></td>
+              <td><strong>{{ item.productName }}</strong></td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-info]="item.modality === 'Por Mayor'"
+                  [class.badge-warning]="item.modality === 'Por Menor'"
+                >
+                  {{ item.modality }}
+                </span>
+              </td>
+              <td>{{ item.unitLabel }}</td>
+              <td><strong>{{ item.quantity }}</strong></td>
+              <td>\${{ item.unitPrice.toFixed(2) }}</td>
+              <td><strong>\${{ item.lineSubtotal.toFixed(2) }}</strong></td>
+              <td>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="removeSaleCartItem(idx)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" style="text-align: right">
+                <strong>SUBTOTAL DE PRODUCTOS AGREGADOS ({{ cartTotalItemsCount() }} unds/cajas):</strong>
+              </td>
+              <td colspan="2">
+                <strong>\${{ cartSubtotal().toFixed(2) }}</strong>
+              </td>
+            </tr>
+            <tr *ngIf="getCartDiscountAmount() > 0">
+              <td colspan="6" style="text-align: right">
+                <strong>DESCUENTO CUPÓN ({{ newSale.couponCode }}):</strong>
+              </td>
+              <td colspan="2">
+                <span class="badge badge-success">-\${{ getCartDiscountAmount().toFixed(2) }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="6" style="text-align: right; font-size: 1rem">
+                <strong>TOTAL GENERAL A PAGAR:</strong>
+              </td>
+              <td colspan="2" style="font-size: 1.08rem">
+                <strong>\${{ getCartFinalTotal().toFixed(2) }} USD</strong>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="form-actions" style="margin-top: 1.1rem; justify-content: flex-end">
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="registerBeverageSale()"
+        >
+          <i class="bi bi-receipt-cutoff"></i>
+          <span>Emitir y Visualizar Comprobante de Venta ($ {{ getCartFinalTotal().toFixed(2) }})</span>
+        </button>
+      </div>
+    </div>
+  </ng-container>
+</section>

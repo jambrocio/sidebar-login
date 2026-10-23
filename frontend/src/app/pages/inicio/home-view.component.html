@@ -1,0 +1,62 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Tablero Comercial del Negocio y Locales</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }} (RUC: {{ businessInfo().taxId }})</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong> ({{ activeBusinessBranches().length }} locales en red)
+        — Usuario: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/dashboard/branches" class="btn-secondary">
+        <i class="bi bi-buildings-fill"></i>
+        <span>Ver {{ activeBusinessBranches().length }} Locales del Negocio</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="kpi-grid">
+    <div class="card kpi-card" *ngFor="let kpi of kpis()">
+      <div class="kpi-icon">
+        <i [class]="kpi.icon"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">{{ kpi.label }}</span>
+        <strong class="kpi-value">{{ kpi.value }}</strong>
+        <span class="kpi-trend" [class.negative]="!kpi.positive">
+          {{ kpi.trend }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">
+      Bitácora de Auditoría del Negocio ({{ businessInfo().commercialName }} — {{ activeBusinessBranches().length }} Locales)
+    </h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Usuario Responsable</th>
+            <th>Local del Negocio</th>
+            <th>Operación Auditada</th>
+            <th>Módulo</th>
+            <th>Tiempo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of recentActivities()">
+            <td><strong>{{ item.user }}</strong></td>
+            <td><code>{{ item.branch }}</code></td>
+            <td>{{ item.action }}</td>
+            <td><span class="badge badge-info">{{ item.badge }}</span></td>
+            <td class="text-muted">{{ item.time }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

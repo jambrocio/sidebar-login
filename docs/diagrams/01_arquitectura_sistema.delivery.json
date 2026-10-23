@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "a32c98f1-877b-4632-85d5-8f7be6f9551a",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
+  "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+  "specification": {
+    "sha256": "f8b8acde1a041867177dbe0a2a19ea6972d2ea21e8a729f59dd0a31fcab70fdb",
+    "bytes": 4713
+  },
+  "artifact": {
+    "sha256": "6df899b225b92495820b02833e00798084ec6614cc4f339480594ff3ed4541b6",
+    "bytes": 831251
+  }
+}

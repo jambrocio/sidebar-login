@@ -1,0 +1,18 @@
+{
+  "name": "BevAdmin Pro — Distribuidora Mayorista y Minorista",
+  "short_name": "BevAdmin POS",
+  "description": "Sistema multi-tienda de compra y venta de licores, cervezas y gaseosas por mayor y menor con control de cupones y arqueo de caja.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1a2e",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

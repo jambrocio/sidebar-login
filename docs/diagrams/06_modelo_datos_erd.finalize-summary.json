@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "erd",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\06_modelo_datos_erd.erd.json",
+    "sha256": "463a8c72fe873e7958f6853f6a7fff99af833e5eecf51a8a6a27aa145a7366b5",
+    "bytes": 12856
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\06_modelo_datos_erd.html",
+    "sha256": "3a60aa66a707115200b4662b26e77b21bb63438e451e0419f4fa262b16f3c31e",
+    "bytes": 888239
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\06_modelo_datos_erd.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\06_modelo_datos_erd.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\06_modelo_datos_erd.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-23T15:37:03.513Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 16537,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 2,
+      "routesOverSuggestedStretch": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "rel_roles_empresas",
+            "from": "roles",
+            "to": "empresas",
+            "label": "",
+            "collectionIndex": 1,
+            "artifactIndex": 2
+          },
+          "bends": 4,
+          "stretch": 1.673,
+          "directCorridorBlockers": [
+            {
+              "id": "sedes",
+              "label": "sedes",
+              "box": [
+                32,
+                226,
+                290,
+                156
+              ]
+            },
+            {
+              "id": "usuarios",
+              "label": "usuarios",
+              "box": [
+                32,
+                412,
+                290,
+                136
+              ]
+            }
+          ]
+        },
+        {
+          "relationship": {
+            "id": "rel_usuarios_roles_roles",
+            "from": "usuarios_roles",
+            "to": "roles",
+            "label": "",
+            "collectionIndex": 3,
+            "artifactIndex": 4
+          },
+          "bends": 3,
+          "stretch": 1.059
+        }
+      ],
+      "truncated": false
+    },
+    "repair": "Advisory only: this mode places or routes these relationships itself. Report them; do not remove relationships or meaning to reduce crossings."
+  }
+}

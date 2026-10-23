@@ -1,0 +1,127 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Gestión de Cupones de Descuento</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Autorizado por: <strong>{{ currentSessionUser() }}</strong>
+      </p>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <h2 class="section-title" style="margin: 0">
+        Crear y Asignar Cupón de Descuento — Autorizado por: {{ currentSessionUser() }}
+      </h2>
+      <button
+        type="button"
+        class="btn-secondary btn-sm"
+        (click)="generateRandomCouponCode()"
+      >
+        <i class="bi bi-magic"></i>
+        <span>Autogenerar Código</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="saveDiscountCoupon()" class="grid-form">
+      <div class="form-group">
+        <label>Código del Cupón</label>
+        <input type="text" name="cpCode" [(ngModel)]="newCoupon.code" />
+      </div>
+      <div class="form-group">
+        <label>Tipo de Descuento</label>
+        <select name="cpType" [(ngModel)]="newCoupon.discountType">
+          <option value="PERCENT">Porcentaje de Descuento (%)</option>
+          <option value="FIXED">Monto Fijo de Descuento ($)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Valor ({{ newCoupon.discountType === 'PERCENT' ? '%' : '$' }})</label>
+        <input type="number" name="cpVal" [(ngModel)]="newCoupon.discountValue" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Cliente o Segmento Beneficiario</label>
+        <select name="cpClient" [(ngModel)]="newCoupon.assignedClient">
+          <option value="Licorería El Brindis S.A.C.">Licorería El Brindis S.A.C.</option>
+          <option value="Restaurante & Bar La Esquina">Restaurante & Bar La Esquina</option>
+          <option value="Bodega Mayorista Don Pepe">Bodega Mayorista Don Pepe</option>
+          <option value="Todos los Clientes Mayoristas VIP">Todos los Clientes Mayoristas VIP</option>
+          <option value="Todos los Clientes Minoristas">Todos los Clientes Minoristas</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Modalidad Aplicable</label>
+        <select name="cpModality" [(ngModel)]="newCoupon.targetModality">
+          <option value="Mayorista">Exclusivo Venta por Mayor (Cajas)</option>
+          <option value="Minorista">Exclusivo Venta por Menor (Unidades)</option>
+          <option value="Mayor y Menor">Aplica a Mayor y Menor (Ambos)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Categoría Permitida</label>
+        <select name="cpCat" [(ngModel)]="newCoupon.targetCategory">
+          <option value="Todas">Todas las Bebidas</option>
+          <option value="Licores">Solo Licores</option>
+          <option value="Cervezas">Solo Cervezas</option>
+          <option value="Gaseosas">Solo Gaseosas</option>
+        </select>
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-ticket-perforated-fill"></i>
+          <span>Crear y Habilitar Cupón</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Cupones Asignados a Clientes y Auditoría de Creación</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Beneficio</th>
+            <th>Cliente Asignado</th>
+            <th>Modalidad</th>
+            <th>Línea</th>
+            <th>Canjes</th>
+            <th>Generado Por (Auditoría)</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cp of couponsList()">
+            <td><code>{{ cp.code }}</code></td>
+            <td>
+              <span class="badge badge-success">
+                {{ cp.discountType === 'PERCENT' ? cp.discountValue + '% OFF' : '-$' + cp.discountValue }}
+              </span>
+            </td>
+            <td><strong>{{ cp.assignedClient }}</strong></td>
+            <td><span class="badge badge-info">{{ cp.targetModality }}</span></td>
+            <td>{{ cp.targetCategory }}</td>
+            <td>{{ cp.usedCount }} / {{ cp.maxUses }}</td>
+            <td><code>{{ cp.createdByUser }}</code></td>
+            <td>
+              <button
+                type="button"
+                class="btn-secondary btn-sm"
+                (click)="toggleCouponStatus(cp)"
+              >
+                {{ cp.active ? 'Activo' : 'Pausado' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

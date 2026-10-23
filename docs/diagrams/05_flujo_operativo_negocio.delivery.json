@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "82deada5-5b49-4f6e-bb7b-4bb42e071c40",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\05_flujo_operativo_negocio.workflow.json",
+  "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\05_flujo_operativo_negocio.html",
+  "specification": {
+    "sha256": "9a544f6eaea551fb34a04cd9b5afd08194460811e6384176758c7e2af7ba21e2",
+    "bytes": 3763
+  },
+  "artifact": {
+    "sha256": "d6fa7f8023053efc5f041dc4a1eeb14f4b095a1cb58798a9e3afcb9a9cc6c720",
+    "bytes": 821239
+  }
+}

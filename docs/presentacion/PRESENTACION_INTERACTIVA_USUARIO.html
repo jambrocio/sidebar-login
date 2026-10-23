@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BevAdmin Pro — Plataforma Inteligente de Ventas POS y Gestión para Distribuidoras de Bebidas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --card-border: #e2e8f0;
+      --card-border-hover: #cbd5e1;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #e0f2fe;
+      --accent: #2563eb;
+      --success: #059669;
+      --success-light: #d1fae5;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --purple: #7c3aed;
+      --purple-light: #ede9fe;
+      --text-main: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+      --shadow-xl: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* TOP COMMERCIAL HEADER */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text span {
+      font-size: 0.75rem;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--surface-subtle);
+      padding: 0.35rem;
+      border-radius: 9999px;
+      border: 1px solid var(--card-border);
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 1.15rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-main);
+    }
+
+    .nav-tab.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-cta {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      padding: 0.6rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .btn-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+    }
+
+    /* HERO SHOWCASE */
+    .hero-banner {
+      background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%);
+      border-bottom: 1px solid var(--card-border);
+      padding: 3rem 2rem 2.5rem;
+      text-align: center;
+    }
+
+    .hero-container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .pill-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary-light);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      color: #0369a1;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      line-height: 1.18;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-lead {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 800px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+
+    /* KPI STATS BAR */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1rem;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .kpi-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 0.35rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .kpi-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* MAIN CONTAINER */
+    main {
+      flex: 1;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+      width: 100%;
+    }
+
+    /* SLIDES CAROUSEL PRESENTATION */
+    .deck-container {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+
+    .slide-progress {
+      height: 6px;
+      background: var(--surface-subtle);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #2563eb);
+      transition: width 0.35s ease;
+      width: 11%;
+    }
+
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--primary-light);
+      color: #0369a1;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.85rem;
+    }
+
+    .slide-title {
+      font-size: 1.95rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+      line-height: 1.25;
+    }
+
+    .slide-desc {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      max-width: 900px;
+    }
+
+    .callout-box {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary);
+      padding: 1.15rem 1.5rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .callout-box i {
+      font-size: 1.35rem;
+      color: var(--primary);
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .callout-box p {
+      font-size: 0.95rem;
+      color: #1e3a8a;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .feature-card {
+      background: var(--surface-subtle);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .feature-card:hover {
+      background: #ffffff;
+      border-color: rgba(2, 132, 199, 0.4);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .feature-card h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.4rem;
+    }
+
+    .feature-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* DECK CONTROLS */
+    .deck-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .deck-dots {
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .deck-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 9999px;
+      background: var(--card-border);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .deck-dot.active {
+      width: 28px;
+      background: var(--primary);
+    }
+
+    .btn-deck {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.65rem 1.35rem;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-deck:hover:not(:disabled) {
+      background: var(--surface-subtle);
+      border-color: var(--card-border-hover);
+    }
+
+    .btn-deck:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-deck.primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .btn-deck.primary:hover:not(:disabled) {
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+    }
+
+    /* INTERACTIVE POS SIMULATOR */
+    .sim-container {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--card-border);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .sim-title h3 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .sim-title p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 1.75rem;
+    }
+
+    @media (max-width: 900px) {
+      .sim-layout { grid-template-columns: 1fr; }
+    }
+
+    .catalog-box {
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      background: #fafafa;
+    }
+
+    .product-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .product-row:hover {
+      border-color: rgba(2, 132, 199, 0.4);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .prod-info h5 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .prod-info span {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .prod-pricing {
+      text-align: right;
+      margin-right: 1rem;
+    }
+
+    .prod-price {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .btn-add {
+      background: #e0f2fe;
+      color: #0284c7;
+      border: 1px solid rgba(2, 132, 199, 0.3);
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-add:hover {
+      background: #0284c7;
+      color: #fff;
+    }
+
+    /* CART & CHECKOUT */
+    .cart-box {
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cart-items {
+      flex: 1;
+      max-height: 220px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      border-bottom: 1px dashed var(--card-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .cart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      padding: 0.4rem 0;
+    }
+
+    .coupon-field {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .coupon-input {
+      flex: 1;
+      border: 1px solid var(--card-border);
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+    }
+
+    .cart-summary {
+      background: var(--surface-subtle);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+
+    .summary-line.total {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      border-top: 1px solid var(--card-border);
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .btn-emit {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff;
+      border: none;
+      padding: 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-emit:hover {
+      box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45);
+      transform: translateY(-1px);
+    }
+
+    /* RECEIPT MODAL SIMULATION */
+    .receipt-pop {
+      background: #fffbeb;
+      border: 1px dashed #d97706;
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    /* ROI CALCULATOR */
+    .roi-section {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+      margin-top: 2rem;
+    }
+
+    .roi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    @media (max-width: 850px) {
+      .roi-grid { grid-template-columns: 1fr; }
+    }
+
+    .slider-box {
+      margin-bottom: 1.5rem;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    .roi-result-card {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .roi-amount {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #15803d;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 0.5rem;
+    }
+
+    /* FOOTER */
+    footer {
+      background: #ffffff;
+      border-top: 1px solid var(--card-border);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER COMERCIAL -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="bi bi-cup-straw"></i>
+      </div>
+      <div class="brand-text">
+        <h1>BevAdmin Pro</h1>
+        <span>SISTEMA POS & GESTIÓN DE BEBIDAS</span>
+      </div>
+    </div>
+
+    <nav class="header-nav">
+      <button class="nav-tab active" onclick="switchMainView('deck')">
+        <i class="bi bi-presentation"></i> Presentación Guiada
+      </button>
+      <button class="nav-tab" onclick="switchMainView('video')">
+        <i class="bi bi-play-btn-fill" style="color: #ef4444;"></i> Video Promocional
+      </button>
+      <button class="nav-tab" onclick="switchMainView('simulator')">
+        <i class="bi bi-cart-check"></i> Simulador POS
+      </button>
+      <button class="nav-tab" onclick="switchMainView('roi')">
+        <i class="bi bi-calculator"></i> Calculadora Ahorro
+      </button>
+    </nav>
+
+    <div class="header-actions">
+      <a class="btn-cta" href="../diagrams/index.html" target="_self">
+        <i class="bi bi-diagram-3-fill"></i> Ver Diagramas Técnicos
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO DE VENTA Y CONFIANZA -->
+  <section class="hero-banner">
+    <div class="hero-container">
+      <div class="pill-hero">
+        <i class="bi bi-patch-check-fill"></i> Solución Especializada para Mayoristas y Licorerías
+      </div>
+      <h2 class="hero-title">
+        Multiplica tus Ventas y Blinda tu Caja con <span>BevAdmin Pro</span>
+      </h2>
+      <p class="hero-lead">
+        La plataforma comercial integral que unifica tus tiendas físicas, inventario de bebidas por caja y botella, facturación electrónica instantánea y arqueo de turnos sin descuadres.
+      </p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-num">+35%</div>
+          <div class="kpi-label">Rapidez de Cobro en Caja</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">100%</div>
+          <div class="kpi-label">Cuadre Exacto de Arqueo</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">&lt; 1 seg</div>
+          <div class="kpi-label">Emisión de Boleta / Factura</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">0%</div>
+          <div class="kpi-label">Pérdidas por Mermas y Robo</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.75rem;">
+        <button class="btn-cta" onclick="switchMainView('video')" style="font-size: 0.95rem; padding: 0.75rem 1.75rem;">
+          <i class="bi bi-play-circle-fill"></i> Ver Spot Promocional en 38s (HyperFrames)
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISTAS INTERACTIVAS -->
+  <main>
+    
+    <!-- MODO 0: VIDEO CINEMÁTICO HYPERFRAMES EMBEBIDO -->
+    <div id="videoView" class="sim-container" style="display: none; padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <span class="slide-tag" style="background: rgba(2, 132, 199, 0.15); color: #0284c7;">
+            <i class="bi bi-film"></i> Video-as-Code Oficial &bull; HyperFrames (38 Segundos)
+          </span>
+          <h3 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">
+            Spot Comercial Oficial: BevAdmin Pro
+          </h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);">
+            Producción audiovisual en movimiento con narración en español, simulación de venta POS por mayor y menor, y demostración de arqueo sin descuadres.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <a class="btn-cta" href="video_promocional_bevadmin.html" target="_blank" style="font-size: 0.85rem; padding: 0.55rem 1.15rem;">
+            <i class="bi bi-arrows-fullscreen"></i> Abrir en Pantalla Completa
+          </a>
+        </div>
+      </div>
+
+      <div style="width: 100%; aspect-ratio: 16 / 9; max-height: 560px; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-xl); border: 1px solid var(--card-border); background: #000;">
+        <iframe src="video_promocional_bevadmin.html" style="width: 100%; height: 100%; border: none;" title="Video Promocional BevAdmin Pro"></iframe>
+      </div>
+    </div>
+
+    <!-- MODO 1: DECK GUIADO COMERCIAL (CLARO Y CREATIVO) -->
+    <div id="deckView" class="deck-container">
+      <div class="slide-progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div id="slideContent">
+        <!-- Generado dinámicamente -->
+      </div>
+
+      <div class="deck-controls">
+        <button class="btn-deck" id="btnPrev" onclick="navigateSlide(-1)">
+          <i class="bi bi-chevron-left"></i> Anterior
+        </button>
+
+        <div class="deck-dots" id="deckDots">
+          <!-- Dots generados dinámicamente -->
+        </div>
+
+        <button class="btn-deck primary" id="btnNext" onclick="navigateSlide(1)">
+          Siguiente Beneficio <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- MODO 2: SIMULADOR POS EN VIVO -->
+    <div id="simulatorView" class="sim-container" style="display: none;">
+      <div class="sim-header">
+        <div class="sim-title">
+          <h3><i class="bi bi-shop"></i> Simulador Interactivo de Ventas POS</h3>
+          <p>Experimenta cómo un cajero atiende un pedido en menos de 20 segundos y emite el comprobante.</p>
+        </div>
+        <div style="background: #e0f2fe; color: #0369a1; padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700;">
+          <i class="bi bi-geo-alt-fill"></i> Local: Sede Central Mayorista (Activo)
+        </div>
+      </div>
+
+      <div class="sim-layout">
+        <!-- Catálogo de productos interactivo -->
+        <div class="catalog-box">
+          <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">
+            <i class="bi bi-grid-fill" style="color: var(--primary);"></i> Catálogo de Bebidas Disponibles
+          </h4>
+
+          <div class="product-row">
+            <div class="prod-info">
+              <h5>Cerveza Cusqueña Trigo (Caja x 24)</h5>
+              <span>SKU: CUSQ-TRI-24 &bull; Stock: 85 Cajas</span>
+            </div>
+            <div class="prod-pricing">
+              <div class="prod-price">S/ 135.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Por Mayor</span>
+            </div>
+            <button class="btn-add" onclick="addToCart('Cerveza Cusqueña Trigo (Caja)', 135.00)">
+              <i class="bi bi-plus-lg"></i> Agregar
+            </button>
+          </div>
+
+          <div class="product-row">
+            <div class="prod-info">
+              <h5>Whisky Johnnie Walker Black Label (750ml)</h5>
+              <span>SKU: JW-BLACK-750 &bull; Stock: 42 Botellas</span>
+            </div>
+            <div class="prod-pricing">
+              <div class="prod-price">S/ 98.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Por Menor</span>
+            </div>
+            <button class="btn-add" onclick="addToCart('JW Black Label (750ml)', 98.00)">
+              <i class="bi bi-plus-lg"></i> Agregar
+            </button>
+          </div>
+
+          <div class="product-row">
+            <div class="prod-info">
+              <h5>Gaseosa Coca Cola 3 Litros (Pack x 4)</h5>
+              <span>SKU: COCA-3L-PK4 &bull; Stock: 110 Packs</span>
+            </div>
+            <div class="prod-pricing">
+              <div class="prod-price">S/ 48.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Pack Comercial</span>
+            </div>
+            <button class="btn-add" onclick="addToCart('Coca Cola 3L (Pack x 4)', 48.00)">
+              <i class="bi bi-plus-lg"></i> Agregar
+            </button>
+          </div>
+
+          <div class="product-row">
+            <div class="prod-info">
+              <h5>Pisco Cuatro Gallos Quebranta (750ml)</h5>
+              <span>SKU: PISCO-4G-QUEB &bull; Stock: 36 Botellas</span>
+            </div>
+            <div class="prod-pricing">
+              <div class="prod-price">S/ 45.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Unidad</span>
+            </div>
+            <button class="btn-add" onclick="addToCart('Pisco Cuatro Gallos Quebranta', 45.00)">
+              <i class="bi bi-plus-lg"></i> Agregar
+            </button>
+          </div>
+        </div>
+
+        <!-- Carrito de compras y emisión de comprobante -->
+        <div class="cart-box">
+          <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.85rem; color: var(--text-main);">
+            <i class="bi bi-cart3" style="color: var(--primary);"></i> Carrito del Cliente
+          </h4>
+
+          <div class="cart-items" id="cartItemsList">
+            <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 2rem;">
+              Selecciona bebidas a la izquierda para armar el pedido.
+            </p>
+          </div>
+
+          <!-- Cupón promocional -->
+          <div class="coupon-field">
+            <input type="text" id="couponCode" class="coupon-input" placeholder="Cupón (Ej: DESCUENTO10)" />
+            <button class="btn-add" onclick="applyCoupon()" style="border-radius: var(--radius-sm);">
+              Aplicar
+            </button>
+          </div>
+
+          <!-- Resumen de montos -->
+          <div class="cart-summary">
+            <div class="summary-line">
+              <span>Subtotal Productos:</span>
+              <span id="txtSubtotal">S/ 0.00</span>
+            </div>
+            <div class="summary-line" style="color: var(--success);" id="rowDescuento" style="display: none;">
+              <span>Descuento Cupón:</span>
+              <span id="txtDescuento">- S/ 0.00</span>
+            </div>
+            <div class="summary-line">
+              <span>IGV (18% Incluido):</span>
+              <span id="txtIgv">S/ 0.00</span>
+            </div>
+            <div class="summary-line total">
+              <span>Total a Cobrar:</span>
+              <span id="txtTotal">S/ 0.00</span>
+            </div>
+          </div>
+
+          <button class="btn-emit" onclick="emitReceipt()">
+            <i class="bi bi-printer-fill"></i> Emitir Boleta / Factura
+          </button>
+
+          <!-- Comprobante generado -->
+          <div class="receipt-pop" id="receiptPop">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <strong style="color: #92400e;"><i class="bi bi-check-circle-fill"></i> ¡Venta Emitida con Éxito!</strong>
+              <span style="font-size: 0.75rem; background: #fde68a; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700;">B001-0004128</span>
+            </div>
+            <p style="font-size: 0.82rem; color: #78350f; margin-bottom: 0.5rem;" id="receiptDescText"></p>
+            <div style="font-size: 0.78rem; color: #92400e; font-family: 'JetBrains Mono', monospace;">
+              Firma Digital &bull; Transacción ACID &bull; Stock rebajado automáticamente
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODO 3: CALCULADORA DE RETORNO DE INVERSIÓN (ROI) -->
+    <div id="roiView" class="roi-section" style="display: none;">
+      <div style="text-align: center; max-width: 700px; margin: 0 auto 2.5rem;">
+        <span class="slide-tag"><i class="bi bi-graph-up-arrow"></i> RETORNO DE INVERSIÓN GARANTIZADO</span>
+        <h3 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+          Calcula cuánto Ahorra tu Negocio al Mes
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 1rem;">
+          Descubre el impacto económico de eliminar mermas, acelerar cobros y blindar la caja registradora de todas tus tiendas.
+        </p>
+      </div>
+
+      <div class="roi-grid">
+        <div>
+          <div class="slider-box">
+            <div class="slider-label">
+              <span>Número de Tiendas o Sucursales:</span>
+              <span style="color: var(--primary); font-family: 'JetBrains Mono', monospace;" id="lblStores">2 Tiendas</span>
+            </div>
+            <input type="range" id="rngStores" min="1" max="15" value="2" oninput="calcRoi()">
+          </div>
+
+          <div class="slider-box">
+            <div class="slider-label">
+              <span>Venta Mensual Estimada por Tienda:</span>
+              <span style="color: var(--primary); font-family: 'JetBrains Mono', monospace;" id="lblSales">S/ 35,000</span>
+            </div>
+            <input type="range" id="rngSales" min="10000" max="150000" step="5000" value="35000" oninput="calcRoi()">
+          </div>
+
+          <div class="slider-box">
+            <div class="slider-label">
+              <span>Cajeros / Vendedores por Turno:</span>
+              <span style="color: var(--primary); font-family: 'JetBrains Mono', monospace;" id="lblCashiers">3 Personas</span>
+            </div>
+            <input type="range" id="rngCashiers" min="1" max="10" value="3" oninput="calcRoi()">
+          </div>
+        </div>
+
+        <div class="roi-result-card">
+          <span style="font-size: 0.85rem; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.05em;">
+            Ahorro Mensual Estimado
+          </span>
+          <div class="roi-amount" id="lblAhorro">S/ 3,150</div>
+          <p style="font-size: 0.9rem; color: #166534; margin-bottom: 1.5rem; line-height: 1.5;">
+            Por erradicación de descuadres de caja, reducción de mermas de almacén y +35% de velocidad comercial.
+          </p>
+          <a class="btn-cta" href="tel:+51999999999" style="width: 100%; justify-content: center;">
+            <i class="bi bi-whatsapp"></i> Solicitar Demostración Personalizada
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer>
+    <p style="font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">
+      BevAdmin Pro &bull; Plataforma Empresarial de Ventas POS y Control para Distribuidoras de Bebidas
+    </p>
+    <p>Desarrollado con Angular 21, Spring Boot 4 y PostgreSQL 17 &bull; Cumplimiento normativo y seguridad OWASP.</p>
+  </footer>
+
+  <script>
+    // SLIDES DATA PARA USUARIOS FINALES
+    const slidesData = [
+      {
+        tag: "1. Venta Rápida en Mostrador",
+        title: "Punto de Venta (POS) Mayorista y Minorista Ultra Ágil",
+        desc: "Atiende a tus clientes en segundos. Vende tanto por cajas cerradas como por botellas sueltas con cálculo automático de precios diferenciados.",
+        callout: "El sistema actualiza el stock al instante en tu sede y aplica descuentos por cupones promocionales con total transparencia.",
+        features: [
+          { icon: "bi-lightning-charge-fill", title: "Atención sin Colas", desc: "Interfaz táctil optimizada para teclado y lector de código de barras." },
+          { icon: "bi-boxes", title: "Precios Mayor y Menor", desc: "Reglas de precio por volumen automáticas sin que el cajero deba memorizarlas." },
+          { icon: "bi-ticket-perforated-fill", title: "Cupones y Promociones", desc: "Descuentos por porcentaje o monto fijo validados en tiempo real." }
+        ]
+      },
+      {
+        tag: "2. Blindaje de Caja y Dinero",
+        title: "Arqueo de Turno Inteligente: Cero Descuadres",
+        desc: "Cada cajero abre su turno con un monto inicial y al finalizar realiza su conteo físico. El sistema detecta sobrantes o faltantes al centavo.",
+        callout: "Separa automáticamente el dinero en efectivo de las transferencias digitales (Yape, Plin y tarjetas) para una conciliación perfecta.",
+        features: [
+          { icon: "bi-calculator-fill", title: "Cálculo Automático", desc: "Compara el saldo del sistema contra el efectivo contado sin dar lugar a dudas." },
+          { icon: "bi-shield-check", title: "Actas Inmutables", desc: "Cada cierre de caja queda firmado con fecha, hora, usuario y local asignado." },
+          { icon: "bi-wallet2", title: "Múltiples Medios de Pago", desc: "Control discriminado de efectivo, POS bancario, Yape, Plin y vales." }
+        ]
+      },
+      {
+        tag: "3. Control Multi-Tienda y Almacenes",
+        title: "Gestiona Todas tus Sucursales desde un Solo Lugar",
+        desc: "Supervisa en tiempo real qué tienda vende más, qué sede necesita mercadería y transfiere productos entre almacenes sin errores.",
+        callout: "Aislamiento estricto por local: los cajeros solo operan su tienda asignada, mientras la gerencia tiene visión 360° de toda la red.",
+        features: [
+          { icon: "bi-shop-window", title: "Locales y Series Propias", desc: "Cada sucursal emite con su propia serie correlativa de boleta y factura." },
+          { icon: "bi-arrow-left-right", title: "Reabastecimiento Ágil", desc: "Genera órdenes de compra a proveedores oficiales e ingresa stock con un clic." },
+          { icon: "bi-geo-alt-fill", title: "Directorio Geográfico", desc: "Monitorea la ubicación y actividad comercial de cada sucursal en vivo." }
+        ]
+      },
+      {
+        tag: "4. Ciberseguridad y Monitoreo de Sesiones",
+        title: "Auditoría en Tiempo Real y Cierre Remoto de Sesiones",
+        desc: "Conoce en todo momento quién está conectado, desde qué dirección IP y en qué tienda. Protege tu negocio contra accesos sospechosos.",
+        callout: "¿Detectaste un intruso o un cajero que olvidó cerrar sesión? Expúlsalo en un segundo con el botón 'Kill Session' remoto.",
+        features: [
+          { icon: "bi-traffic-light-fill", title: "Semáforos de Conexión", desc: "Visualiza de un vistazo quién está Activo (verde) o Inactivo (amarillo)." },
+          { icon: "bi-shield-x", title: "Kill Session Instantáneo", desc: "Invalida credenciales sospechosas sin reiniciar ni afectar a otros usuarios." },
+          { icon: "bi-journal-check", title: "Bitácora Inalterable", desc: "Registro estricto de cada venta, modificación o anulación realizada." }
+        ]
+      },
+      {
+        tag: "5. Facturación Electrónica al Instante",
+        title: "Boletas y Facturas Electrónicas con Formato SUNAT",
+        desc: "Genera comprobantes válidos con código QR y numeración correlativa en formato ticket para impresora térmica o tamaño A4/PDF.",
+        callout: "Ahorra papel y tiempo: envía el comprobante por WhatsApp o correo electrónico al cliente con un solo clic.",
+        features: [
+          { icon: "bi-receipt-cutoff", title: "Comprobantes Inmediatos", desc: "Emisión de Boleta de Venta o Factura con RUC y Razón Social validada." },
+          { icon: "bi-printer-fill", title: "Compatibilidad Total", desc: "Impresoras térmicas de 80mm y 58mm, PDF de alta definición y exportación." },
+          { icon: "bi-qr-code", title: "Código QR y Hash", desc: "Cumplimiento con estándares tributarios y representación gráfica oficial." }
+        ]
+      }
+    ];
+
+    let currentSlide = 0;
+
+    function renderSlide() {
+      const data = slidesData[currentSlide];
+      const container = document.getElementById('slideContent');
+
+      const featuresHtml = data.features.map(f => `
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi ${f.icon}"></i></div>
+          <h4>${f.title}</h4>
+          <p>${f.desc}</p>
+        </div>
+      `).join('');
+
+      container.innerHTML = `
+        <span class="slide-tag"><i class="bi bi-star-fill"></i> ${data.tag}</span>
+        <h2 class="slide-title">${data.title}</h2>
+        <p class="slide-desc">${data.desc}</p>
+        <div class="callout-box">
+          <i class="bi bi-check-circle-fill"></i>
+          <p>${data.callout}</p>
+        </div>
+        <div class="features-grid">
+          ${featuresHtml}
+        </div>
+      `;
+
+      // Actualizar barra de progreso y botones
+      const pct = ((currentSlide + 1) / slidesData.length) * 100;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+      document.getElementById('btnPrev').disabled = currentSlide === 0;
+      document.getElementById('btnNext').innerHTML = currentSlide === slidesData.length - 1 
+        ? 'Ir al Simulador POS <i class="bi bi-play-circle-fill"></i>' 
+        : 'Siguiente Beneficio <i class="bi bi-chevron-right"></i>';
+
+      // Actualizar dots
+      const dotsContainer = document.getElementById('deckDots');
+      dotsContainer.innerHTML = slidesData.map((_, idx) => `
+        <div class="deck-dot ${idx === currentSlide ? 'active' : ''}" onclick="goToSlide(${idx})"></div>
+      `).join('');
+    }
+
+    function navigateSlide(dir) {
+      if (currentSlide === slidesData.length - 1 && dir === 1) {
+        switchMainView('simulator');
+        return;
+      }
+      currentSlide = Math.max(0, Math.min(slidesData.length - 1, currentSlide + dir));
+      renderSlide();
+    }
+
+    function goToSlide(idx) {
+      currentSlide = idx;
+      renderSlide();
+    }
+
+    // CAMBIO DE VISTA PRINCIPAL
+    function switchMainView(view) {
+      document.getElementById('deckView').style.display = view === 'deck' ? 'block' : 'none';
+      document.getElementById('videoView').style.display = view === 'video' ? 'block' : 'none';
+      document.getElementById('simulatorView').style.display = view === 'simulator' ? 'block' : 'none';
+      document.getElementById('roiView').style.display = view === 'roi' ? 'block' : 'none';
+
+      const tabs = document.querySelectorAll('.nav-tab');
+      tabs.forEach((tab, i) => {
+        if ((view === 'deck' && i === 0) || (view === 'video' && i === 1) || (view === 'simulator' && i === 2) || (view === 'roi' && i === 3)) {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
+    }
+
+    // SIMULADOR DE CARRITO POS
+    let cart = [];
+    let discountPct = 0;
+
+    function addToCart(name, price) {
+      const existing = cart.find(item => item.name === name);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ name, price, qty: 1 });
+      }
+      updateCartUI();
+    }
+
+    function applyCoupon() {
+      const code = document.getElementById('couponCode').value.trim().toUpperCase();
+      if (code === 'DESCUENTO10' || code === 'PROMO10') {
+        discountPct = 0.10;
+        alert('✅ Cupón PROMO10 aplicado: 10% de descuento en el total');
+      } else if (code === '') {
+        discountPct = 0;
+      } else {
+        alert('⚠️ Cupón inválido o caducado. Prueba con DESCUENTO10');
+        discountPct = 0;
+      }
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const list = document.getElementById('cartItemsList');
+      if (cart.length === 0) {
+        list.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 2rem;">Selecciona bebidas a la izquierda para armar el pedido.</p>`;
+        document.getElementById('txtSubtotal').innerText = 'S/ 0.00';
+        document.getElementById('txtDescuento').innerText = '- S/ 0.00';
+        document.getElementById('txtIgv').innerText = 'S/ 0.00';
+        document.getElementById('txtTotal').innerText = 'S/ 0.00';
+        return;
+      }
+
+      let subtotal = 0;
+      list.innerHTML = cart.map((item, idx) => {
+        const itemTotal = item.price * item.qty;
+        subtotal += itemTotal;
+        return `
+          <div class="cart-row">
+            <div>
+              <strong>${item.name}</strong><br>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">${item.qty} x S/ ${item.price.toFixed(2)}</span>
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">
+              S/ ${itemTotal.toFixed(2)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const discountAmt = subtotal * discountPct;
+      const finalTotal = subtotal - discountAmt;
+      const igv = finalTotal * 0.18;
+
+      document.getElementById('txtSubtotal').innerText = `S/ ${subtotal.toFixed(2)}`;
+      document.getElementById('txtDescuento').innerText = `- S/ ${discountAmt.toFixed(2)}`;
+      document.getElementById('rowDescuento').style.display = discountPct > 0 ? 'flex' : 'none';
+      document.getElementById('txtIgv').innerText = `S/ ${igv.toFixed(2)}`;
+      document.getElementById('txtTotal').innerText = `S/ ${finalTotal.toFixed(2)}`;
+    }
+
+    function emitReceipt() {
+      if (cart.length === 0) {
+        alert('⚠️ Agrega productos al carrito antes de emitir la venta.');
+        return;
+      }
+      const total = document.getElementById('txtTotal').innerText;
+      const pop = document.getElementById('receiptPop');
+      pop.style.display = 'block';
+      document.getElementById('receiptDescText').innerText = 
+        `Se registró la venta por ${total} pagado con Efectivo en Sede Central Mayorista. Correlativo registrado en base de datos.`;
+      
+      // Auto scroll suave
+      pop.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // CALCULADORA DE ROI
+    function calcRoi() {
+      const stores = parseInt(document.getElementById('rngStores').value);
+      const sales = parseInt(document.getElementById('rngSales').value);
+      const cashiers = parseInt(document.getElementById('rngCashiers').value);
+
+      document.getElementById('lblStores').innerText = `${stores} ${stores > 1 ? 'Tiendas' : 'Tienda'}`;
+      document.getElementById('lblSales').innerText = `S/ ${sales.toLocaleString('es-PE')}`;
+      document.getElementById('lblCashiers').innerText = `${cashiers} ${cashiers > 1 ? 'Personas' : 'Persona'}`;
+
+      // Estimación de ahorro: 4.5% de ahorro en mermas + 15 horas hombre mensuales por tienda
+      const ahorroMermas = (stores * sales) * 0.035;
+      const ahorroHoras = stores * cashiers * 250;
+      const ahorroTotal = Math.round(ahorroMermas + ahorroHoras);
+
+      document.getElementById('lblAhorro').innerText = `S/ ${ahorroTotal.toLocaleString('es-PE')}`;
+    }
+
+    // INICIALIZACIÓN
+    renderSlide();
+    calcRoi();
+  </script>
+</body>
+</html>

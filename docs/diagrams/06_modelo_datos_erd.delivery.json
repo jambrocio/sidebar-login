@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "e09478a4-7cee-43f7-9a28-eded209bdb43",
+  "status": "current",
+  "command": "deliver",
+  "type": "erd",
+  "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\06_modelo_datos_erd.erd.json",
+  "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\06_modelo_datos_erd.html",
+  "specification": {
+    "sha256": "463a8c72fe873e7958f6853f6a7fff99af833e5eecf51a8a6a27aa145a7366b5",
+    "bytes": 12856
+  },
+  "artifact": {
+    "sha256": "3a60aa66a707115200b4662b26e77b21bb63438e451e0419f4fa262b16f3c31e",
+    "bytes": 888239
+  }
+}

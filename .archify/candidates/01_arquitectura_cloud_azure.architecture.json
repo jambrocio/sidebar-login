@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura Cloud Empresarial en Microsoft Azure",
+    "locale": "es",
+    "output": "cloud/01_arquitectura_cloud_azure.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Clientes y Cajeros POS",
+      "sublabel": "Navegadores & Tablets",
+      "pos": [40, 70],
+      "size": [150, 60]
+    },
+    {
+      "id": "front_door",
+      "type": "cloud",
+      "label": "Azure Front Door",
+      "sublabel": "WAF + CDN + SSL",
+      "pos": [40, 180],
+      "size": [150, 60],
+      "tag": "OWASP Top 10"
+    },
+    {
+      "id": "fe_app",
+      "type": "frontend",
+      "label": "Frontend Container App",
+      "sublabel": "Angular 21 + Nginx",
+      "pos": [260, 70],
+      "size": [180, 60],
+      "tag": "ACA Serverless"
+    },
+    {
+      "id": "be_app",
+      "type": "backend",
+      "label": "Backend Container App",
+      "sublabel": "Spring Boot 4 / Java 21",
+      "pos": [260, 180],
+      "size": [180, 60],
+      "tag": "Virtual Threads"
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL Flex Server",
+      "sublabel": "PostgreSQL 17 Multi-AZ",
+      "pos": [260, 290],
+      "size": [180, 60],
+      "tag": "Private Endpoint"
+    },
+    {
+      "id": "keyvault",
+      "type": "security",
+      "label": "Azure Key Vault",
+      "sublabel": "Secretos JWT & DB",
+      "pos": [500, 70],
+      "size": [180, 60],
+      "tag": "Managed Identity"
+    },
+    {
+      "id": "storage",
+      "type": "cloud",
+      "label": "Azure Blob Storage",
+      "sublabel": "Backups & Comprobantes",
+      "pos": [500, 290],
+      "size": [180, 60],
+      "tag": "Geo-Redundant"
+    },
+    {
+      "id": "cicd",
+      "type": "cloud",
+      "label": "GitHub Actions CI/CD",
+      "sublabel": "Test + Sonar + Trivy",
+      "pos": [740, 70],
+      "size": [180, 60],
+      "tag": "Shift-Left"
+    },
+    {
+      "id": "acr",
+      "type": "cloud",
+      "label": "Azure Container Registry",
+      "sublabel": "Imágenes Hardened",
+      "pos": [740, 180],
+      "size": [180, 60],
+      "tag": "ACR Premium"
+    },
+    {
+      "id": "monitor",
+      "type": "security",
+      "label": "Azure Monitor & Logs",
+      "sublabel": "App Insights + Métricas",
+      "pos": [740, 290],
+      "size": [180, 60],
+      "tag": "Observabilidad"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Perímetro Edge y Seguridad",
+      "wraps": ["front_door"]
+    },
+    {
+      "kind": "region",
+      "label": "Azure Virtual Network (VNet Privada 10.0.0.0/16)",
+      "wraps": ["fe_app", "be_app", "postgres", "keyvault", "storage"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Plataforma CI/CD y Monitoreo",
+      "wraps": ["cicd", "acr", "monitor"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-front_door",
+      "from": "users",
+      "to": "front_door",
+      "label": "HTTPS :443 TLS 1.3",
+      "variant": "emphasis"
+    },
+    {
+      "id": "front_door-fe_app",
+      "from": "front_door",
+      "to": "fe_app",
+      "label": "Ruta Web /*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "front_door-be_app",
+      "from": "front_door",
+      "to": "be_app",
+      "label": "Ruta API /api/v1/*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "be_app-keyvault",
+      "from": "be_app",
+      "to": "keyvault",
+      "label": "Token Seguro",
+      "variant": "security"
+    },
+    {
+      "id": "be_app-postgres",
+      "from": "be_app",
+      "to": "postgres",
+      "label": "JDBC :5432 SSL",
+      "variant": "emphasis"
+    },
+    {
+      "id": "postgres-storage",
+      "from": "postgres",
+      "to": "storage",
+      "label": "Backups WAL",
+      "variant": "dashed"
+    },
+    {
+      "id": "cicd-acr",
+      "from": "cicd",
+      "to": "acr",
+      "label": "Push Imagen",
+      "variant": "emphasis"
+    },
+    {
+      "id": "acr-be_app",
+      "from": "acr",
+      "to": "be_app",
+      "label": "Zero-Downtime",
+      "variant": "dashed"
+    },
+    {
+      "id": "be_app-monitor",
+      "from": "be_app",
+      "to": "monitor",
+      "label": "OpenTelemetry",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Seguridad Perimetral y Zero-Trust",
+      "items": [
+        "Azure Front Door actúa como punto único de entrada global con WAF y reglas administradas OWASP Top 10.",
+        "La base de datos PostgreSQL Flexible Server se despliega en una subred privada aislada accesible solo mediante Private Endpoint.",
+        "Autenticación sin contraseñas (Passwordless) entre Backend y Key Vault mediante Managed Identity de Azure."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Cómputo Serverless y Escalabilidad",
+      "items": [
+        "Azure Container Apps (ACA) orquesta los contenedores Docker de Frontend y Backend sobre Kubernetes serverless.",
+        "Escalamiento automático por demanda basado en solicitudes HTTP y concurrencia (KEDA).",
+        "Alta disponibilidad multi-zona de PostgreSQL con failover transparente sin pérdida de datos (RPO = 0)."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Pipeline CI/CD DevSecOps",
+      "items": [
+        "GitHub Actions ejecuta escaneos estáticos (SAST con SonarQube) y análisis de vulnerabilidades en imágenes con Trivy.",
+        "Migraciones automáticas de esquema de base de datos con Flyway ejecutadas como Job de pre-despliegue.",
+        "Despliegues sin tiempo de inactividad (Zero-Downtime Blue/Green) con reversión automática si fallan los healthchecks."
+      ]
+    }
+  ]
+}

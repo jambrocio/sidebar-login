@@ -1,0 +1,118 @@
+<aside class="notifications-sidebar" aria-label="Centro de notificaciones">
+  <!-- Cabecera homogénea con el Sidebar y Login -->
+  <header class="notifications-header">
+    <div class="header-title">
+      <div class="brand-badge" aria-hidden="true">
+        <i class="bi bi-bell-fill"></i>
+      </div>
+      <div>
+        <h3>Notificaciones</h3>
+        <span class="subtitle">
+          {{ unreadCount() > 0 ? unreadCount() + ' sin leer' : 'Todo al día' }}
+        </span>
+      </div>
+    </div>
+    <button
+      type="button"
+      (click)="onClose()"
+      class="close-button"
+      title="Cerrar panel"
+      aria-label="Cerrar panel de notificaciones"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </header>
+
+  <!-- Barra de filtros y acción rápida -->
+  <div class="notifications-toolbar">
+    <div class="filter-tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeFilter() === 'all'"
+        (click)="setFilter('all')"
+      >
+        Todas ({{ notifications().length }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeFilter() === 'unread'"
+        (click)="setFilter('unread')"
+      >
+        No leídas ({{ unreadCount() }})
+      </button>
+    </div>
+
+    <button
+      *ngIf="unreadCount() > 0"
+      type="button"
+      class="mark-read-btn"
+      (click)="markAllAsRead()"
+    >
+      <i class="bi bi-check2-all"></i>
+      <span>Marcar leídas</span>
+    </button>
+  </div>
+
+  <!-- Lista de tarjetas de notificación -->
+  <div class="notifications-list">
+    <div
+      *ngFor="let item of filteredNotifications()"
+      class="notification-item"
+      [class.unread]="item.unread"
+      (click)="markAsRead(item.id)"
+    >
+      <div
+        class="notification-icon"
+        [class.type-success]="item.type === 'success'"
+        [class.type-info]="item.type === 'info'"
+        [class.type-warning]="item.type === 'warning'"
+        [class.type-danger]="item.type === 'danger'"
+      >
+        <i class="bi" [ngClass]="item.icon"></i>
+      </div>
+
+      <div class="notification-content">
+        <div class="item-top">
+          <span class="category-tag">{{ item.category }}</span>
+          <span class="notification-time">{{ item.time }}</span>
+        </div>
+        <p class="notification-title">{{ item.title }}</p>
+        <p class="notification-desc">{{ item.description }}</p>
+      </div>
+
+      <div class="item-actions">
+        <span *ngIf="item.unread" class="unread-dot" title="Sin leer"></span>
+        <button
+          type="button"
+          class="dismiss-btn"
+          title="Descartar"
+          (click)="removeNotification(item.id, $event)"
+        >
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div *ngIf="filteredNotifications().length === 0" class="no-notifications">
+      <div class="empty-icon">
+        <i class="bi bi-bell-slash"></i>
+      </div>
+      <p class="empty-title">Sin notificaciones pendientes</p>
+      <p class="empty-subtitle">
+        No tienes alertas en esta vista por el momento.
+      </p>
+      <button
+        *ngIf="notifications().length === 0"
+        type="button"
+        class="btn-secondary btn-sm"
+        (click)="refreshNotifications()"
+      >
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <span>Sincronizar notificaciones</span>
+      </button>
+    </div>
+  </div>
+</aside>

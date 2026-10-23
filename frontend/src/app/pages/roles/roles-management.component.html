@@ -1,0 +1,203 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Registro y Administración de Roles y Permisos</h1>
+      <p class="subtitle">
+        Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        — Rol seleccionado en matriz: <strong>{{ selectedRoleCode() }}</strong>
+      </p>
+    </div>
+  </header>
+
+  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ feedbackMessage() }}</span>
+  </div>
+
+  <!-- 1. Formulario de Registro / Edición de Rol -->
+  <div class="card">
+    <div class="toolbar">
+      <h2 class="section-title" style="margin: 0">
+        {{ isEditingRole() ? 'Editar Rol (' + roleForm.code + ')' : 'Registrar Nuevo Rol en el Sistema' }}
+      </h2>
+      <button
+        *ngIf="isEditingRole()"
+        type="button"
+        class="btn-secondary btn-sm"
+        (click)="resetRoleForm()"
+      >
+        <i class="bi bi-x-lg"></i>
+        <span>Cancelar Edición</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="saveRole()" class="grid-form">
+      <div class="form-group">
+        <label>Código Único del Rol</label>
+        <input
+          type="text"
+          name="rlCode"
+          [(ngModel)]="roleForm.code"
+          [readonly]="isEditingRole()"
+          placeholder="Ej. JEFE_ALMACEN"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Nombre del Rol</label>
+        <input
+          type="text"
+          name="rlName"
+          [(ngModel)]="roleForm.name"
+          placeholder="Ej. Jefe de Almacén y Despacho"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Alcance Organizacional (Negocio vs Local)</label>
+        <select name="rlScope" [(ngModel)]="roleForm.scope">
+          <option value="Nivel Local Asignado">Nivel Local Asignado (Opera un solo local)</option>
+          <option value="Nivel Negocio (Multi-Local)">Nivel Negocio (Multi-Local / Supervisión)</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label>Descripción de Responsabilidades y Permisos</label>
+        <input
+          type="text"
+          name="rlDesc"
+          [(ngModel)]="roleForm.description"
+          placeholder="Describe las funciones operativas permitidas para este rol..."
+        />
+      </div>
+
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-shield-plus"></i>
+          <span>{{ isEditingRole() ? 'Actualizar Datos del Rol' : 'Registrar Nuevo Rol' }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. Catálogo de Roles Registrados -->
+  <div class="card">
+    <h2 class="section-title">Roles Registrados en el Negocio ({{ systemRoles().length }})</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre del Rol</th>
+            <th>Alcance (Negocio / Local)</th>
+            <th>Descripción</th>
+            <th>Usuarios</th>
+            <th>Estado</th>
+            <th>Administración</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of systemRoles()">
+            <td><code>{{ r.code }}</code></td>
+            <td><strong>{{ r.name }}</strong></td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-info]="r.scope === 'Nivel Negocio (Multi-Local)'"
+                [class.badge-warning]="r.scope === 'Nivel Local Asignado'"
+              >
+                {{ r.scope }}
+              </span>
+            </td>
+            <td>{{ r.description }}</td>
+            <td>{{ r.usersCount }} usuario(s)</td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-success]="r.active"
+                [class.badge-danger]="!r.active"
+              >
+                {{ r.active ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="selectRoleForMatrix(r.code)"
+                >
+                  <i class="bi bi-sliders"></i>
+                  <span>Permisos Menú</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="editRole(r)"
+                >
+                  <i class="bi bi-pencil"></i>
+                  <span>Editar</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  (click)="toggleRoleStatus(r)"
+                >
+                  {{ r.active ? 'Inactivar' : 'Activar' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Matriz de Permisos por Opción de Menú del Rol Seleccionado -->
+  <div class="card">
+    <div class="toolbar">
+      <h2 class="section-title" style="margin: 0">
+        Matriz de Permisos de Menú — Rol Activo: {{ selectedRoleCode() }}
+      </h2>
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="saveRoleMatrix()"
+      >
+        <i class="bi bi-check2-circle"></i>
+        <span>Guardar Matriz de Permisos</span>
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Opción de Menú</th>
+            <th>Código Menú</th>
+            <th>Ruta</th>
+            <th>Visible en Sidebar</th>
+            <th>Ver</th>
+            <th>Crear</th>
+            <th>Editar</th>
+            <th>Eliminar</th>
+            <th>Exportar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of roleMenuMatrix()">
+            <td><strong>{{ item.label }}</strong></td>
+            <td><code>{{ item.code }}</code></td>
+            <td><code>{{ item.routerLink }}</code></td>
+            <td><input type="checkbox" [(ngModel)]="item.visibleInSidebar" /></td>
+            <td><input type="checkbox" [(ngModel)]="item.canView" /></td>
+            <td><input type="checkbox" [(ngModel)]="item.canCreate" /></td>
+            <td><input type="checkbox" [(ngModel)]="item.canEdit" /></td>
+            <td><input type="checkbox" [(ngModel)]="item.canDelete" /></td>
+            <td><input type="checkbox" [(ngModel)]="item.canExport" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

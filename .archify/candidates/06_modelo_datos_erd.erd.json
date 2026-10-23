@@ -1,0 +1,408 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Modelo de Datos Relacional: Esquema en Español (PostgreSQL 17)",
+    "locale": "es",
+    "output": "docs/diagrams/06_modelo_datos_erd.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "identidad",
+        "label": "Identidad y Multi-Sede",
+        "focus": [
+          "empresas",
+          "sedes",
+          "usuarios",
+          "roles",
+          "usuarios_sedes",
+          "usuarios_roles"
+        ],
+        "note": "Modelo multi-inquilino con aislamiento estricto por empresa y sede asignada."
+      },
+      {
+        "id": "transaccional",
+        "label": "Ventas POS y Catálogo",
+        "focus": [
+          "categorias_bebida",
+          "productos_bebida",
+          "ventas",
+          "detalles_venta",
+          "arqueos_caja"
+        ],
+        "note": "Persistencia de ventas mayor/menor, catálogo de bebidas y arqueo de turnos."
+      },
+      {
+        "id": "seguridad",
+        "label": "Seguridad y RBAC",
+        "focus": [
+          "opciones_menu",
+          "permisos_roles_menu",
+          "sesiones_activas",
+          "usuarios"
+        ],
+        "note": "Menú dinámico jerárquico y auditoría de sesiones concurrentes en tiempo real."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "gapX": 64,
+    "gapY": 30
+  },
+  "entities": [
+    {
+      "id": "empresas",
+      "label": "empresas",
+      "row": 0,
+      "col": 0,
+      "width": 290,
+      "tag": "identidad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "codigo_empresa", "type": "varchar(30)", "key": "uk" },
+        { "name": "razon_social", "type": "varchar(150)" },
+        { "name": "ruc", "type": "varchar(11)", "key": "uk" },
+        { "name": "activo", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "sedes",
+      "label": "sedes",
+      "row": 1,
+      "col": 0,
+      "width": 290,
+      "tag": "identidad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_empresa", "type": "uuid", "key": "fk", "references": "empresas.id" },
+        { "name": "codigo_sede", "type": "varchar(30)" },
+        { "name": "nombre", "type": "varchar(120)" },
+        { "name": "serie_factura", "type": "varchar(10)" },
+        { "name": "serie_boleta", "type": "varchar(10)" }
+      ]
+    },
+    {
+      "id": "usuarios",
+      "label": "usuarios",
+      "row": 2,
+      "col": 0,
+      "width": 290,
+      "tag": "identidad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_empresa", "type": "uuid", "key": "fk", "references": "empresas.id" },
+        { "name": "nombre_usuario", "type": "varchar(50)", "key": "uk" },
+        { "name": "correo_electronico", "type": "varchar(120)", "key": "uk" },
+        { "name": "contrasena_hash", "type": "varchar(255)" }
+      ]
+    },
+    {
+      "id": "roles",
+      "label": "roles",
+      "row": 3,
+      "col": 0,
+      "width": 290,
+      "tag": "identidad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_empresa", "type": "uuid", "key": "fk", "references": "empresas.id" },
+        { "name": "codigo_rol", "type": "varchar(50)" },
+        { "name": "nombre", "type": "varchar(80)" },
+        { "name": "nivel_alcance", "type": "varchar(20)" }
+      ]
+    },
+    {
+      "id": "usuarios_sedes",
+      "label": "usuarios_sedes",
+      "row": 0,
+      "col": 1,
+      "width": 290,
+      "tag": "seguridad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_usuario", "type": "uuid", "key": "fk", "references": "usuarios.id" },
+        { "name": "id_sede", "type": "uuid", "key": "fk", "references": "sedes.id" },
+        { "name": "es_sede_principal", "type": "boolean" },
+        { "name": "activo", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "usuarios_roles",
+      "label": "usuarios_roles",
+      "row": 1,
+      "col": 1,
+      "width": 290,
+      "tag": "seguridad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_usuario", "type": "uuid", "key": "fk", "references": "usuarios.id" },
+        { "name": "id_rol", "type": "uuid", "key": "fk", "references": "roles.id" },
+        { "name": "asignado_en", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "sesiones_activas",
+      "label": "sesiones_activas",
+      "row": 2,
+      "col": 1,
+      "width": 290,
+      "tag": "seguridad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_usuario", "type": "uuid", "key": "fk", "references": "usuarios.id" },
+        { "name": "direccion_ip", "type": "varchar(45)" },
+        { "name": "ubicacion_pais", "type": "varchar(80)" },
+        { "name": "tipo_conexion", "type": "varchar(30)" },
+        { "name": "estado", "type": "varchar(20)" }
+      ]
+    },
+    {
+      "id": "permisos_roles_menu",
+      "label": "permisos_roles_menu",
+      "row": 3,
+      "col": 1,
+      "width": 290,
+      "tag": "seguridad",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_rol", "type": "uuid", "key": "fk", "references": "roles.id" },
+        { "name": "id_menu", "type": "uuid", "key": "fk", "references": "opciones_menu.id" },
+        { "name": "puede_ver", "type": "boolean" },
+        { "name": "puede_crear", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "categorias_bebida",
+      "label": "categorias_bebida",
+      "row": 0,
+      "col": 2,
+      "width": 290,
+      "tag": "catalogo",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_empresa", "type": "uuid", "key": "fk", "references": "empresas.id" },
+        { "name": "codigo_categoria", "type": "varchar(30)" },
+        { "name": "nombre", "type": "varchar(80)" },
+        { "name": "activo", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "productos_bebida",
+      "label": "productos_bebida",
+      "row": 1,
+      "col": 2,
+      "width": 290,
+      "tag": "catalogo",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_categoria", "type": "uuid", "key": "fk", "references": "categorias_bebida.id" },
+        { "name": "sku", "type": "varchar(40)", "key": "uk" },
+        { "name": "nombre", "type": "varchar(120)" },
+        { "name": "precio_unitario", "type": "numeric(10,2)" },
+        { "name": "stock_actual", "type": "integer" }
+      ]
+    },
+    {
+      "id": "cupones_descuento",
+      "label": "cupones_descuento",
+      "row": 2,
+      "col": 2,
+      "width": 290,
+      "tag": "catalogo",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_empresa", "type": "uuid", "key": "fk", "references": "empresas.id" },
+        { "name": "codigo_cupon", "type": "varchar(30)", "key": "uk" },
+        { "name": "tipo_descuento", "type": "varchar(20)" },
+        { "name": "valor_descuento", "type": "numeric(10,2)" },
+        { "name": "activo", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "opciones_menu",
+      "label": "opciones_menu",
+      "row": 3,
+      "col": 2,
+      "width": 290,
+      "tag": "catalogo",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "codigo_menu", "type": "varchar(60)", "key": "uk" },
+        { "name": "titulo", "type": "varchar(100)" },
+        { "name": "ruta", "type": "varchar(200)" },
+        { "name": "id_menu_padre", "type": "uuid" },
+        { "name": "activo", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "arqueos_caja",
+      "label": "arqueos_caja",
+      "row": 0,
+      "col": 3,
+      "width": 290,
+      "tag": "ventas",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_sede", "type": "uuid", "key": "fk", "references": "sedes.id" },
+        { "name": "id_usuario_cajero", "type": "uuid", "key": "fk", "references": "usuarios.id" },
+        { "name": "saldo_inicial", "type": "numeric(10,2)" },
+        { "name": "diferencia", "type": "numeric(10,2)" },
+        { "name": "estado", "type": "varchar(20)" }
+      ]
+    },
+    {
+      "id": "ventas",
+      "label": "ventas",
+      "row": 1,
+      "col": 3,
+      "width": 290,
+      "tag": "ventas",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_sede", "type": "uuid", "key": "fk", "references": "sedes.id" },
+        { "name": "numero_comprobante", "type": "varchar(20)", "key": "uk" },
+        { "name": "tipo_comprobante", "type": "varchar(20)" },
+        { "name": "monto_total", "type": "numeric(12,2)" },
+        { "name": "estado", "type": "varchar(20)" }
+      ]
+    },
+    {
+      "id": "detalles_venta",
+      "label": "detalles_venta",
+      "row": 2,
+      "col": 3,
+      "width": 290,
+      "tag": "ventas",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_venta", "type": "uuid", "key": "fk", "references": "ventas.id" },
+        { "name": "id_producto", "type": "uuid", "key": "fk", "references": "productos_bebida.id" },
+        { "name": "cantidad", "type": "integer" },
+        { "name": "precio_unitario", "type": "numeric(10,2)" },
+        { "name": "subtotal", "type": "numeric(12,2)" }
+      ]
+    },
+    {
+      "id": "compras",
+      "label": "compras",
+      "row": 3,
+      "col": 3,
+      "width": 290,
+      "tag": "ventas",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "id_sede", "type": "uuid", "key": "fk", "references": "sedes.id" },
+        { "name": "numero_guia_factura", "type": "varchar(50)" },
+        { "name": "proveedor_razon_social", "type": "varchar(150)" },
+        { "name": "monto_total", "type": "numeric(12,2)" },
+        { "name": "estado", "type": "varchar(20)" }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel_sedes_empresas",
+      "from": "sedes",
+      "to": "empresas",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_roles_empresas",
+      "from": "roles",
+      "to": "empresas",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_usuarios_sedes_sedes",
+      "from": "usuarios_sedes",
+      "to": "sedes",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_usuarios_roles_roles",
+      "from": "usuarios_roles",
+      "to": "roles",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_sesiones_usuarios",
+      "from": "sesiones_activas",
+      "to": "usuarios",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_permisos_roles",
+      "from": "permisos_roles_menu",
+      "to": "roles",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_permisos_menu",
+      "from": "permisos_roles_menu",
+      "to": "opciones_menu",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_prod_cat",
+      "from": "productos_bebida",
+      "to": "categorias_bebida",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_detalles_ventas",
+      "from": "detalles_venta",
+      "to": "ventas",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_detalles_prod",
+      "from": "detalles_venta",
+      "to": "productos_bebida",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "rel_arqueos_ventas",
+      "from": "arqueos_caja",
+      "to": "ventas",
+      "fromCardinality": "one",
+      "toCardinality": "many"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Aislamiento Multi-Tenant",
+      "items": [
+        "Todas las entidades organizacionales y transaccionales aseguran aislamiento estricto por id_empresa e id_sede.",
+        "Los cajeros solo tienen visibilidad y control sobre las ventas y caja de su sede asignada."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Consistencia e Integridad ACID",
+      "items": [
+        "ventas y detalles_venta garantizan integridad referencial mediante claves foráneas (ON DELETE RESTRICT).",
+        "Control transaccional estricto de correlativos con series únicas de facturación por sede."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Auditoría y RBAC Dinámico",
+      "items": [
+        "El árbol de navegación y permisos se resuelve recursivamente vía fn_obtener_menu_efectivo_usuario.",
+        "sesiones_activas registra IP, agente, ubicación geográfica y permite revocación inmediata (Kill Session)."
+      ]
+    }
+  ]
+}

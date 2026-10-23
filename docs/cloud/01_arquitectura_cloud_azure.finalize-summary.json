@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_cloud_azure.architecture.json",
+    "sha256": "a7a3063578a24fea15d0f573d9d368567609cdb2ba6d5c584cf5381c19ffdc41",
+    "bytes": 5702
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\cloud\\01_arquitectura_cloud_azure.html",
+    "sha256": "9564e01fcb15d24597ebe23c4420352e3d67cddfc221e5d519ff783d3322cf04",
+    "bytes": 835215
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\cloud\\01_arquitectura_cloud_azure.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\cloud\\01_arquitectura_cloud_azure.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\cloud\\01_arquitectura_cloud_azure.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-23T15:37:03.513Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6392,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "front_door-be_app",
+            "from": "front_door",
+            "to": "be_app",
+            "label": "Ruta API /api/v1/*",
+            "collectionIndex": 2,
+            "artifactIndex": 3
+          },
+          "bends": 3,
+          "stretch": 1.274
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "front_door → be_app needs 3 bends: move node front_door or be_app so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}
