@@ -68,7 +68,18 @@ sidebar-login/
 │       ├── 07_analyst_and_auditor_permissions.sql # Roles Auditor y Analista
 │       └── README.md           # Diccionario completo de datos y objetos en español
 │
-├── docker-compose.yml          # Orquestación de contenedores (dev-postgres, dev-backend, dev-frontend)
+├── docker-compose.yml          # Orquestación base de aplicación (dev-postgres, dev-backend, dev-frontend)
+├── docker-compose.ops.yml      # 🛡️ Orquestación independiente VPS (Traefik, CrowdSec, Uptime Kuma, Autoheal, Backup)
+├── ops/                        # Configuraciones modulares de Seguridad y Monitoreo (VPS Hardened)
+│   ├── README.md               # 📖 Guía maestra de la suite operativa independiente
+│   ├── traefik/                # Reverse Proxy, SSL TLS 1.3, Bloqueo HTTP y OWASP (README.md)
+│   ├── crowdsec/               # WAF / IPS Colaborativo y Detección de Intrusiones (README.md)
+│   ├── uptime-kuma/            # Monitoreo de Disponibilidad "Alert-on-Down Only" (README.md)
+│   ├── autoheal/               # Watchdog de Auto-Recuperación de Contenedores (README.md)
+│   ├── db-backup/              # Respaldos Diarios Automatizados con Rotación GFS (README.md)
+│   ├── .env.ops.example        # Variables operativas (dominio, SSL ACME, credenciales)
+│   ├── start-ops.ps1           # Script de control operativo en Windows
+│   └── start-ops.sh            # Script de control operativo en Linux / VPS
 ├── start.ps1                   # Script maestro multiplataforma para Windows
 └── start.sh                    # Script maestro multiplataforma para Linux / macOS
 ```
@@ -98,15 +109,184 @@ El proyecto cuenta con un **script maestro en la raíz** que orquesta la verific
 
 ---
 
-## 3. URLs y Credenciales de Acceso
+## 3. Guía de Pruebas y Validación: Solo Aplicación vs. Conjunto con Operaciones
 
-- **Frontend Angular 21 (Nginx SPA):** [http://localhost:4200](http://localhost:4200)
-- **Backend REST API (Spring Boot 4):** [http://localhost:8080/api/v1](http://localhost:8080/api/v1)
+El proyecto está diseñado bajo una arquitectura modular donde la **Aplicación Core** y el **Módulo de Operaciones (Seguridad & Monitoreo)** pueden ejecutarse y probarse de forma totalmente independiente o en conjunto:
+
+```
+┌────────────────────────────────────────────────────────┐     ┌────────────────────────────────────────────────────────┐
+│            MODO 1: SOLO APLICACIÓN                     │     │         MODO 2: CONJUNTO CON OPERACIONES (VPS)         │
+│             (docker-compose.yml)                       │     │        (docker-compose.yml + docker-compose.ops.yml)   │
+├────────────────────────────────────────────────────────┤     ├────────────────────────────────────────────────────────┤
+│  • dev-postgres  (PostgreSQL 17 :5432)                 │     │  • dev-postgres  (Aislado en bevadmin-network)         │
+│  • dev-backend   (Spring Boot 4 :8080)                 │     │  • dev-backend   (Aislado en bevadmin-network)         │
+│  • dev-frontend  (Angular 21 + Nginx :4200)            │     │  • dev-frontend  (Aislado en bevadmin-network)         │
+│                                                        │     │  • bevadmin-proxy (Traefik v3.2 WAF / TLS 1.3 :80/:443)│
+│                                                        │     │  • bevadmin-crowdsec (WAF/IPS Anti-Bot / Anti-OWASP)   │
+│                                                        │     │  • bevadmin-uptime-kuma (Alert-on-Down Monitor :3001)  │
+│                                                        │     │  • bevadmin-autoheal (Watchdog auto-restart)           │
+│                                                        │     │  • bevadmin-db-backup (Dumps diarios automáticos)      │
+└────────────────────────────────────────────────────────┘     └────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 3.1. Prueba de Solo Aplicación (Modo Standalone)
+
+Este modo levanta exclusivamente los 3 contenedores funcionales de la aplicación, exponiendo sus puertos directos (`5432`, `8080`, `4200`) para desarrollo ágil y validación de lógica de negocio:
+
+#### 1. Iniciar los contenedores:
+```powershell
+# Windows PowerShell:
+.\start.ps1 -Environment prod
+
+# Linux / macOS:
+./start.sh prod
+```
+*(Alternativa directa con Docker: `docker compose up -d`)*
+
+#### 2. Comandos de Verificación:
+```powershell
+# Verificar que los 3 contenedores estén activos y saludables:
+docker compose ps
+```
+
+#### 3. Pruebas Funcionales:
+* **Salud de Base de Datos:**
+  ```powershell
+  docker exec dev-postgres pg_isready -U postgres -d admin_dashboard_db
+  # Respuesta esperada: /var/run/postgresql:5432 - accepting connections
+  ```
+* **Healthcheck del Backend REST API:**
+  ```powershell
+  Invoke-RestMethod -Uri "http://localhost:8080/api/v1/auth/health"
+  # Respuesta esperada: {"status":"UP","service":"bevadmin-backend"}
+  ```
+* **Documentación OpenAPI / Swagger:** Abrir en el navegador [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
+* **Frontend Angular SPA:** Abrir en el navegador [http://localhost:4200](http://localhost:4200) (debe cargar la pantalla de login).
+* **Prueba de Autenticación:**
+  ```powershell
+  $body = @{ username = "agarcia"; password = "AdminRoble2026#" } | ConvertTo-Json
+  Invoke-RestMethod -Uri "http://localhost:8080/api/v1/auth/login" -Method Post -ContentType "application/json" -Body $body
+  ```
+
+#### 4. Detener la aplicación:
+```powershell
+docker compose down
+```
+
+---
+
+### 3.2. Prueba en Conjunto: Aplicación + Módulo de Operaciones (VPS Hardened)
+
+Este modo simula el despliegue final de producción en un servidor VPS, incorporando la capa de **Seguridad Web (WAF + TLS 1.3 con Traefik)**, **Prevención de Intrusiones (CrowdSec)**, **Monitoreo inteligente (Uptime Kuma con regla "Alert-on-Down")**, **Auto-reinicio (Autoheal)** y **Respaldos de Base de Datos**:
+
+#### 1. Iniciar la Aplicación Core:
+```powershell
+.\start.ps1 -Environment prod
+# (o: docker compose up -d)
+```
+
+#### 2. Iniciar el Módulo de Operaciones:
+```powershell
+.\ops\start-ops.ps1
+# (o: docker compose -f docker-compose.ops.yml up -d)
+```
+
+#### 3. Verificar la Salud de Todos los Servicios (8 Contenedores):
+```powershell
+docker compose ps
+docker compose -f docker-compose.ops.yml ps
+```
+*Todos los contenedores deben figurar en estado `Up (healthy)`.*
+
+#### 4. Pruebas End-to-End Integradas:
+
+##### A. Prueba de Ingress & Redirección SSL/TLS (Traefik Reverse Proxy):
+El Reverse Proxy escucha en los puertos estándar `80` (HTTP) y `443` (HTTPS) y aplica la cadena de middlewares de seguridad OWASP:
+```powershell
+# 1. Probar redirección forzada de HTTP a HTTPS (Código 301/308):
+Invoke-WebRequest -Uri "http://localhost/api/v1/auth/health" -MaximumRedirection 0 -ErrorAction SilentlyContinue | Select-Object StatusCode, Headers
+
+# 2. Probar acceso seguro al Backend a través de Traefik (HTTPS):
+Invoke-RestMethod -Uri "https://localhost/api/v1/auth/health" -SkipCertificateCheck
+# Respuesta esperada: {"status":"UP","service":"bevadmin-backend"}
+
+# 3. Probar acceso seguro al Frontend a través de Traefik (HTTPS + Headers OWASP):
+$res = Invoke-WebRequest -Uri "https://localhost/" -SkipCertificateCheck -Method Head
+$res.Headers["Strict-Transport-Security"]  # max-age=31536000; includeSubDomains; preload
+$res.Headers["Referrer-Policy"]            # strict-origin-when-cross-origin
+$res.Headers["Permissions-Policy"]          # camera=(), microphone=(), geolocation=()
+
+# 4. Inspeccionar el Dashboard visual de Traefik:
+# Abrir en el navegador: http://localhost:8088/dashboard/
+```
+
+##### B. Prueba del Monitoreo "Alert-on-Down" (Uptime Kuma):
+1. **Acceder a la interfaz web de Uptime Kuma:** [http://localhost:3001](http://localhost:3001).
+2. **Crear la cuenta de administrador** inicial en el primer ingreso.
+3. **Verificar las 3 sondas internas de salud:**
+   - 🌐 **Frontend:** `http://dev-frontend:80/` (Protocolo HTTP, código 200).
+   - ⚙️ **Backend:** `http://dev-backend:8080/api/v1/auth/health` (Protocolo HTTP, busca `"status":"UP"`).
+   - 🗄️ **Base de Datos:** `dev-postgres:5432` (Protocolo TCP Port).
+4. **Configurar el canal de alerta:** Ir a *Settings* $\rightarrow$ *Notifications* $\rightarrow$ Agregar **Telegram** (Bot Token + Chat ID) o **Discord** (Webhook URL).
+5. **Prueba de Fuego "Alert-on-Down" (Simulación de Incidente Real):**
+   ```powershell
+   # 1. Detener intencionalmente el backend para simular caída:
+   docker stop dev-backend
+
+   # 2. Esperar 30 a 45 segundos:
+   # Uptime Kuma realizará 3 reintentos y, al confirmar que está caído,
+   # emitirá INMEDIATAMENTE una notificación de alarma al canal configurado:
+   # 🚨 [DOWN] Backend REST API is down!
+
+   # 3. Restablecer el servicio:
+   docker start dev-backend
+
+   # 4. Al volver a estar saludable, emitirá un único aviso de confirmación:
+   # ✅ [UP] Backend REST API is back up!
+   ```
+   *Nota: Durante el funcionamiento normal no se genera ningún spam ni ruido de alertas.*
+
+##### C. Prueba del Watchdog de Auto-Recuperación (Autoheal):
+Autoheal vigila continuamente los `healthcheck` de Docker. Si un contenedor entra en estado `unhealthy`, lo reinicia automáticamente en menos de 15 segundos sin intervención humana.
+
+##### D. Prueba de Respaldo Automatizado de Base de Datos:
+```powershell
+# 1. Ejecutar un volcado manual inmediato:
+docker exec bevadmin-db-backup /backup.sh
+
+# 2. Comprobar el archivo comprimido generado en el volumen:
+docker exec bevadmin-db-backup ls -lh /backups/daily/
+# Generará: admin_dashboard_db-YYYYMMDD.sql.gz
+```
+
+#### 5. Detención Ordenada de los Entornos:
+```powershell
+# Detener módulo de operaciones:
+.\ops\start-ops.ps1 -Down
+# (o: docker compose -f docker-compose.ops.yml down)
+
+# Detener aplicación:
+docker compose down
+```
+
+---
+
+## 4. URLs y Credenciales de Acceso
+
+### Endpoints de la Aplicación Core:
+- **Frontend Angular 21 (Nginx SPA):** [http://localhost:4200](http://localhost:4200) (o vía Traefik en [https://localhost](https://localhost))
+- **Backend REST API (Spring Boot 4):** [http://localhost:8080/api/v1](http://localhost:8080/api/v1) (o vía Traefik en [https://localhost/api/v1](https://localhost/api/v1))
 - **Swagger UI (OpenAPI 3.1):** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 - **Actuator Health Check:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
 - **PostgreSQL 17 Database:** `localhost:5432/admin_dashboard_db`
 
-### Credenciales de Acceso:
+### Endpoints del Módulo de Operaciones (VPS Hardened):
+- **Uptime Kuma (Monitoreo Alert-on-Down):** [http://localhost:3001](http://localhost:3001)
+- **Traefik Dashboard (Seguridad Ingress & Middlewares):** [http://localhost:8088/dashboard/](http://localhost:8088/dashboard/)
+
+### Credenciales de Acceso al Sistema:
 | Rol | Usuario | Contraseña |
 | :--- | :--- | :--- |
 | **Administrador General** | `agarcia` | `AdminRoble2026#` |
@@ -116,10 +296,11 @@ El proyecto cuenta con un **script maestro en la raíz** que orquesta la verific
 
 ---
 
-## 4. Enlaces a Portales Interactivos
+## 5. Enlaces a Portales Interactivos
 
-* 🌐 **[Portal de Diagramas Técnicos de Software (`docs/diagrams/index.html`)](file:///D:/tools/Proyectos/mio/sidebar-login/docs/diagrams/index.html)**
-* ☁️ **[Portal de Arquitecturas Cloud y Costos (`docs/cloud/index.html`)](file:///D:/tools/Proyectos/mio/sidebar-login/docs/cloud/index.html)**
-* 🎨 **[Presentación Interactiva en Tema Claro (`docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html`)](file:///D:/tools/Proyectos/mio/sidebar-login/docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html)**
-* 🗄️ **[Diccionario de Base de Datos en Español (`docs/sql/README.md`)](file:///D:/tools/Proyectos/mio/sidebar-login/docs/sql/README.md)**
-* 🗺️ **[Mapeo Técnico de Interfaces (`docs/technical_frontend_interfaces_and_database_mapping.md`)](file:///D:/tools/Proyectos/mio/sidebar-login/docs/technical_frontend_interfaces_and_database_mapping.md)**
+* 🌐 **[Portal de Diagramas Técnicos de Software (`docs/diagrams/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/diagrams/index.html)**
+* ☁️ **[Portal de Arquitecturas Cloud y Costos (`docs/cloud/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/index.html)**
+* 🛡️ **[Diagrama Arquitectura VPS Hardened con Docker (`docs/cloud/03_arquitectura_cloud_vps.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/03_arquitectura_cloud_vps.html)**
+* 🎨 **[Presentación Interactiva en Tema Claro (`docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html)**
+* 🗄️ **[Diccionario de Base de Datos en Español (`docs/sql/README.md`)](file:///D:/tools/Proyectos/sidebar-login/docs/sql/README.md)**
+* 🗺️ **[Mapeo Técnico de Interfaces (`docs/technical_frontend_interfaces_and_database_mapping.md`)](file:///D:/tools/Proyectos/sidebar-login/docs/technical_frontend_interfaces_and_database_mapping.md)**

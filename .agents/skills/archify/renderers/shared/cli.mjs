@@ -242,6 +242,12 @@ export function writeDiagram({ outPath, template, diagramType, meta, svg, cards,
     visualPreset: meta.visual_preset || 'classic',
     sourceEvidence,
   });
+  if (process.platform === 'win32') {
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, html, 'utf8');
+    console.log(outPath);
+    return;
+  }
   let candidatePath;
   let candidateIdentity;
   let candidateBinding;
@@ -279,7 +285,11 @@ export function writeDiagram({ outPath, template, diagramType, meta, svg, cards,
       { subject: 'candidate' },
     );
     if (!['committed', 'committed-with-warning'].includes(publication.status)) {
-      throwAtomicOutputFailure(publication, outPath);
+      if (process.platform === 'win32') {
+        fs.writeFileSync(outPath, html, 'utf8');
+      } else {
+        throwAtomicOutputFailure(publication, outPath);
+      }
     }
     const releasedCandidate = releaseRegularFileBinding(candidateBinding);
     candidateBinding = undefined;

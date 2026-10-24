@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura Hardened VPS Linux con Contenedores Docker y Monitoreo Alert-on-Down",
+    "locale": "es",
+    "output": "docs/cloud/03_arquitectura_cloud_vps.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Usuarios / Cajas POS",
+      "sublabel": "Navegadores & Tablets",
+      "pos": [40, 70],
+      "size": [160, 60]
+    },
+    {
+      "id": "host_firewall",
+      "type": "security",
+      "label": "UFW Firewall & Fail2ban",
+      "sublabel": "Protección a Nivel Host",
+      "pos": [40, 190],
+      "size": [160, 60],
+      "tag": "Puertos 80/443 & SSH"
+    },
+    {
+      "id": "proxy_waf",
+      "type": "cloud",
+      "label": "Reverse Proxy & WAF",
+      "sublabel": "Traefik / Nginx Proxy Mgr",
+      "pos": [260, 70],
+      "size": [190, 60],
+      "tag": "SSL Let's Encrypt TLS 1.3"
+    },
+    {
+      "id": "crowdsec",
+      "type": "security",
+      "label": "CrowdSec / WAF IPS",
+      "sublabel": "DDoS, Brute-Force & Bots",
+      "pos": [260, 190],
+      "size": [190, 60],
+      "tag": "OWASP CRS + Blocklist"
+    },
+    {
+      "id": "fe_app",
+      "type": "frontend",
+      "label": "Frontend Angular 21",
+      "sublabel": "Nginx Alpine (Non-Root)",
+      "pos": [510, 70],
+      "size": [190, 60],
+      "tag": "dev-frontend :80"
+    },
+    {
+      "id": "be_app",
+      "type": "backend",
+      "label": "Backend Spring Boot 4",
+      "sublabel": "Java 21 Loom / Spring Sec 7",
+      "pos": [510, 190],
+      "size": [190, 60],
+      "tag": "dev-backend :8080"
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 17 DB",
+      "sublabel": "Volumen Local + Backups WAL",
+      "pos": [510, 310],
+      "size": [190, 60],
+      "tag": "Sin Exposición Pública"
+    },
+    {
+      "id": "uptime_kuma",
+      "type": "security",
+      "label": "Uptime Kuma Monitor",
+      "sublabel": "Sonda HTTP/TCP Interna",
+      "pos": [760, 70],
+      "size": [190, 60],
+      "tag": "Alert-on-Down"
+    },
+    {
+      "id": "autoheal",
+      "type": "security",
+      "label": "Autoheal Watchdog",
+      "sublabel": "Reinicio si Unhealthy",
+      "pos": [760, 190],
+      "size": [190, 60],
+      "tag": "Docker Healthcheck"
+    },
+    {
+      "id": "alert_channel",
+      "type": "external",
+      "label": "Telegram / Discord / Email",
+      "sublabel": "Canal de Notificación",
+      "pos": [760, 310],
+      "size": [190, 60],
+      "tag": "Solo Cuando Cae (DOWN)"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Firewall Perimetral Host VPS",
+      "wraps": ["host_firewall"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Seguridad Web & WAF (Ingress)",
+      "wraps": ["proxy_waf", "crowdsec"]
+    },
+    {
+      "kind": "region",
+      "label": "Red Interna Docker Aislada (bevadmin-network)",
+      "wraps": ["fe_app", "be_app", "postgres"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Monitoreo y Resiliencia Activa",
+      "wraps": ["uptime_kuma", "autoheal", "alert_channel"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-host_firewall",
+      "from": "users",
+      "to": "host_firewall",
+      "label": "HTTPS :443",
+      "variant": "emphasis"
+    },
+    {
+      "id": "host_firewall-proxy_waf",
+      "from": "host_firewall",
+      "to": "proxy_waf",
+      "label": "Tráfico Permitido",
+      "variant": "emphasis"
+    },
+    {
+      "id": "crowdsec-proxy_waf",
+      "from": "crowdsec",
+      "to": "proxy_waf",
+      "label": "Bouncer Remediation",
+      "variant": "security"
+    },
+    {
+      "id": "proxy_waf-fe_app",
+      "from": "proxy_waf",
+      "to": "fe_app",
+      "label": "Ruta Web /*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "proxy_waf-be_app",
+      "from": "proxy_waf",
+      "to": "be_app",
+      "label": "Ruta API /api/v1/*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "be_app-postgres",
+      "from": "be_app",
+      "to": "postgres",
+      "label": "JDBC :5432 Interno",
+      "variant": "emphasis"
+    },
+    {
+      "id": "uptime_kuma-be_app",
+      "from": "uptime_kuma",
+      "to": "be_app",
+      "label": "Sonda /auth/health",
+      "variant": "dashed"
+    },
+    {
+      "id": "uptime_kuma-fe_app",
+      "from": "uptime_kuma",
+      "to": "fe_app",
+      "label": "Check HTTP 200",
+      "variant": "dashed"
+    },
+    {
+      "id": "uptime_kuma-postgres",
+      "from": "uptime_kuma",
+      "to": "postgres",
+      "label": "Ping TCP 5432",
+      "variant": "dashed"
+    },
+    {
+      "id": "uptime_kuma-alert_channel",
+      "from": "uptime_kuma",
+      "to": "alert_channel",
+      "label": "Alerta Solo DOWN",
+      "variant": "security"
+    },
+    {
+      "id": "autoheal-be_app",
+      "from": "autoheal",
+      "to": "be_app",
+      "label": "Auto-Restart",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Seguridad Web Perimetral (Reverse Proxy + WAF + CrowdSec)",
+      "items": [
+        "Traefik / Nginx Proxy Manager gestiona certificados SSL/TLS 1.3 automáticos (Let's Encrypt) con renovación desatendida.",
+        "CrowdSec o ModSecurity CRS analiza el tráfico en tiempo real y bloquea activamente ataques OWASP Top 10 (SQLi, XSS, escaneos de puertos y fuerza bruta).",
+        "Aislamiento de red total: Los contenedores de Backend y PostgreSQL no exponen puertos al host público (0.0.0.0). Únicamente el Reverse Proxy escucha en 80 y 443."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Monitoreo Alert-on-Down (Uptime Kuma + Autoheal)",
+      "items": [
+        "Uptime Kuma consulta periódicamente cada 30s el endpoint `/api/v1/auth/health`, la SPA y el socket TCP de PostgreSQL.",
+        "Configuración Alert-on-Down: Cero ruido diario. El sistema emite alertas inmediatas a Telegram, Discord o Email ÚNICAMENTE ante fallos (DOWN) o recuperaciones críticas.",
+        "Autoheal monitorea los Healthchecks nativos de Docker y reinicia automáticamente cualquier contenedor que pase a estado no saludable."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Costo Ultrabajo y Despliegue Todo-en-Uno ($12 - $20 USD/mes)",
+      "items": [
+        "Un único VPS dedicado (ej. Hetzner CPX31 o DigitalOcean con 4 vCPU y 8GB RAM) alberga toda la solución con altísimo rendimiento.",
+        "Mismo stack de Docker Compose validado localmente, sin pagar sobrecostos por servicios PaaS administrados de nube pública.",
+        "Script diario en cron para exportar dump de PostgreSQL cifrado y enviarlo a almacenamiento S3/Cloud Storage externo (Disaster Recovery)."
+      ]
+    }
+  ]
+}

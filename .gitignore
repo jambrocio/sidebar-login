@@ -16,8 +16,11 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.env.ops
+ops/.env.ops
 *.pem
 *.key
+ops/traefik/acme/
 
 # Common IDEs & Editors
 .idea/

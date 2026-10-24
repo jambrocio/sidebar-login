@@ -11,9 +11,10 @@
 
 Los diagramas interactivos de alta fidelidad compilados con el estándar **Archify v3.2.0** con soporte de temas claro/oscuro, zoom y exportación se encuentran listos para inspección:
 
-- 🌐 **[Portal Unificado de Nube (`cloud/index.html`)](file:///D:/tools/Proyectos/mio/sidebar-login/cloud/index.html)** — Permite alternar entre Azure y Google Cloud en la misma pestaña.
-- 🏛️ **[Diagrama Arquitectura Microsoft Azure (`cloud/01_arquitectura_cloud_azure.html`)](file:///D:/tools/Proyectos/mio/sidebar-login/cloud/01_arquitectura_cloud_azure.html)**
-- 🚀 **[Diagrama Arquitectura Google Cloud Platform (`cloud/02_arquitectura_cloud_gcp.html`)](file:///D:/tools/Proyectos/mio/sidebar-login/cloud/02_arquitectura_cloud_gcp.html)**
+- 🌐 **[Portal Unificado de Nube (`cloud/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/index.html)** — Permite alternar interactivamente entre Azure, Google Cloud y VPS Hardened.
+- 🏛️ **[Diagrama Arquitectura Microsoft Azure (`cloud/01_arquitectura_cloud_azure.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/01_arquitectura_cloud_azure.html)**
+- 🚀 **[Diagrama Arquitectura Google Cloud Platform (`cloud/02_arquitectura_cloud_gcp.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/02_arquitectura_cloud_gcp.html)**
+- 🛡️ **[Diagrama Arquitectura Hardened VPS Linux + Docker (`cloud/03_arquitectura_cloud_vps.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/03_arquitectura_cloud_vps.html)**
 
 ---
 
@@ -135,7 +136,239 @@ El sistema ha sido desarrollado bajo un modelo desacoplado y nativo en contenedo
 
 ---
 
-## 4. Pipeline de Integración y Despliegue Continuo (CI/CD)
+## 4. Propuesta 3: Arquitectura en Servidor VPS Hardened (Self-Hosted Docker Compose)
+
+Para organizaciones o escenarios donde se prioriza el **control total de costos fijos**, la **independencia de proveedores cloud propietarios** y un **costo operativo ultrabajo**, la arquitectura sobre un servidor virtual privado (**VPS Hardened**) con Docker Compose representa una solución de nivel empresarial altamente robusta, predecible y segura.
+
+### 4.1. Topología y Componentes de Seguridad y Monitoreo
+
+```
+[ Clientes / Cajas POS ] ──(HTTPS :443 TLS 1.3)──> [ Host VPS: UFW Firewall + Fail2ban ]
+                                                                 │
+                                                                 ▼
+                                            [ Reverse Proxy & WAF (Traefik / Nginx PM) ]
+                                            ├─ SSL Let's Encrypt automático (TLS 1.3)
+                                            ├─ Headers de seguridad (HSTS, CSP, X-Frame)
+                                            └─ CrowdSec Bouncer (OWASP Top 10 & Anti-Bot)
+                                                                 │
+                 ┌───────────────────────────────────────────────┴───────────────────────────────────────────────┐
+                 │                                                                                               │
+                 ▼                                                                                               ▼
+      [ Contenedor Frontend ]                                                                         [ Contenedor Backend ]
+      (Angular 21 + Nginx Alpine)                                                                     (Spring Boot 4 / Java 21)
+      Puerto interno :80 (No 0.0.0.0)                                                                 Puerto interno :8080 (No 0.0.0.0)
+                 │                                                                                               │
+                 │                                                                                               ▼
+                 │                                                                                    [ Contenedor PostgreSQL 17 ]
+                 │                                                                                    Volumen local + Dump cifrado diario
+                 │                                                                                    Puerto interno :5432 (Aislado)
+                 │                                                                                               │
+                 └──────────────────────────────> [ Red Docker: bevadmin-network ] <─────────────────────────────┘
+                                                                 ▲
+                                                                 │
+                                           ┌─────────────────────┴─────────────────────┐
+                                           │ Sondas internas cada 30s                  │ Watchdog Docker
+                                           ▼                                           ▼
+                                [ Contenedor Uptime Kuma ]                   [ Contenedor Autoheal ]
+                                (Consumo <50MB RAM)                          (Supervisa Healthchecks)
+                                ├─ Check: http://dev-frontend:80             └─ Reinicia contenedor si
+                                ├─ Check: http://dev-backend:8080/.../health    entra en estado Unhealthy
+                                └─ Check: tcp://dev-postgres:5432
+                                           │
+                                           ▼  🚨 REGLA: Notificación ÚNICAMENTE ante fallos (DOWN)
+                                 [ Alerta Inmediata a Telegram / Discord / Email ]
+```
+
+### 4.2. Capa de Seguridad Web e Ingress (Web Hardening)
+
+1. **Blindaje del Sistema Operativo Host (Ubuntu 24.04 LTS / Debian 12)**:
+   - **UFW (Uncomplicated Firewall)**: Solo expone públicamente los puertos `80/tcp` (HTTP para ACME Challenge), `443/tcp` (HTTPS seguro) y el puerto de administración `SSH` (alterado del puerto 22 a uno no estándar, ej: `50222`).
+   - **SSH Hardening**: Autenticación estricta exclusivamente mediante llaves criptográficas **ED25519** (`PasswordAuthentication no`, `PermitRootLogin no`).
+   - **Fail2ban**: Baneo automático y temporal de direcciones IP ante intentos sucesivos de autenticación fallida por SSH o intentos de sondeo.
+
+2. **Reverse Proxy WAF con SSL Automático (Traefik v3 o Nginx Proxy Manager)**:
+   - **Terminación SSL/TLS 1.3 nativa**: Emisión y renovación desatendida de certificados SSL con **Let's Encrypt** (Zero-Config Certbot).
+   - **Redirección forzada HTTPS**: Todo el tráfico entrante por el puerto 80 es redirigido con código `301 Moved Permanently` hacia HTTPS.
+   - **Headers de seguridad HTTP (HSTS)**:
+     - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+     - `X-Content-Type-Options: nosniff`
+     - `X-Frame-Options: SAMEORIGIN`
+     - `Referrer-Policy: strict-origin-when-cross-origin`
+   - **Rate Limiting**: Limitación de ráfagas de peticiones por segundo por IP para neutralizar ataques de denegación de servicio (DoS) y scraping malicioso.
+
+3. **Intrusion Prevention System (IPS) y WAF con CrowdSec**:
+   - Analiza los logs del Reverse Proxy en tiempo real para detectar patrones de escaneo de vulnerabilidades, ataques **OWASP Top 10** (SQL Injection, Cross-Site Scripting, Path Traversal) y bots maliciosos.
+   - Aplica remediación proactiva mediante el **CrowdSec Remediation Component (Bouncer)**, bloqueando la IP en el firewall o retornando `HTTP 403 Forbidden` a nivel del proxy.
+
+4. **Aislamiento de Red Docker (Principio de Menor Privilegio)**:
+   - **Cero exposición a `0.0.0.0`**: Ni el contenedor `dev-backend` ni `dev-postgres` mapean sus puertos directamente al host público.
+   - Toda la comunicación entre el frontend, backend y la base de datos se realiza de forma estrictamente privada dentro de la red puente `bevadmin-network`.
+
+### 4.3. Sistema de Monitoreo "Alert-on-Down Only" (Cero Ruido / Alerta de Caída Inmediata)
+
+El monitoreo está diseñado para operar bajo la filosofía **Alert-on-Down**: no genera alertas rutinarias ni reportes innecesarios, sino que **emite notificaciones de emergencia únicamente cuando un servicio se cae o sufre una degradación crítica**.
+
+1. **Uptime Kuma (`louislam/uptime-kuma:latest`)**:
+   - **Ultraligero**: Consume menos de 50 MB de memoria RAM y casi 0% de CPU en estado estacionario.
+   - **Sondas configuradas**:
+     - 🌐 **Frontend SPA**: `http://dev-frontend:80/` (Espera código `200 OK`).
+     - ⚙️ **Backend REST API**: `http://dev-backend:8080/api/v1/auth/health` (Espera payload `{"status":"UP"}`).
+     - 🗄️ **Base de Datos PostgreSQL**: Sonda de socket TCP a `dev-postgres:5432`.
+   - **Frecuencia y Resiliencia**:
+     - Intervalo de chequeo: cada 30 segundos.
+     - Umbral de reintentos: 3 reintentos antes de disparar la alerta (evita falsos positivos por parpadeos transitorios de red).
+   - **Canales de Notificación Inmediata soportados**:
+     - **Telegram Bot**: Mensaje push instantáneo al canal o grupo privado de administradores con el nombre del servicio, hora exacta y código de error.
+     - **Discord Webhook**: Notificación con embed visual (rojo para DOWN, verde para UP) en el canal de `#operaciones`.
+     - **Email SMTP**: Envío de correo electrónico de alta prioridad al equipo de infraestructura.
+
+2. **Autoheal (`willfarrell/autoheal:latest`)**:
+   - Actúa como un perro guardián (**watchdog**) local. Conectado al socket de Docker (`/var/run/docker.sock:ro`), supervisa el estado reportado por las directivas `healthcheck` de los contenedores.
+   - Si `dev-backend` o `dev-postgres` cambia su estado a `unhealthy`, Autoheal reinicia el contenedor de manera autónoma, logrando un tiempo medio de recuperación (**MTTR**) de pocos segundos.
+
+### 4.4. Especificación Docker Compose para Producción en VPS (`docker-compose.vps.yml`)
+
+```yaml
+services:
+  # 1. Reverse Proxy WAF con SSL Automático
+  reverse-proxy:
+    image: traefik:v3.2
+    container_name: bevadmin-proxy
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@bevadmin.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certificates:/letsencrypt
+    networks:
+      - bevadmin-network
+
+  # 2. Base de Datos Relacional PostgreSQL 17 (Sin puertos expuestos al host)
+  dev-postgres:
+    image: postgres:17
+    container_name: dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-admin_dashboard_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docs/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME:-admin_dashboard_db}"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - bevadmin-network
+
+  # 3. Backend REST API Spring Boot 4 + Java 21
+  dev-backend:
+    image: dev-backend:latest
+    container_name: dev-backend
+    restart: unless-stopped
+    environment:
+      - DB_URL=jdbc:postgresql://dev-postgres:5432/${DB_NAME:-admin_dashboard_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      dev-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/v1/auth/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.bevadmin.com`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+      - "autoheal=true"
+    networks:
+      - bevadmin-network
+
+  # 4. Frontend SPA Angular 21 (Nginx Alpine)
+  dev-frontend:
+    image: dev-frontend:latest
+    container_name: dev-frontend
+    restart: unless-stopped
+    depends_on:
+      dev-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.bevadmin.com`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "autoheal=true"
+    networks:
+      - bevadmin-network
+
+  # 5. Monitoreo Alert-on-Down (Uptime Kuma)
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - uptime-kuma-data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime.rule=Host(`status.bevadmin.com`)"
+      - "traefik.http.routers.uptime.entrypoints=websecure"
+      - "traefik.http.routers.uptime.tls.certresolver=letsencrypt"
+      - "traefik.http.services.uptime.loadbalancer.server.port=3001"
+    networks:
+      - bevadmin-network
+
+  # 6. Auto-reinicio de Contenedores no saludables (Watchdog)
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: autoheal
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=15
+      - AUTOHEAL_START_PERIOD=30
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - bevadmin-network
+
+volumes:
+  postgres-data:
+  traefik-certificates:
+  uptime-kuma-data:
+
+networks:
+  bevadmin-network:
+    name: bevadmin-network
+```
+
+---
+
+## 5. Pipeline de Integración y Despliegue Continuo (CI/CD)
 
 Ambas nubes aprovechan el mismo pipeline automatizado multi-etapa diseñado bajo la filosofía **Shift-Left Security**:
 
@@ -277,11 +510,11 @@ jobs:
 
 ---
 
-## 5. Análisis Comparativo Detallado de Costos Mensuales (USD)
+## 6. Análisis Comparativo Detallado de Costos Mensuales (USD)
 
 Los costos están calculados para una operación comercial estándar con **hasta 5 sucursales**, **15 cajas POS concurrentes**, aproximadamente **50,000 transacciones mensuales** y un volumen de transferencia de datos de **150 GB/mes**.
 
-### 5.1. Cuadro Comparativo en Microsoft Azure (Región: East US)
+### 6.1. Cuadro Comparativo en Microsoft Azure (Región: East US)
 
 | Servicio Involucrado | Especificación / Tier | Ambiente Dev / Test | Ambiente Producción (HA) |
 | :--- | :--- | :---: | :---: |
@@ -299,7 +532,7 @@ Los costos están calculados para una operación comercial estándar con **hasta
 
 ---
 
-### 5.2. Cuadro Comparativo en Google Cloud Platform (Región: us-central1)
+### 6.2. Cuadro Comparativo en Google Cloud Platform (Región: us-central1)
 
 | Servicio Involucrado | Especificación / Tier | Ambiente Dev / Test | Ambiente Producción (HA) |
 | :--- | :--- | :---: | :---: |
@@ -318,13 +551,41 @@ Los costos están calculados para una operación comercial estándar con **hasta
 
 ---
 
-## 6. Recomendaciones Estratégicas y FinOps (Optimización Financiera)
+### 6.3. Cuadro Comparativo en Servidor VPS Hardened (Hetzner / Contabo / DigitalOcean)
 
-1. **Eficiencia de Costos en Producción**:
-   - **Google Cloud Platform (GCP)** resulta aproximadamente **13% a 15% más económico** en modalidad On-Demand y hasta un **28% más económico** con compromisos anuales (**CUD**), debido a que Cloud Run factura al milisegundo exacto de procesamiento y ofrece un nivel gratuito mensual muy generoso (2 millones de peticiones gratis).
-   - **Microsoft Azure** es la opción recomendada si la empresa ya cuenta con licencias corporativas de Microsoft (Microsoft 365, Active Directory / Entra ID) o acuerdos empresariales (EA), permitiendo aplicar créditos y descuentos comerciales consolidados.
+| Servicio Involucrado | Especificación / Tier | Costo Dev / QA | Costo Producción |
+| :--- | :--- | :---: | :---: |
+| **Servidor VPS Linux Dedicado** | Hetzner Cloud CPX31 (4 vCPU AMD EPYC, 8 GB RAM, 160 GB NVMe SSD) o DigitalOcean Droplet | $7.50 *(2 vCPU, 4GB)* | $14.50 |
+| **Reverse Proxy & WAF (Traefik / NPM)** | Contenedor local con Let's Encrypt SSL TLS 1.3 | $0.00 | $0.00 |
+| **Protección WAF / IPS (CrowdSec)** | Contenedor local + Listas de reputación globales | $0.00 | $0.00 |
+| **Monitoreo Alert-on-Down (Uptime Kuma)** | Contenedor local (<50MB RAM) con sondas internas | $0.00 | $0.00 |
+| **Notificaciones de Caída (Alertas)** | Bot de Telegram / Discord Webhook / Email SMTP | $0.00 | $0.00 |
+| **Almacenamiento Remoto de Backups** | Cloudflare R2 / Backblaze B2 S3 (50 GB - 100 GB cifrados) | $0.00 *(Free Tier)* | $0.60 |
+| **Tráfico de Red (Bandwidth)** | 20 TB de transferencia mensual incluidos en VPS | $0.00 | $0.00 |
+| **TOTAL MENSUAL ESTIMADO (VPS HARDENED)** | **Costo Fijo Mensual Predecible (Sin sorpresas)** | **$7.50 USD** | **$15.10 USD / mes** |
 
-2. **Políticas FinOps Inmediatas**:
-   - **Ambiente de Desarrollo Apagable**: En Azure y GCP, los ambientes de Dev/QA se configuran para apagar instancias de base de datos fuera del horario laboral (7:00 PM a 7:00 AM) y fines de semana, reduciendo el costo de desarrollo a menos de **$20 USD / mes**.
-   - **Lifecycle en Almacenamiento**: Configurar reglas en Azure Blob Storage o Cloud Storage para migrar comprobantes de venta y backups mayores a 90 días a niveles fríos (**Cool / Coldline / Archive**), reduciendo el costo de almacenamiento en un **75%**.
-   - **Compromiso a 1 Año**: Tras los primeros 30 días de estabilización en producción, activar una reserva de 1 año para la base de datos PostgreSQL, logrando un ahorro inmediato garantizado superior al **30%**.
+---
+
+### 6.4. Matriz Comparativa Consolidada de Opciones
+
+| Criterio de Decisión | Microsoft Azure | Google Cloud (GCP) | VPS Linux Hardened |
+| :--- | :---: | :---: | :---: |
+| **Costo Mensual Estimado** | **$245.00 USD** | **$212.00 USD** | **$15.10 USD (Ahorro del 93%)** |
+| **Modelo de Facturación** | Variable / Serverless | Variable / Serverless | **100% Fijo y Predecible** |
+| **Gestión de Infraestructura** | PaaS Administrado | PaaS Administrado | IaaS Auto-administrado (Docker) |
+| **Alta Disponibilidad de BD** | Multi-AZ Failover automático | Regional HA Failover automático | Local con réplica/backup offsite |
+| **Seguridad Web (WAF)** | Azure Front Door WAF | Google Cloud Armor | Traefik TLS 1.3 + CrowdSec IPS |
+| **Monitoreo & Notificaciones** | Azure Monitor + Log Analytics | Cloud Operations Suite | **Uptime Kuma (Alert-on-Down)** |
+| **Complejidad Operativa** | Media-Alta | Media | **Baja-Media (Mismo Docker local)** |
+
+---
+
+## 7. Recomendaciones Estratégicas y FinOps (Optimización Financiera)
+
+1. **Estrategia Recomendada por Etapa de Negocio**:
+   - **Fase Inicial / Crecimiento (Hasta 15 sucursales / POS)**: La opción de **VPS Linux Hardened** es indiscutiblemente la más rentable. Por solo **$15 a $20 USD mensuales**, se obtiene un servidor con 4 vCPU y 8 GB de RAM capaz de procesar más de 300 peticiones por segundo gracias a los Hilos Virtuales de Java 21, con seguridad perimetral de grado profesional y monitoreo instantáneo a Telegram sin sobrecostos.
+   - **Fase Corporativa / Enterprise Multi-Región (Más de 50 sucursales)**: Si la empresa requiere acuerdos de nivel de servicio (**SLA**) del 99.99% garantizados contractualmente con redundancia multi-zona y auditorías regulatorias bancarias/financieras, se recomienda la transición a **Google Cloud Run + Cloud SQL** o **Azure Container Apps**, aplicando compromisos de uso a 1 año (CUD / Savings Plans) para asegurar ahorros de hasta el 35%.
+
+2. **Políticas de Monitoreo Eficiente ("Alert-on-Down")**:
+   - En el entorno VPS, **Uptime Kuma** configurado en modo *Alert-on-Down* elimina la fatiga de alertas: el personal técnico solo recibe avisos en su celular (Telegram/Discord) cuando ocurre un incidente real que requiera atención inmediata.
+   - En combinación con **Autoheal**, más del 80% de incidencias por saturación temporal o cuelgues de sockets se resuelven automáticamente en menos de 15 segundos sin intervención humana.

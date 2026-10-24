@@ -1,0 +1,15 @@
+# =========================================================================
+# CrowdSec v1.6+ - Configuración de Adquisición de Fuentes de Bitácora
+# =========================================================================
+
+# Ingestión de logs de acceso JSON emitidos por el Reverse Proxy Traefik
+filenames:
+  - /var/log/traefik/access.log
+labels:
+  type: traefik
+---
+# Ingestión de logs del sistema de autenticación SSH (si se monta el host)
+filenames:
+  - /var/log/auth.log
+labels:
+  type: syslog

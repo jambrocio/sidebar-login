@@ -1,0 +1,48 @@
+# =========================================================================
+# Traefik v3.2 - Rutas y Servicios Dinámicos Hacia Contenedores Aislados
+# =========================================================================
+
+http:
+  routers:
+    # 1. Enrutamiento hacia Frontend SPA (Angular 21 + Nginx Alpine)
+    frontend-router:
+      rule: "Host(`app.bevadmin.com`) || Host(`localhost`)"
+      entryPoints:
+        - "websecure"
+      service: "frontend-service"
+      middlewares:
+        - "securedChain@file"
+
+    # 2. Enrutamiento hacia Backend REST API (Spring Boot 4 / Java 21)
+    backend-router:
+      rule: "Host(`api.bevadmin.com`) || (Host(`app.bevadmin.com`) && PathPrefix(`/api/v1`)) || PathPrefix(`/api/v1`) || PathPrefix(`/swagger-ui`) || PathPrefix(`/v3/api-docs`)"
+      entryPoints:
+        - "websecure"
+      service: "backend-service"
+      middlewares:
+        - "securedChain@file"
+
+    # 3. Enrutamiento hacia Panel de Monitoreo Uptime Kuma (Alert-on-Down)
+    status-router:
+      rule: "Host(`status.bevadmin.com`)"
+      entryPoints:
+        - "websecure"
+      service: "status-service"
+      middlewares:
+        - "secHeaders@file"
+
+  services:
+    frontend-service:
+      loadBalancer:
+        servers:
+          - url: "http://dev-frontend:80"
+
+    backend-service:
+      loadBalancer:
+        servers:
+          - url: "http://dev-backend:8080"
+
+    status-service:
+      loadBalancer:
+        servers:
+          - url: "http://bevadmin-uptime-kuma:3001"

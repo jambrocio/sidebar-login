@@ -1,0 +1,55 @@
+# =========================================================================
+# Traefik v3.2 - Middlewares de Seguridad Perimetral y Rendimiento (OWASP)
+# =========================================================================
+
+http:
+  middlewares:
+    # 1. Cabeceras de Seguridad Estrictas (HSTS, Anti-Clickjacking, Anti-Sniffing)
+    secHeaders:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        customFrameOptionsValue: "SAMEORIGIN"
+        referrerPolicy: "strict-origin-when-cross-origin"
+        permissionsPolicy: "camera=(), microphone=(), geolocation=(), payment=()"
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow"
+          Server: ""
+
+    # 2. Limitación de Tasa (Rate Limiting contra ataques DoS y fuerza bruta)
+    rateLimit:
+      rateLimit:
+        average: 120
+        burst: 60
+        period: 1m
+
+    # 3. Compresión Dinámica de Tráfico (Gzip / Brotli)
+    compression:
+      compress:
+        minResponseBodyBytes: 1024
+
+    # 4. Cadena de Seguridad Completa Reutilizable
+    securedChain:
+      chain:
+        middlewares:
+          - secHeaders
+          - rateLimit
+          - compression
+
+# Configuración Criptográfica TLS Estricta (Bloqueo de SSLv3, TLS 1.0 y TLS 1.1)
+tls:
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_AES_128_GCM_SHA256"
+        - "TLS_AES_256_GCM_SHA384"
+        - "TLS_CHACHA20_POLY1305_SHA256"
+      sniStrict: false
