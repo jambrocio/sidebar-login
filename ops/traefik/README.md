@@ -5,8 +5,9 @@
 ## 1. Descripción de su Funcionalidad
 
 **Traefik v3.2** actúa como el punto único de entrada seguro (**Ingress Controller & Reverse Proxy**) para toda la infraestructura del VPS:
-- **Terminación SSL/TLS 1.3 Automatizada:** Emite y renueva certificados criptográficos válidos a través de **Let's Encrypt (ACME)** sin necesidad de configurar tareas cron ni scripts externos.
-- **Bloqueo Estricto de HTTP Inseguro:** Todo el tráfico que ingresa por el puerto no cifrado `80/tcp` es interceptado y forzado de inmediato mediante redirección permanente (`HTTP 301 Moved Permanently`) hacia `https://` (puerto `443/tcp`). Los routers de la aplicación solo escuchan en el entrypoint seguro (`websecure`), impidiendo cualquier fuga de datos o credenciales en texto claro.
+- **Desactivación Completa de HTTP Inseguro (Zero-Trust Ingress):** Cuando el módulo de Operaciones está habilitado, el puerto no cifrado `80/tcp` se encuentra **completamente desactivado e inactivo**. No existe ningún socket HTTP escuchando en el perímetro; cualquier intento de conexión por HTTP plano es rechazado de inmediato por el sistema operativo (`Connection Refused`).
+- **Ingreso Exclusivo HTTPS (TLS 1.3):** Todo el tráfico web y de API se canaliza estrictamente a través de `https://` (puerto `443/tcp`). Los routers de la aplicación solo operan en el entrypoint seguro (`websecure`), impidiendo ataques de degradación (SSL-stripping) o fugas de credenciales en texto plano.
+- **Terminación SSL/TLS 1.3 Automatizada:** Emite y renueva certificados criptográficos a través de **Let's Encrypt (ACME)** mediante el desafío `tlsChallenge` (TLS-ALPN-01) en el puerto 443, sin requerir el puerto HTTP 80.
 - **Middlewares de Seguridad Perimetral (OWASP Top 10):** Inyecta cabeceras de protección activa contra Clickjacking, MIME-Sniffing y XSS, además de aplicar **HSTS estricto con precarga** (`preload`), compresión dinámica (Gzip/Brotli) y **Rate Limiting** para mitigar ataques de fuerza bruta y DoS.
 - **Bitácoras Estructuradas JSON:** Registra cada solicitud en `/var/log/traefik/access.log` para alimentar el motor de detección de intrusiones de **CrowdSec**.
 
@@ -32,10 +33,10 @@ La configuración de Traefik está dividida en dos capas limpias:
 
 ### A. Configuración Estática ([`traefik.yml`](file:///D:/tools/Proyectos/sidebar-login/ops/traefik/traefik.yml))
 - **Entrypoints:**
-  - `web` (`:80`): Redirección HTTP $\rightarrow$ HTTPS (`permanent: true`, `priority: 10000`).
-  - `websecure` (`:443`): Entrypoint principal TLS con certificado ACME.
-  - `traefik` (`:8080`): Expuesto localmente en `127.0.0.1:8088` para el Dashboard de telemetría y sonda `/ping`.
-- **CertificatesResolvers:** Configurado con `letsencrypt` (desafío `httpChallenge` y `tlsChallenge`).
+  - `websecure` (`:443`): Entrypoint principal TLS 1.3 con certificado ACME. Único punto de ingreso público activo.
+  - `traefik` (`:8080`): Expuesto exclusivamente en localhost `127.0.0.1:8088` para telemetría interna y sonda `/ping`.
+  - *(Nota: El entrypoint HTTP `:80` se mantiene inactivo y cerrado cuando Ops está habilitado).*
+- **CertificatesResolvers:** Configurado con `letsencrypt` mediante desafío `tlsChallenge` (TLS-ALPN-01 sobre `:443`).
 
 ### B. Configuración Dinámica ([`dynamic/`](file:///D:/tools/Proyectos/sidebar-login/ops/traefik/dynamic/))
 - **[`middlewares.yml`](file:///D:/tools/Proyectos/sidebar-login/ops/traefik/dynamic/middlewares.yml):**
@@ -52,22 +53,21 @@ La configuración de Traefik está dividida en dos capas limpias:
 
 ## 4. Pruebas y Validación Paso a Paso
 
-### Prueba 1: Bloqueo y Redirección Forzada de HTTP a HTTPS
-Verifica que cualquier petición entrante por el puerto 80 no cifrado sea rechazada y redirigida con código `301`:
+### Prueba 1: Verificación de HTTP Inactivo (Puerto 80 Cerrado)
+Verifica que cualquier intento de conexión por el puerto 80 no cifrado sea rechazado de inmediato por el sistema operativo al no haber ningún socket HTTP activo:
 ```powershell
 # En PowerShell:
 try {
-    Invoke-WebRequest -Uri "http://localhost/api/v1/auth/health" -MaximumRedirection 0
+    Invoke-WebRequest -Uri "http://localhost/api/v1/auth/health" -TimeoutSec 3
 } catch {
-    $_.Exception.Response.StatusCode  # Debe responder: MovedPermanently (301)
+    $_.Exception.Message  # Debe indicar que no es posible conectar (Connection Refused)
 }
 ```
 ```bash
 # En Bash / cURL:
-curl -I http://localhost/api/v1/auth/health
+curl.exe -i http://localhost/api/v1/auth/health
 # Respuesta esperada:
-# HTTP/1.1 301 Moved Permanently
-# Location: https://localhost/api/v1/auth/health
+# curl: (7) Failed to connect to localhost port 80: Connection refused
 ```
 
 ### Prueba 2: Acceso Seguro a la API Backend vía HTTPS

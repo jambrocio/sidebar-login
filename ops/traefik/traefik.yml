@@ -32,19 +32,11 @@ ping:
   entryPoint: traefik
 
 # Puntos de Entrada de Red
+# NOTA DE SEGURIDAD: Cuando el módulo Ops está activo, el protocolo HTTP (:80)
+# queda COMPLETAMENTE DESACTIVADO para garantizar que el único ingreso sea HTTPS (:443).
 entryPoints:
   traefik:
     address: ":8080"
-
-  web:
-    address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
-          permanent: true
-          priority: 10000
 
   websecure:
     address: ":443"
@@ -69,11 +61,10 @@ providers:
     watch: true
 
 # Proveedor Automático de Certificados SSL/TLS (Let's Encrypt ACME)
+# Utiliza TLS-ALPN-01 (tlsChallenge en puerto 443) sin requerir el puerto HTTP :80
 certificatesResolvers:
   letsencrypt:
     acme:
       email: "${ACME_EMAIL:-admin@bevadmin.com}"
       storage: "/etc/traefik/acme/acme.json"
       tlsChallenge: {}
-      httpChallenge:
-        entryPoint: web

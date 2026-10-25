@@ -10,9 +10,24 @@
 #   docker compose -f docker-compose.ops.yml up -d
 # ==============================================================================
 
-name: bevadmin-ops
+name: bevadmin
+
+include:
+  - docker-compose.yml
 
 services:
+  # ----------------------------------------------------------------------------
+  # Aislamiento Perimetral Zero-Trust: desactiva los puertos no cifrados del host
+  # ----------------------------------------------------------------------------
+  dev-frontend:
+    ports: !reset []
+
+  dev-backend:
+    ports: !reset []
+
+  dev-postgres:
+    ports: !reset []
+
   # ----------------------------------------------------------------------------
   # 1. Reverse Proxy WAF con SSL Automático Let's Encrypt (Traefik v3.2)
   # ----------------------------------------------------------------------------
@@ -21,7 +36,7 @@ services:
     container_name: bevadmin-proxy
     restart: unless-stopped
     ports:
-      - "80:80"
+      # Puerto HTTP :80 DESACTIVADO: cuando Ops está activo, el ingreso es exclusivamente HTTPS (:443)
       - "443:443"
       - "127.0.0.1:8088:8080"
     environment:
@@ -43,7 +58,8 @@ services:
       timeout: 3s
       retries: 3
     networks:
-      - bevadmin-network
+      - bevadmin-ops-network
+      - bevadmin-app-network
 
   # ----------------------------------------------------------------------------
   # 2. WAF & Sistema de Prevención de Intrusiones (CrowdSec IDS/IPS)
@@ -69,7 +85,7 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - bevadmin-network
+      - bevadmin-ops-network
 
   # ----------------------------------------------------------------------------
   # 3. Monitoreo Inteligente de Disponibilidad (Uptime Kuma - "Alert-on-Down")
@@ -89,7 +105,9 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - bevadmin-network
+      - bevadmin-ops-network
+      - bevadmin-app-network
+      - bevadmin-data-network
 
   # ----------------------------------------------------------------------------
   # 4. Watchdog de Auto-Recuperación de Contenedores (Autoheal)
@@ -105,7 +123,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - bevadmin-network
+      - bevadmin-ops-network
 
   # ----------------------------------------------------------------------------
   # 5. Respaldos Cifrados Automatizados de Base de Datos (PostgreSQL Backup)
@@ -123,6 +141,12 @@ services:
       - BACKUP_KEEP_DAYS=7
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
+      # Variables de Notificación y Métricas (Push Monitor / Telegram / Discord / Webhook)
+      - BACKUP_PUSH_URL=${BACKUP_PUSH_URL:-}
+      - BACKUP_TELEGRAM_BOT_TOKEN=${BACKUP_TELEGRAM_BOT_TOKEN:-}
+      - BACKUP_TELEGRAM_CHAT_ID=${BACKUP_TELEGRAM_CHAT_ID:-}
+      - BACKUP_DISCORD_WEBHOOK_URL=${BACKUP_DISCORD_WEBHOOK_URL:-}
+      - BACKUP_WEBHOOK_URL=${BACKUP_WEBHOOK_URL:-}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h dev-postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-admin_dashboard_db} || exit 1"]
       interval: 30s
@@ -130,8 +154,34 @@ services:
       retries: 3
     volumes:
       - postgres-backups:/backups
+      - ./ops/db-backup/hooks:/hooks:ro
     networks:
-      - bevadmin-network
+      - bevadmin-ops-network
+      - bevadmin-data-network
+
+  # ----------------------------------------------------------------------------
+  # 6. Herramienta Visual de Gestión y Configuración de Respaldos (Databasus)
+  # ----------------------------------------------------------------------------
+  bevadmin-databasus:
+    image: databasus/databasus:latest
+    container_name: bevadmin-databasus
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8085:4005"
+    environment:
+      - ENV_MODE=production
+      - IS_DISABLE_ANONYMOUS_TELEMETRY=true
+    volumes:
+      - databasus-data:/databasus-data
+      - postgres-backups:/backups
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/4005 && exec 3>&-"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    networks:
+      - bevadmin-ops-network
+      - bevadmin-data-network
 
 volumes:
   traefik-acme:
@@ -146,8 +196,13 @@ volumes:
     name: bevadmin_uptime_kuma_data
   postgres-backups:
     name: bevadmin_postgres_backups
+  databasus-data:
+    name: bevadmin_databasus_data
 
 networks:
-  bevadmin-network:
-    name: bevadmin-network
-    external: true
+  bevadmin-ops-network:
+    name: bevadmin-ops-network
+  bevadmin-app-network:
+    name: bevadmin-app-network
+  bevadmin-data-network:
+    name: bevadmin-data-network

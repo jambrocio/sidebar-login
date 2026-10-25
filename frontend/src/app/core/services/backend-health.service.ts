@@ -28,6 +28,17 @@ export class BackendHealthService {
   /** Indica si el backend se encuentra fuera de servicio (inaccesible / 0 / 503) */
   readonly isBackendOffline = computed(() => this.backendStatus() === 'OFFLINE');
 
+  /** Dirección resuelta del backend para visualización clara y dinámica */
+  readonly backendEndpointDisplay = computed(() => {
+    if (typeof window !== 'undefined') {
+      if (this.healthEndpoint.startsWith('http://') || this.healthEndpoint.startsWith('https://')) {
+        return this.healthEndpoint;
+      }
+      return `${window.location.origin}${this.healthEndpoint}`;
+    }
+    return this.healthEndpoint;
+  });
+
   /** Indica si el servicio estuvo caído y acaba de ser recuperado exitosamente */
   readonly wasOfflineAndRecovered = signal<boolean>(false);
 
@@ -191,8 +202,9 @@ export class BackendHealthService {
     const prev = this.backendStatus();
     this.backendStatus.set('OFFLINE');
     this.wasOfflineAndRecovered.set(false);
+    const target = this.backendEndpointDisplay();
     this.statusMessage.set(
-      `El servicio Backend en http://localhost:8080 está fuera de servicio. Conexión interrumpida${originUrl ? ` al consultar ${originUrl}` : ''}.`
+      `El servicio Backend (${target}) se encuentra fuera de servicio. Conexión interrumpida${originUrl ? ` al consultar ${originUrl}` : ''}.`
     );
 
     this.redirectDashboardIfOffline();

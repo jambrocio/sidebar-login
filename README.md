@@ -118,14 +118,16 @@ El proyecto está diseñado bajo una arquitectura modular donde la **Aplicación
 │            MODO 1: SOLO APLICACIÓN                     │     │         MODO 2: CONJUNTO CON OPERACIONES (VPS)         │
 │             (docker-compose.yml)                       │     │        (docker-compose.yml + docker-compose.ops.yml)   │
 ├────────────────────────────────────────────────────────┤     ├────────────────────────────────────────────────────────┤
-│  • dev-postgres  (PostgreSQL 17 :5432)                 │     │  • dev-postgres  (Aislado en bevadmin-network)         │
-│  • dev-backend   (Spring Boot 4 :8080)                 │     │  • dev-backend   (Aislado en bevadmin-network)         │
-│  • dev-frontend  (Angular 21 + Nginx :4200)            │     │  • dev-frontend  (Aislado en bevadmin-network)         │
-│                                                        │     │  • bevadmin-proxy (Traefik v3.2 WAF / TLS 1.3 :80/:443)│
+│  • dev-postgres  (Red Data :5432)                      │     │  • dev-postgres  (Aislado en Red Data :5432)           │
+│  • dev-backend   (Redes App & Data :8080)              │     │  • dev-backend   (Redes App & Data / Host Inactivo)    │
+│  • dev-frontend  (Red App :4200 HTTP)                  │     │  • dev-frontend  (Red App / :4200 Host Inactivo)       │
+│                                                        │     │  • bevadmin-proxy (Traefik TLS 1.3 Ingress :443)       │
 │                                                        │     │  • bevadmin-crowdsec (WAF/IPS Anti-Bot / Anti-OWASP)   │
 │                                                        │     │  • bevadmin-uptime-kuma (Alert-on-Down Monitor :3001)  │
 │                                                        │     │  • bevadmin-autoheal (Watchdog auto-restart)           │
-│                                                        │     │  • bevadmin-db-backup (Dumps diarios automáticos)      │
+│                                                        │     │  • bevadmin-db-backup (Dumps diarios GFS automáticos)  │
+│                                                        │     │  • bevadmin-databasus (Panel Visual Respaldos :8085)   │
+│  Redes: bevadmin-app-network, bevadmin-data-network    │     │  Redes Segmentadas: Ops-Net, App-Net y Data-Net (Zero) │
 └────────────────────────────────────────────────────────┘     └────────────────────────────────────────────────────────┘
 ```
 
@@ -189,11 +191,11 @@ Este modo simula el despliegue final de producción en un servidor VPS, incorpor
 
 #### 2. Iniciar el Módulo de Operaciones:
 ```powershell
-.\ops\start-ops.ps1
+.\start-ops.ps1
 # (o: docker compose -f docker-compose.ops.yml up -d)
 ```
 
-#### 3. Verificar la Salud de Todos los Servicios (8 Contenedores):
+#### 3. Verificar la Salud de Todos los Servicios (9 Contenedores):
 ```powershell
 docker compose ps
 docker compose -f docker-compose.ops.yml ps
@@ -202,11 +204,15 @@ docker compose -f docker-compose.ops.yml ps
 
 #### 4. Pruebas End-to-End Integradas:
 
-##### A. Prueba de Ingress & Redirección SSL/TLS (Traefik Reverse Proxy):
-El Reverse Proxy escucha en los puertos estándar `80` (HTTP) y `443` (HTTPS) y aplica la cadena de middlewares de seguridad OWASP:
+##### A. Prueba de Ingress Seguro Exclusivo HTTPS (Traefik TLS 1.3):
+Cuando el módulo de Operaciones está habilitado, el puerto `80` (HTTP plano) se encuentra **completamente inactivo** para evitar tráfico no cifrado y ataques de degradación (*SSL-stripping*). El único ingreso permitido es a través del puerto seguro `443` (HTTPS) con la cadena de middlewares OWASP:
 ```powershell
-# 1. Probar redirección forzada de HTTP a HTTPS (Código 301/308):
-Invoke-WebRequest -Uri "http://localhost/api/v1/auth/health" -MaximumRedirection 0 -ErrorAction SilentlyContinue | Select-Object StatusCode, Headers
+# 1. Verificar que HTTP esté inactivo (Puerto 80 cerrado / Connection Refused):
+try {
+    Invoke-WebRequest -Uri "http://localhost/api/v1/auth/health" -TimeoutSec 3
+} catch {
+    Write-Host "✓ HTTP inactivo correctamente: $($_.Exception.Message)" -ForegroundColor Green
+}
 
 # 2. Probar acceso seguro al Backend a través de Traefik (HTTPS):
 Invoke-RestMethod -Uri "https://localhost/api/v1/auth/health" -SkipCertificateCheck
@@ -261,11 +267,25 @@ docker exec bevadmin-db-backup ls -lh /backups/daily/
 # Generará: admin_dashboard_db-YYYYMMDD.sql.gz
 ```
 
-#### 5. Detención Ordenada de los Entornos:
+##### E. Panel Visual de Gestión y Respaldos (Databasus):
+1. **Acceder a la interfaz web:** [http://localhost:8085](http://localhost:8085) (o vía Traefik en [https://backup.bevadmin.com](https://backup.bevadmin.com)).
+2. **Crear la cuenta de administrador** inicial.
+3. **Conectar a la base de datos:** `dev-postgres:5432`, `admin_dashboard_db`, `postgres`/`postgres`.
+4. **Definir destino de almacenamiento local (Homelab):** En *Destinations*, seleccionar *Local Storage* y configurar la ruta persistente `/backups`.
+5. **Programar tareas automáticas:** Respaldos programados con rotación diaria (7 días) y restauración asistida con 1 clic.
+6. **Notificaciones Nativas:** Alertas instantáneas de éxito/fallo enviadas a Telegram, Discord o Webhooks.
+
+#### 5. Segmentación de Redes en Tres Capas (Zero-Trust):
+La plataforma aísla el tráfico en tres redes virtuales independientes:
+- 🌐 **`bevadmin-ops-network`:** Contiene los servicios perimetrales y de soporte (Traefik, CrowdSec, Uptime Kuma, Autoheal, Backup y Databasus).
+- 📱 **`bevadmin-app-network`:** Conecta exclusivamente el Frontend Angular SPA (Nginx) con el Backend Spring Boot REST API y el Ingress Traefik.
+- 🗄️ **`bevadmin-data-network`:** Conecta la base de datos PostgreSQL únicamente con el Backend y las herramientas autorizadas de respaldo (`db-backup` y `databasus`). **El Frontend no tiene acceso a esta red**, garantizando que un compromiso del servidor web nunca exponga la base de datos.
+
+#### 6. Detención Ordenada de los Entornos:
 ```powershell
-# Detener módulo de operaciones:
-.\ops\start-ops.ps1 -Down
-# (o: docker compose -f docker-compose.ops.yml down)
+# Detener módulo de operaciones y rehabilitar HTTP automático:
+.\stop-ops.ps1
+# (o: .\start-ops.ps1 -Stop)
 
 # Detener aplicación:
 docker compose down
@@ -284,6 +304,7 @@ docker compose down
 
 ### Endpoints del Módulo de Operaciones (VPS Hardened):
 - **Uptime Kuma (Monitoreo Alert-on-Down):** [http://localhost:3001](http://localhost:3001)
+- **Databasus (Panel Visual de Respaldos):** [http://localhost:8085](http://localhost:8085) (o [https://backup.bevadmin.com](https://backup.bevadmin.com))
 - **Traefik Dashboard (Seguridad Ingress & Middlewares):** [http://localhost:8088/dashboard/](http://localhost:8088/dashboard/)
 
 ### Credenciales de Acceso al Sistema:

@@ -3,6 +3,7 @@
 # ==============================================================================
 server:
   port: 8080
+  forward-headers-strategy: framework
 
 spring:
   config:
@@ -31,3 +32,8 @@ bevadmin:
       allowed-origins:
         - "http://localhost:4200"
         - "http://127.0.0.1:4200"
+        - "https://localhost"
+        - "https://127.0.0.1"
+        - "http://localhost"
+        - "https://app.bevadmin.com"
+        - "http://app.bevadmin.com"

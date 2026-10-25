@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\07_c4_interconexion_ops_aplicaciones.architecture.json",
+    "sha256": "f3d075767a811d2bead5842cbea541e221e63782d7c763f2a866d6b1b2e446dd",
+    "bytes": 6966
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
+    "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
+    "bytes": 848165
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4404,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

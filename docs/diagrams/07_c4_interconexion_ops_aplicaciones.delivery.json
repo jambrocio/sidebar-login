@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "2a2a01f7-8318-49a5-972c-eae90a33c9c9",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\07_c4_interconexion_ops_aplicaciones.architecture.json",
+  "output": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
+  "specification": {
+    "sha256": "f3d075767a811d2bead5842cbea541e221e63782d7c763f2a866d6b1b2e446dd",
+    "bytes": 6966
+  },
+  "artifact": {
+    "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
+    "bytes": 848165
+  }
+}

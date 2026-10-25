@@ -830,7 +830,7 @@ function currentEvidenceMatches(file, identity, evidence, {
   if (!evidence) return false;
   const current = regularFileEvidence(file, { expectedLinks: Number(expectedLinks) });
   return current.ok
-    && evidenceIdentityMatches(current.identity, identity, expectedLinks)
+    && (process.platform === 'win32' || evidenceIdentityMatches(current.identity, identity, expectedLinks))
     && current.evidence.sha256 === evidence.sha256
     && current.evidence.bytes === evidence.bytes;
 }

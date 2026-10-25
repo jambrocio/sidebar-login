@@ -6,7 +6,7 @@
 
 **Uptime Kuma** es una herramienta moderna, visual y ultraliviana de supervisión de disponibilidad de infraestructura y servicios:
 - **Consumo Ultrabajo de Recursos:** Requiere menos de 50 MB de memoria RAM y una fracción imperceptible de CPU, siendo ideal para servidores VPS con recursos medidos.
-- **Sondeo Interno Nativo:** Se comunica directamente con los contenedores dentro de la red privada Docker `bevadmin-network` usando sus alias de servicio (`dev-frontend`, `dev-backend`, `dev-postgres`), sin exponer puertos innecesarios a Internet.
+- **Sondeo Interno Nativo y Segmentado:** Se comunica directamente con los contenedores conectándose a las redes `bevadmin-app-network` (para sondear Frontend y Backend) y `bevadmin-data-network` (para sondear PostgreSQL por TCP) usando sus alias de servicio (`dev-frontend`, `dev-backend`, `dev-postgres`), sin exponer puertos innecesarios a Internet.
 - **Filosofía Estricta "Alert-on-Down":** Diseñado para **eliminar la fatiga de alertas**. El sistema permanece en absoluto silencio mientras los servicios operan con normalidad. Solo dispara notificaciones inmediatas a los canales de alerta cuando un servicio cae (**DOWN**) tras superar 3 reintentos consecutivos, y emite un único aviso de confirmación cuando se restablece (**UP**).
 - **Notificaciones Push Multicanal:** Integra soporte nativo para **Telegram Bot**, **Discord Webhook**, **Slack**, **Email SMTP**, entre más de 90 proveedores.
 

@@ -55,6 +55,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Captura errores cuando el cuerpo de la solicitud JSON está malformado o es ilegible.
+     */
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ProblemDetail handleMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "El cuerpo de la solicitud JSON es inválido o no pudo ser deserializado."
+        );
+        problem.setTitle("Solicitud JSON Malformada");
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    /**
      * Captura intentos de inicio de sesión con credenciales incorrectas o cuentas inactivas.
      *
      * @param ex excepción de credenciales inválidas

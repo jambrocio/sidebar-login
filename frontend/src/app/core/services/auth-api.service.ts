@@ -205,10 +205,11 @@ export class AuthApiService {
     }
 
     if (error.status === 0) {
+      const endpoint = typeof window !== 'undefined' ? `${window.location.origin}${this.baseUrl}` : this.baseUrl;
       return {
         title: 'Servidor Backend No Disponible',
         status: 0,
-        detail: 'No fue posible conectar con el servidor Spring Boot en http://localhost:8080.',
+        detail: `No fue posible conectar con el servidor Spring Boot en ${endpoint}.`,
       };
     }
 

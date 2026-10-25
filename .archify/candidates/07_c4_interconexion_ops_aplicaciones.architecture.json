@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Modelo C4 (Nivel 2 - Contenedores): Segmentación de Redes (Ops, App y Datos)",
+    "subtitle": "Segmentación en 3 redes aisladas (bevadmin-ops-network, bevadmin-app-network, bevadmin-data-network) con Traefik TLS 1.3, CrowdSec, Databasus y PostgreSQL",
+    "locale": "es",
+    "output": "docs/diagrams/07_c4_interconexion_ops_aplicaciones.html",
+    "quality_profile": "showcase",
+    "viewBox": [1240, 1020]
+  },
+  "components": [
+    {
+      "id": "client_user",
+      "type": "external",
+      "label": "Usuarios y Clientes",
+      "sublabel": "Navegador Web / Terminal POS",
+      "pos": [40, 80],
+      "size": [180, 64],
+      "tag": "HTTPS :443"
+    },
+    {
+      "id": "client_ops",
+      "type": "external",
+      "label": "Administrador / DevOps",
+      "sublabel": "Consola de Operaciones & Métricas",
+      "pos": [40, 240],
+      "size": [180, 64],
+      "tag": "Dashboards :8088 / :3001 / :8085"
+    },
+    {
+      "id": "docker_daemon",
+      "type": "external",
+      "label": "Docker Engine Host",
+      "sublabel": "/var/run/docker.sock",
+      "pos": [40, 400],
+      "size": [180, 64],
+      "tag": "Daemon API Local"
+    },
+    {
+      "id": "ext_alerts",
+      "type": "external",
+      "label": "Canales de Alerta",
+      "sublabel": "Telegram / Discord / Slack",
+      "pos": [40, 560],
+      "size": [180, 64],
+      "tag": "Alert-on-Down Push"
+    },
+    {
+      "id": "ops_traefik",
+      "type": "cloud",
+      "label": "bevadmin-proxy (Traefik v3.2)",
+      "sublabel": "Reverse Proxy & TLS Termination",
+      "pos": [460, 80],
+      "size": [240, 64],
+      "tag": "Redes Ops & App (:443 Ingress)"
+    },
+    {
+      "id": "ops_crowdsec",
+      "type": "security",
+      "label": "bevadmin-crowdsec (CrowdSec)",
+      "sublabel": "IPS / Detección de Amenazas",
+      "pos": [460, 240],
+      "size": [240, 64],
+      "tag": "Red Ops (WAF / IPS)"
+    },
+    {
+      "id": "ops_autoheal",
+      "type": "security",
+      "label": "bevadmin-autoheal (Autoheal)",
+      "sublabel": "Vigilante de Salud de Contenedores",
+      "pos": [460, 400],
+      "size": [240, 64],
+      "tag": "Red Ops (Docker Socket)"
+    },
+    {
+      "id": "ops_kuma",
+      "type": "security",
+      "label": "bevadmin-uptime-kuma",
+      "sublabel": "Sonda Monitoreo Sintético",
+      "pos": [460, 560],
+      "size": [240, 64],
+      "tag": "Redes Ops, App & Data (:3001)"
+    },
+    {
+      "id": "ops_backup",
+      "type": "database",
+      "label": "bevadmin-db-backup",
+      "sublabel": "Respaldos Programados (pg_dump)",
+      "pos": [460, 720],
+      "size": [240, 64],
+      "tag": "Redes Ops & Data (pg_dump)"
+    },
+    {
+      "id": "ops_databasus",
+      "type": "database",
+      "label": "bevadmin-databasus",
+      "sublabel": "Panel Visual Web de Respaldos",
+      "pos": [460, 880],
+      "size": [240, 64],
+      "tag": "Redes Ops & Data (:8085 / :4005)"
+    },
+    {
+      "id": "app_frontend",
+      "type": "frontend",
+      "label": "dev-frontend (Angular 21 + Nginx)",
+      "sublabel": "SPA PWA / Signals / Proxy Inverso",
+      "pos": [940, 80],
+      "size": [240, 64],
+      "tag": "Red App :80 (:4200 Inactivo)"
+    },
+    {
+      "id": "app_backend",
+      "type": "backend",
+      "label": "dev-backend (Spring Boot 4)",
+      "sublabel": "Java 21 Loom / Spring Security 7",
+      "pos": [940, 240],
+      "size": [240, 64],
+      "tag": "Redes App & Data :8080"
+    },
+    {
+      "id": "app_database",
+      "type": "database",
+      "label": "dev-postgres (PostgreSQL 17)",
+      "sublabel": "Base de Datos Relacional Multi-Sede",
+      "pos": [940, 400],
+      "size": [240, 64],
+      "tag": "Red Data :5432 (Aislada)"
+    },
+    {
+      "id": "app_storage",
+      "type": "database",
+      "label": "postgres-data Volume",
+      "sublabel": "Almacenamiento Físico Persistente",
+      "pos": [940, 720],
+      "size": [240, 64],
+      "tag": "Volumen Docker Host"
+    },
+    {
+      "id": "app_databasus_storage",
+      "type": "database",
+      "label": "databasus-data Volume",
+      "sublabel": "Metadatos y Destinos Locales",
+      "pos": [940, 880],
+      "size": [240, 64],
+      "tag": "Volumen Docker Host"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Red Operaciones e Ingress (bevadmin-ops-network)",
+      "wraps": [
+        "ops_traefik",
+        "ops_crowdsec",
+        "ops_autoheal",
+        "ops_kuma",
+        "ops_backup",
+        "ops_databasus"
+      ],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "Red de Aplicación (bevadmin-app-network)",
+      "wraps": [
+        "app_frontend",
+        "app_backend"
+      ],
+      "pad": 20
+    },
+    {
+      "kind": "security-group",
+      "label": "Red Aislada de Datos (bevadmin-data-network)",
+      "wraps": [
+        "app_database",
+        "app_storage",
+        "app_databasus_storage"
+      ],
+      "pad": 20
+    }
+  ],
+  "connections": [
+    {
+      "from": "client_user",
+      "to": "ops_traefik",
+      "label": "HTTPS :443 (TLS 1.3)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ops_traefik",
+      "to": "app_frontend",
+      "label": "Proxy Web (localhost / app)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ops_traefik",
+      "to": "app_backend",
+      "label": "API Gateway (/api/v1)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ops_crowdsec",
+      "to": "ops_traefik",
+      "label": "AppSec Bouncer (WAF/IPS)",
+      "variant": "security"
+    },
+    {
+      "from": "app_frontend",
+      "to": "app_backend",
+      "label": "REST JSON (/api/v1/auth)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "app_backend",
+      "to": "app_database",
+      "label": "JDBC HikariCP :5432",
+      "variant": "emphasis"
+    },
+    {
+      "from": "client_ops",
+      "to": "ops_traefik",
+      "label": "Dashboard Traefik :8088",
+      "variant": "default"
+    },
+    {
+      "from": "ops_autoheal",
+      "to": "docker_daemon",
+      "label": "Docker Engine Events",
+      "variant": "default"
+    },
+    {
+      "from": "ops_autoheal",
+      "to": "app_backend",
+      "label": "Auto-Restart si Unhealthy",
+      "variant": "dashed"
+    },
+    {
+      "from": "ops_kuma",
+      "to": "app_database",
+      "label": "Sonda TCP :5432",
+      "variant": "default"
+    },
+    {
+      "from": "ops_kuma",
+      "to": "ext_alerts",
+      "label": "Alert-on-Down Webhook",
+      "variant": "security"
+    },
+    {
+      "from": "ops_backup",
+      "to": "app_storage",
+      "label": "Volcado diario dump.sql.gz",
+      "variant": "dashed"
+    },
+    {
+      "from": "ops_databasus",
+      "to": "app_databasus_storage",
+      "label": "Gestión y Almacén /databasus-data",
+      "variant": "emphasis"
+    },
+    {
+      "from": "app_database",
+      "to": "app_storage",
+      "label": "Persistencia Tablas y WAL",
+      "variant": "default"
+    }
+  ]
+}

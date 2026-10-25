@@ -23,7 +23,8 @@ docs/
 │   ├── 03_secuencia_monitoreo_sesiones.html    # Secuencia: Auditoría NOC y Kill Session
 │   ├── 04_secuencia_menu_dinamico_rbac.html    # Secuencia: Menú Dinámico y Resolución RBAC
 │   ├── 05_flujo_operativo_negocio.html         # Flujo Operativo End-to-End (Workflow Trace)
-│   └── 06_modelo_datos_erd.html                # Modelo de Datos Relacional ERD (19 Tablas en Español)
+│   ├── 06_modelo_datos_erd.html                # Modelo de Datos Relacional ERD (19 Tablas en Español)
+│   └── 07_c4_interconexion_ops_aplicaciones.html # C4 Nivel 2: Segmentación de Redes (Ops, App y Datos) con Databasus
 │
 ├── presentacion/                               # Presentación Comercial y Pitch para Clientes Finales
 │   ├── video_promocional_bevadmin.html         # Video animado de 38s con HyperFrames (Video-as-Code)
@@ -55,7 +56,7 @@ docs/
 
 | Módulo | Descripción | Enlace al Visor Interactivo |
 | :--- | :--- | :--- |
-| **Arquitectura de Software** | Visor de 6 diagramas Archify C4, flujos y secuencias | [**`docs/diagrams/index.html`**](file:///D:/tools/Proyectos/mio/sidebar-login/docs/diagrams/index.html) |
+| **Arquitectura de Software** | Visor de 7 diagramas Archify C4, flujos, secuencias y redes | [**`docs/diagrams/index.html`**](file:///D:/tools/Proyectos/sidebar-login/docs/diagrams/index.html) |
 | **Arquitectura Cloud** | Comparador interactivo Azure vs GCP y costos FinOps | [**`docs/cloud/index.html`**](file:///D:/tools/Proyectos/mio/sidebar-login/docs/cloud/index.html) |
 | **Presentación a Clientes** | Pitch comercial interactivo (Tema Claro + Simulador POS) | [**`docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html`**](file:///D:/tools/Proyectos/mio/sidebar-login/docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html) |
 

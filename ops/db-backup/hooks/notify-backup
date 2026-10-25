@@ -1,0 +1,207 @@
+#!/bin/sh
+# ==============================================================================
+# BevAdmin Pro - Hook de Notificación y Gestión de Respaldos de Base de Datos
+# ==============================================================================
+# Invocado automáticamente por run-parts en prodrigestivill/postgres-backup-local:
+#   $1 = "pre-backup"  -> Antes de iniciar el volcado
+#   $1 = "post-backup" -> Al culminar exitosamente el volcado
+#   $1 = "error"       -> Si ocurre un fallo en el volcado
+# ==============================================================================
+
+ACTION="$1"
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+DATE_READABLE=$(date +"%Y-%m-%d %H:%M:%S")
+DB_NAME="${POSTGRES_DB:-admin_dashboard_db}"
+BACKUP_DIR="${BACKUP_DIR:-/backups}"
+STATUS_FILE="${BACKUP_DIR}/backup_latest.json"
+HISTORY_LOG="${BACKUP_DIR}/backup_history.log"
+TIME_TMP="/tmp/backup_start_time"
+
+case "${ACTION}" in
+  pre-backup)
+    date +%s > "${TIME_TMP}"
+    echo "[$(date)] [HOOK:PRE-BACKUP] Iniciando proceso de respaldo para base de datos '${DB_NAME}'..."
+    ;;
+
+  post-backup)
+    START_TIME=0
+    if [ -f "${TIME_TMP}" ]; then
+      START_TIME=$(cat "${TIME_TMP}")
+      rm -f "${TIME_TMP}"
+    fi
+    CURRENT_TIME=$(date +%s)
+    if [ "${START_TIME}" -gt 0 ]; then
+      DURATION=$((CURRENT_TIME - START_TIME))
+    else
+      DURATION=0
+    fi
+
+    # Identificar el archivo mas reciente con marca de tiempo (excluyendo el symlink -latest)
+    LATEST_FILE=$(ls -t "${BACKUP_DIR}/last/${DB_NAME}-"[0-9]*.sql.gz 2>/dev/null | head -n 1)
+    if [ -z "${LATEST_FILE}" ]; then
+      LATEST_FILE=$(ls -t "${BACKUP_DIR}/daily/${DB_NAME}-"[0-9]*.sql.gz 2>/dev/null | head -n 1)
+    fi
+
+    FILE_NAME=""
+    FILE_SIZE_BYTES=0
+    FILE_SIZE_HUMAN="0B"
+
+    if [ -n "${LATEST_FILE}" ] && [ -f "${LATEST_FILE}" ]; then
+      FILE_NAME=$(basename "${LATEST_FILE}")
+      FILE_SIZE_BYTES=$(stat -c %s "${LATEST_FILE}" 2>/dev/null || echo 0)
+      FILE_SIZE_HUMAN=$(du -h "${LATEST_FILE}" 2>/dev/null | cut -f1)
+    fi
+
+    echo "================================================================================"
+    echo " [HOOK:POST-BACKUP] RESPALDO CULMINADO CON ÉXITO"
+    echo " Base de Datos: ${DB_NAME}"
+    echo " Archivo:       ${FILE_NAME}"
+    echo " Tamaño:        ${FILE_SIZE_HUMAN} (${FILE_SIZE_BYTES} bytes)"
+    echo " Duración:      ${DURATION} segundos"
+    echo " Fecha/Hora:    ${DATE_READABLE} UTC"
+    echo "================================================================================"
+
+    # 1. Registrar estado estructurado JSON para consumo de herramientas y scripts
+    cat <<EOF > "${STATUS_FILE}"
+{
+  "status": "SUCCESS",
+  "database": "${DB_NAME}",
+  "timestamp": "${TIMESTAMP}",
+  "date_readable": "${DATE_READABLE}",
+  "filename": "${FILE_NAME}",
+  "size_bytes": ${FILE_SIZE_BYTES},
+  "size_human": "${FILE_SIZE_HUMAN}",
+  "duration_seconds": ${DURATION}
+}
+EOF
+
+    # 2. Registrar en bitácora de auditoría histórica
+    echo "[${DATE_READABLE}] SUCCESS | DB: ${DB_NAME} | File: ${FILE_NAME} | Size: ${FILE_SIZE_HUMAN} | Duration: ${DURATION}s" >> "${HISTORY_LOG}"
+
+    # 3. Notificación a Uptime Kuma (Push Monitor / Heartbeat de Respaldos)
+    if [ -n "${BACKUP_PUSH_URL}" ]; then
+      echo "Enviando ping de confirmación a Uptime Kuma..."
+      PUSH_URL="${BACKUP_PUSH_URL}?status=up&msg=OK+Size:${FILE_SIZE_HUMAN}+Duration:${DURATION}s&ping=${DURATION}"
+      curl -fsS -m 10 "${PUSH_URL}" >/dev/null 2>&1 || echo "Advertencia: No se pudo contactar el Push Monitor de Uptime Kuma"
+    fi
+
+    # 4. Notificación vía Telegram Bot
+    if [ -n "${BACKUP_TELEGRAM_BOT_TOKEN}" ] && [ -n "${BACKUP_TELEGRAM_CHAT_ID}" ]; then
+      echo "Enviando notificación de respaldo a Telegram..."
+      TG_MSG="💾 <b>BevAdmin Pro - Respaldo de Base de Datos Culminado</b>%0A%0A"
+      TG_MSG="${TG_MSG}✅ <b>Estado:</b> Exitoso%0A"
+      TG_MSG="${TG_MSG}🗄️ <b>Base de Datos:</b> <code>${DB_NAME}</code>%0A"
+      TG_MSG="${TG_MSG}📦 <b>Archivo:</b> <code>${FILE_NAME}</code>%0A"
+      TG_MSG="${TG_MSG}📊 <b>Tamaño:</b> ${FILE_SIZE_HUMAN}%0A"
+      TG_MSG="${TG_MSG}⏱️ <b>Duración:</b> ${DURATION} segundos%0A"
+      TG_MSG="${TG_MSG}🕒 <b>Fecha:</b> ${DATE_READABLE} UTC"
+
+      curl -fsS -m 10 -X POST \
+        "https://api.telegram.org/bot${BACKUP_TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d "chat_id=${BACKUP_TELEGRAM_CHAT_ID}&text=${TG_MSG}&parse_mode=HTML" >/dev/null 2>&1 || \
+        echo "Advertencia: Fallo al enviar notificación a Telegram"
+    fi
+
+    # 5. Notificación vía Webhook (Discord / Slack / Genérico)
+    if [ -n "${BACKUP_DISCORD_WEBHOOK_URL}" ]; then
+      echo "Enviando notificación de respaldo a Discord..."
+      DISCORD_PAYLOAD=$(cat <<JSONEOF
+{
+  "username": "BevAdmin Backup Watchdog",
+  "avatar_url": "https://raw.githubusercontent.com/prodrigestivill/docker-postgres-backup-local/master/logo.png",
+  "embeds": [
+    {
+      "title": "✅ Respaldo de Base de Datos Culminado con Éxito",
+      "color": 3066993,
+      "fields": [
+        {"name": "Base de Datos", "value": "${DB_NAME}", "inline": true},
+        {"name": "Tamaño", "value": "${FILE_SIZE_HUMAN}", "inline": true},
+        {"name": "Duración", "value": "${DURATION}s", "inline": true},
+        {"name": "Archivo", "value": "${FILE_NAME}", "inline": false},
+        {"name": "Fecha UTC", "value": "${DATE_READABLE}", "inline": false}
+      ],
+      "footer": {"text": "BevAdmin Pro Enterprise VPS"}
+    }
+  ]
+}
+JSONEOF
+)
+      curl -fsS -m 10 -H "Content-Type: application/json" -X POST \
+        -d "${DISCORD_PAYLOAD}" "${BACKUP_DISCORD_WEBHOOK_URL}" >/dev/null 2>&1 || \
+        echo "Advertencia: Fallo al enviar notificación a Discord"
+    fi
+
+    if [ -n "${BACKUP_WEBHOOK_URL}" ]; then
+      echo "Enviando notificación a Webhook HTTP genérico..."
+      curl -fsS -m 10 -H "Content-Type: application/json" -X POST \
+        -d @"${STATUS_FILE}" "${BACKUP_WEBHOOK_URL}" >/dev/null 2>&1 || \
+        echo "Advertencia: Fallo al enviar webhook genérico"
+    fi
+    ;;
+
+  error)
+    echo "================================================================================"
+    echo " [HOOK:ERROR] ERROR CRÍTICO AL CREAR EL RESPALDO DE BASE DE DATOS"
+    echo " Base de Datos: ${DB_NAME}"
+    echo " Fecha/Hora:    ${DATE_READABLE} UTC"
+    echo "================================================================================"
+
+    # Registrar fallo en JSON
+    cat <<EOF > "${STATUS_FILE}"
+{
+  "status": "ERROR",
+  "database": "${DB_NAME}",
+  "timestamp": "${TIMESTAMP}",
+  "date_readable": "${DATE_READABLE}",
+  "error": "pg_dump failed during execution"
+}
+EOF
+
+    echo "[${DATE_READABLE}] ERROR | DB: ${DB_NAME} | pg_dump failed" >> "${HISTORY_LOG}"
+
+    # Alerta Uptime Kuma Push Monitor (Down)
+    if [ -n "${BACKUP_PUSH_URL}" ]; then
+      curl -fsS -m 10 "${BACKUP_PUSH_URL}?status=down&msg=BACKUP_FAILED_ERROR" >/dev/null 2>&1 || true
+    fi
+
+    # Alerta Telegram
+    if [ -n "${BACKUP_TELEGRAM_BOT_TOKEN}" ] && [ -n "${BACKUP_TELEGRAM_CHAT_ID}" ]; then
+      ERR_MSG="🚨 <b>BevAdmin Pro - ERROR EN RESPALDO DE BASE DE DATOS</b>%0A%0A"
+      ERR_MSG="${ERR_MSG}❌ <b>Estado:</b> FALLIDO%0A"
+      ERR_MSG="${ERR_MSG}🗄️ <b>Base de Datos:</b> <code>${DB_NAME}</code>%0A"
+      ERR_MSG="${ERR_MSG}⚠️ Revisar logs: <code>docker logs bevadmin-db-backup</code>%0A"
+      ERR_MSG="${ERR_MSG}🕒 <b>Fecha:</b> ${DATE_READABLE} UTC"
+
+      curl -fsS -m 10 -X POST \
+        "https://api.telegram.org/bot${BACKUP_TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d "chat_id=${BACKUP_TELEGRAM_CHAT_ID}&text=${ERR_MSG}&parse_mode=HTML" >/dev/null 2>&1 || true
+    fi
+
+    # Alerta Discord
+    if [ -n "${BACKUP_DISCORD_WEBHOOK_URL}" ]; then
+      ERR_PAYLOAD=$(cat <<JSONEOF
+{
+  "username": "BevAdmin Backup Watchdog",
+  "embeds": [
+    {
+      "title": "🚨 ERROR CRÍTICO: Fallo al Respaldar Base de Datos",
+      "color": 15158332,
+      "fields": [
+        {"name": "Base de Datos", "value": "${DB_NAME}", "inline": true},
+        {"name": "Estado", "value": "FALLIDO", "inline": true},
+        {"name": "Acción Requerida", "value": "Inspeccionar bitácoras con `docker logs bevadmin-db-backup`", "inline": false}
+      ]
+    }
+  ]
+}
+JSONEOF
+)
+      curl -fsS -m 10 -H "Content-Type: application/json" -X POST \
+        -d "${ERR_PAYLOAD}" "${BACKUP_DISCORD_WEBHOOK_URL}" >/dev/null 2>&1 || true
+    fi
+    ;;
+
+  *)
+    echo "[HOOK] Acción desconocida: ${ACTION}"
+    ;;
+esac

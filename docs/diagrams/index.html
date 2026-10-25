@@ -353,10 +353,19 @@
           <span class="item-badge badge-erd">PostgreSQL 17 ERD</span>
         </div>
       </button>
+
+      <!-- Item 7 -->
+      <button class="diagram-item" onclick="selectDiagram(6)">
+        <i class="bi bi-shield-check item-icon"></i>
+        <div class="item-content">
+          <div class="item-title">07. C4: Ops + Frontend + Backend + BD</div>
+          <span class="item-badge badge-arch">C4 Model Nivel 2</span>
+        </div>
+      </button>
     </div>
 
     <div class="sidebar-footer">
-      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 6 Diagramas Listos</span>
+      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 7 Diagramas Listos</span>
       <span style="font-family: 'JetBrains Mono', monospace;">100% Pasaron Gates</span>
     </div>
   </aside>
@@ -435,6 +444,13 @@
         badgeClass: "badge-erd",
         desc: "19 tablas con nombres en español estructuradas en 4 dominios con claves foráneas.",
         url: "06_modelo_datos_erd.html"
+      },
+      {
+        title: "07. Modelo C4: Interconexión Operaciones (Ops), Frontend, Backend y BD",
+        badge: "C4 Model Nivel 2",
+        badgeClass: "badge-arch",
+        desc: "Segmentación en 3 redes aisladas (bevadmin-ops-network, bevadmin-app-network y bevadmin-data-network) con Traefik TLS 1.3, CrowdSec, Databasus y PostgreSQL.",
+        url: "07_c4_interconexion_ops_aplicaciones.html"
       }
     ];
 

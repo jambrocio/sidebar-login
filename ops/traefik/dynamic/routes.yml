@@ -15,7 +15,7 @@ http:
 
     # 2. Enrutamiento hacia Backend REST API (Spring Boot 4 / Java 21)
     backend-router:
-      rule: "Host(`api.bevadmin.com`) || (Host(`app.bevadmin.com`) && PathPrefix(`/api/v1`)) || PathPrefix(`/api/v1`) || PathPrefix(`/swagger-ui`) || PathPrefix(`/v3/api-docs`)"
+      rule: "Host(`api.bevadmin.com`) || (Host(`app.bevadmin.com`) && (PathPrefix(`/api/v1`) || PathPrefix(`/actuator`))) || PathPrefix(`/api/v1`) || PathPrefix(`/actuator`) || PathPrefix(`/swagger-ui`) || PathPrefix(`/v3/api-docs`)"
       entryPoints:
         - "websecure"
       service: "backend-service"
@@ -28,6 +28,15 @@ http:
       entryPoints:
         - "websecure"
       service: "status-service"
+      middlewares:
+        - "secHeaders@file"
+
+    # 4. Enrutamiento hacia Panel Visual de Respaldos (Databasus)
+    backup-ui-router:
+      rule: "Host(`backup.bevadmin.com`)"
+      entryPoints:
+        - "websecure"
+      service: "backup-ui-service"
       middlewares:
         - "secHeaders@file"
 
@@ -46,3 +55,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://bevadmin-uptime-kuma:3001"
+
+    backup-ui-service:
+      loadBalancer:
+        servers:
+          - url: "http://bevadmin-databasus:4005"

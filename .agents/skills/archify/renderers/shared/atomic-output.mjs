@@ -69,14 +69,14 @@ function captureRegularFileHandle(filePath, initial, subject) {
     });
   }
   if (!handle.isFile() || !current.isFile()
-    || handle.ino === 0n || current.ino === 0n
+    || (process.platform !== 'win32' && (handle.ino === 0n || current.ino === 0n
     || handle.dev !== initial.dev || handle.ino !== initial.ino
-    || current.dev !== handle.dev || current.ino !== handle.ino) {
+    || current.dev !== handle.dev || current.ino !== handle.ino))) {
     return relation('unknown', `${subject}-changed-during-inspection`, {
       [pathKey]: filePath,
     });
   }
-  if (handle.nlink === 0n) {
+  if (process.platform !== 'win32' && handle.nlink === 0n) {
     return relation('unknown', `${subject}-link-count-unavailable`, {
       [pathKey]: filePath,
     });
@@ -226,13 +226,13 @@ function inspectRegularFileDescriptor({
       entryType: entryType(beforePath),
     });
   }
-  if (beforeHandle.ino === 0n || beforePath.ino === 0n) {
+  if (process.platform !== 'win32' && (beforeHandle.ino === 0n || beforePath.ino === 0n)) {
     return relation('unknown', `${subject}-identity-unavailable`, { filePath });
   }
-  if (beforeHandle.dev !== identity.device
+  if (process.platform !== 'win32' && (beforeHandle.dev !== identity.device
     || beforeHandle.ino !== identity.inode
     || beforePath.dev !== beforeHandle.dev
-    || beforePath.ino !== beforeHandle.ino) {
+    || beforePath.ino !== beforeHandle.ino)) {
     return relation(phase === 'inspection' ? 'unknown' : 'different',
       `${subject}-${phase === 'inspection' ? 'changed-during-inspection' : 'identity-changed'}`,
       { filePath });
@@ -268,9 +268,9 @@ function inspectRegularFileDescriptor({
     return filesystemFailure(`${subject}-handle-${phase}-failed`, error, { filePath });
   }
   if (!afterHandle.isFile() || !afterPath.isFile()
-    || afterHandle.ino === 0n || afterPath.ino === 0n
+    || (process.platform !== 'win32' && (afterHandle.ino === 0n || afterPath.ino === 0n
     || afterHandle.dev !== identity.device || afterHandle.ino !== identity.inode
-    || afterPath.dev !== afterHandle.dev || afterPath.ino !== afterHandle.ino) {
+    || afterPath.dev !== afterHandle.dev || afterPath.ino !== afterHandle.ino))) {
     return relation(phase === 'inspection' ? 'unknown' : 'different',
       `${subject}-${phase === 'inspection' ? 'changed-during-inspection' : 'identity-changed'}`,
       { filePath });
@@ -332,7 +332,7 @@ export function captureRegularFileBinding(filePath, {
       entryType: type,
     });
   }
-  if (initial.ino === 0n) {
+  if (process.platform !== 'win32' && initial.ino === 0n) {
     return relation('unknown', `${subject}-identity-unavailable`, { filePath: resolvedPath });
   }
 
@@ -345,7 +345,7 @@ export function captureRegularFileBinding(filePath, {
     return filesystemFailure(`${subject}-handle-inspection-failed`, error, { filePath: resolvedPath });
   }
   const identity = { device: initial.dev, inode: initial.ino };
-  if (expectedIdentity !== undefined
+  if (process.platform !== 'win32' && expectedIdentity !== undefined
     && (identity.device !== expectedIdentity.device
       || identity.inode !== expectedIdentity.inode)) {
     const closeFailure = closeCapturedDescriptor(descriptor, subject, resolvedPath);
@@ -1503,6 +1503,9 @@ function captureRequestedEntry(requestedPath, policy) {
 
 function requestedEntryMatches(left, right) {
   if (left.kind !== right.kind) return false;
+  if (process.platform === 'win32') {
+    return left.kind === 'absent' || left.entryType === right.entryType;
+  }
   return left.kind === 'absent'
     || (left.entryType === right.entryType
       && left.device === right.device

@@ -1,0 +1,18 @@
+# ==============================================================================
+# BevAdmin Pro - Aislamiento Perimetral en Modo Operaciones (Ops / Producción)
+# ==============================================================================
+# Cuando el módulo Ops está activo, el acceso se realiza EXCLUSIVAMENTE vía HTTPS (:443).
+# Este archivo de sobreescritura desactiva la exposición de puertos HTTP no cifrados
+# (4200 para Frontend y 8080 para Backend) y el puerto de base de datos (5432) en el host,
+# impidiendo el ingreso directo por HTTP y obligando a pasar por Traefik y CrowdSec.
+# ==============================================================================
+
+services:
+  dev-frontend:
+    ports: !reset []
+
+  dev-backend:
+    ports: !reset []
+
+  dev-postgres:
+    ports: !reset []

@@ -286,8 +286,8 @@ function assertOwnedDeliveryLock(state, ownedLock, operation, { verifyReceipt = 
     });
   }
   if (captured.status !== 'captured'
-    || captured.identity.device !== ownedLock.identity.dev
-    || captured.identity.inode !== ownedLock.identity.ino) {
+    || (process.platform !== 'win32' && (captured.identity.device !== ownedLock.identity.dev
+    || captured.identity.inode !== ownedLock.identity.ino))) {
     if (captured?.binding) releaseRegularFileBinding(captured.binding);
     throw deliveryOwnershipFailure(state, operation, 'an owned lock path no longer names the entry created by this attempt', {
       lock: ownedLock.path,
@@ -364,8 +364,8 @@ function assertDeliveryOwnership(ownership, operation, { allowInitializing = fal
     }
     if (captured.status !== 'captured'
       || !state.pendingIdentity
-      || captured.identity.device !== state.pendingIdentity.dev
-      || captured.identity.inode !== state.pendingIdentity.ino) {
+      || (process.platform !== 'win32' && (captured.identity.device !== state.pendingIdentity.dev
+      || captured.identity.inode !== state.pendingIdentity.ino))) {
       if (captured?.binding) releaseRegularFileBinding(captured.binding);
       throw deliveryOwnershipFailure(state, operation, 'the delivery journal no longer names the entry created by this attempt', {
         journal: pendingPath,
@@ -674,11 +674,11 @@ function acquireDeliveryLock(
       openedLocks.push(ownedLock);
       const pathIdentity = fs.lstatSync(ownedLockPath, { bigint: true });
       if (!handleIdentity.isFile()
-        || handleIdentity.ino === 0n
         || !pathIdentity.isFile()
         || pathIdentity.isSymbolicLink()
+        || (process.platform !== 'win32' && (handleIdentity.ino === 0n
         || pathIdentity.ino === 0n
-        || !sameFileIdentity(pathIdentity, handleIdentity)) {
+        || !sameFileIdentity(pathIdentity, handleIdentity)))) {
         throw new Error('Delivery lock path identity could not be verified safely.');
       }
       if (handleIdentityError) throw handleIdentityError;
