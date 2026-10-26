@@ -1,9 +1,0 @@
-git remote add origin https://github.com/jambrocio/sidebar-login.git
-
-token telegram
-8800531064:AAE7ISp3rshGzi4te4E9MPUc0iOZCCSKR84
-id chat
-1597051090
-
-postgresql://postgres:postgres@dev-postgres:5432/admin_dashboard_db
-

@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\08_c4_pipeline_cicd_homelab.architecture.json",
+    "sha256": "da2516210493a65c76cb8d971fcce6ba4dc77d90e4f757e66e4b2539ae306dcd",
+    "bytes": 8484
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\08_c4_pipeline_cicd_homelab.html",
+    "sha256": "940a0be3659d87766514cc450332a7cf9b2ac09849fdfa476228da00e430b656",
+    "bytes": 860798
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\08_c4_pipeline_cicd_homelab.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\08_c4_pipeline_cicd_homelab.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\08_c4_pipeline_cicd_homelab.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6404,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 4
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "from": "gh_sast",
+            "to": "gh_builder",
+            "label": "Gate SAST OK",
+            "collectionIndex": 3,
+            "artifactIndex": 4
+          },
+          "bends": 3,
+          "stretch": 1.34
+        },
+        {
+          "relationship": {
+            "from": "gh_actions_ci",
+            "to": "notif_alerts",
+            "label": "Estado Build",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "bends": 3,
+          "stretch": 1.32
+        },
+        {
+          "relationship": {
+            "from": "hl_docker",
+            "to": "hl_backend",
+            "label": "Despliega API",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "bends": 3,
+          "stretch": 1.294
+        },
+        {
+          "relationship": {
+            "from": "hl_kuma",
+            "to": "hl_backend",
+            "label": "Smoke /auth/health",
+            "collectionIndex": 17,
+            "artifactIndex": 18
+          },
+          "bends": 3,
+          "stretch": 1
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "gh_sast → gh_builder needs 3 bends: move node gh_sast or gh_builder so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "gh_actions_ci → notif_alerts needs 3 bends: move node gh_actions_ci or notif_alerts so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "hl_docker → hl_backend needs 3 bends: move node hl_docker or hl_backend so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "hl_kuma → hl_backend needs 3 bends: move node hl_kuma or hl_backend so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

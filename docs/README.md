@@ -24,9 +24,13 @@ docs/
 │   ├── 04_secuencia_menu_dinamico_rbac.html    # Secuencia: Menú Dinámico y Resolución RBAC
 │   ├── 05_flujo_operativo_negocio.html         # Flujo Operativo End-to-End (Workflow Trace)
 │   ├── 06_modelo_datos_erd.html                # Modelo de Datos Relacional ERD (19 Tablas en Español)
-│   └── 07_c4_interconexion_ops_aplicaciones.html # C4 Nivel 2: Segmentación de Redes (Ops, App y Datos) con Databasus
+│   ├── 07_c4_interconexion_ops_aplicaciones.html # C4 Nivel 2: Segmentación de Redes (Ops, App y Datos) con Databasus
+│   └── 08_c4_pipeline_cicd_homelab.html        # C4 Nivel 2: Pipeline CI/CD con GitHub Actions y Runner en Homelab
 │
-├── presentacion/                               # Presentación Comercial y Pitch para Clientes Finales
+├── README_PIPELINE_CICD_HOMELAB_DEVSECOPS.md   # Guía Maestra DevSecOps: Implementación paso a paso del Pipeline CI/CD en Homelab
+│
+├── presentacion/                               # Presentaciones, Videos HyperFrames y Pitches
+│   ├── video_c4_segmentacion_redes.html        # Video animado HyperFrames (52s): C4 Nivel 2 y Segmentación de Redes (Ops, App, Datos)
 │   ├── video_promocional_bevadmin.html         # Video animado de 38s con HyperFrames (Video-as-Code)
 │   ├── PRESENTACION_INTERACTIVA_USUARIO.html   # Pitch interactivo en Tema Claro con Simulador POS y ROI
 │   └── PRESENTACION_INTERACTIVA_USUARIO.md     # Guía funcional detallada para el usuario final
@@ -56,7 +60,9 @@ docs/
 
 | Módulo | Descripción | Enlace al Visor Interactivo |
 | :--- | :--- | :--- |
-| **Arquitectura de Software** | Visor de 7 diagramas Archify C4, flujos, secuencias y redes | [**`docs/diagrams/index.html`**](file:///D:/tools/Proyectos/sidebar-login/docs/diagrams/index.html) |
+| **Arquitectura de Software** | Visor de 8 diagramas Archify C4, flujos, secuencias, redes y CI/CD Homelab | [**`docs/diagrams/index.html`**](file:///D:/tools/Proyectos/sidebar-login/docs/diagrams/index.html) |
+| **Pipeline CI/CD DevSecOps** | Guía de implementación paso a paso CI/CD con GitHub Actions y Homelab | [**`docs/README_PIPELINE_CICD_HOMELAB_DEVSECOPS.md`**](file:///D:/tools/Proyectos/sidebar-login/docs/README_PIPELINE_CICD_HOMELAB_DEVSECOPS.md) |
+| **Video C4 Redes (HyperFrames)** | Video animado didáctico (52s) de C4 Nivel 2 y Segmentación en 3 Redes Aisladas | [**`docs/presentacion/video_c4_segmentacion_redes.html`**](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/video_c4_segmentacion_redes.html) |
 | **Arquitectura Cloud** | Comparador interactivo Azure vs GCP y costos FinOps | [**`docs/cloud/index.html`**](file:///D:/tools/Proyectos/mio/sidebar-login/docs/cloud/index.html) |
 | **Presentación a Clientes** | Pitch comercial interactivo (Tema Claro + Simulador POS) | [**`docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html`**](file:///D:/tools/Proyectos/mio/sidebar-login/docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html) |
 

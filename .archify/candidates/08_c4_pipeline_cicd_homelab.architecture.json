@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Modelo C4 (Nivel 2 - Despliegue): Pipeline CI/CD con GitHub Actions para Homelab",
+    "subtitle": "Integración Continua (CI) en GitHub Cloud y Despliegue Continuo (CD) Seguro Pull-Based mediante Self-Hosted Runner en Homelab On-Premise",
+    "locale": "es",
+    "output": "docs/diagrams/08_c4_pipeline_cicd_homelab.html",
+    "quality_profile": "showcase",
+    "viewBox": [1240, 920]
+  },
+  "components": [
+    {
+      "id": "dev_user",
+      "type": "external",
+      "label": "Desarrollador / DevSecOps",
+      "sublabel": "Workstation (Git CLI / IDE)",
+      "pos": [40, 80],
+      "size": [180, 64],
+      "tag": "Feature & Main Branch"
+    },
+    {
+      "id": "notif_alerts",
+      "type": "external",
+      "label": "Canales de Auditoría",
+      "sublabel": "Telegram Bot & Discord Webhook",
+      "pos": [40, 220],
+      "size": [180, 64],
+      "tag": "Alertas Push CI/CD"
+    },
+    {
+      "id": "gh_repo",
+      "type": "cloud",
+      "label": "GitHub Repository",
+      "sublabel": "jambrocio/sidebar-login",
+      "pos": [270, 80],
+      "size": [180, 64],
+      "tag": "Branch Protection & PR"
+    },
+    {
+      "id": "gh_actions_ci",
+      "type": "cloud",
+      "label": "GitHub Actions CI",
+      "sublabel": "Maven Test & Angular Build",
+      "pos": [270, 220],
+      "size": [180, 64],
+      "tag": "Ubuntu-Latest (Cloud CI)"
+    },
+    {
+      "id": "gh_sast",
+      "type": "security",
+      "label": "Escaneo SAST & CVEs",
+      "sublabel": "Trivy Security Scanner",
+      "pos": [270, 360],
+      "size": [180, 64],
+      "tag": "OWASP Top 10 Gate"
+    },
+    {
+      "id": "gh_secrets",
+      "type": "security",
+      "label": "GitHub Secrets KMS",
+      "sublabel": "Variables y Tokens Encriptados",
+      "pos": [270, 500],
+      "size": [180, 64],
+      "tag": "AES-256 (Cloud KMS)"
+    },
+    {
+      "id": "gh_registry",
+      "type": "cloud",
+      "label": "GitHub Container Registry",
+      "sublabel": "ghcr.io/jambrocio/sidebar-login",
+      "pos": [490, 220],
+      "size": [180, 64],
+      "tag": "Imágenes OCI Inmutables"
+    },
+    {
+      "id": "gh_builder",
+      "type": "cloud",
+      "label": "Docker Multi-Stage Build",
+      "sublabel": "Buildx OCI Container Packager",
+      "pos": [490, 360],
+      "size": [180, 64],
+      "tag": "dev-frontend & dev-backend"
+    },
+    {
+      "id": "gh_runner",
+      "type": "security",
+      "label": "Self-Hosted Runner",
+      "sublabel": "Agente Homelab (Pull-Based)",
+      "pos": [740, 80],
+      "size": [190, 64],
+      "tag": "Poll Outbound TLS :443"
+    },
+    {
+      "id": "deploy_script",
+      "type": "backend",
+      "label": "Script de Despliegue CD",
+      "sublabel": "start-ops.sh / deploy-homelab.sh",
+      "pos": [740, 220],
+      "size": [190, 64],
+      "tag": "Orquestador Compose CD"
+    },
+    {
+      "id": "hl_docker",
+      "type": "external",
+      "label": "Docker Engine Daemon",
+      "sublabel": "Socket de Control Local",
+      "pos": [740, 360],
+      "size": [190, 64],
+      "tag": "/var/run/docker.sock"
+    },
+    {
+      "id": "hl_autoheal",
+      "type": "security",
+      "label": "bevadmin-autoheal",
+      "sublabel": "Vigilante de Contenedores",
+      "pos": [740, 500],
+      "size": [190, 64],
+      "tag": "Auto-Restart si Unhealthy"
+    },
+    {
+      "id": "hl_kuma",
+      "type": "security",
+      "label": "bevadmin-uptime-kuma",
+      "sublabel": "Sonda Monitoreo Sintético",
+      "pos": [740, 640],
+      "size": [190, 64],
+      "tag": "Sonda /auth/health"
+    },
+    {
+      "id": "hl_proxy",
+      "type": "cloud",
+      "label": "bevadmin-proxy (Traefik v3.2)",
+      "sublabel": "Ingress Router & CrowdSec",
+      "pos": [980, 80],
+      "size": [210, 64],
+      "tag": "Red Ops & App (:443)"
+    },
+    {
+      "id": "hl_frontend",
+      "type": "frontend",
+      "label": "dev-frontend (Angular 21)",
+      "sublabel": "SPA PWA Nginx Servida",
+      "pos": [980, 220],
+      "size": [210, 64],
+      "tag": "Red App :80 (:4200 Off)"
+    },
+    {
+      "id": "hl_backend",
+      "type": "backend",
+      "label": "dev-backend (Spring Boot 4)",
+      "sublabel": "Java 21 Loom / Spring Security 7",
+      "pos": [980, 360],
+      "size": [210, 64],
+      "tag": "Redes App & Data :8080"
+    },
+    {
+      "id": "hl_database",
+      "type": "database",
+      "label": "dev-postgres (PostgreSQL 17)",
+      "sublabel": "Base de Datos Relacional",
+      "pos": [980, 500],
+      "size": [210, 64],
+      "tag": "Red Data :5432 (Aislada)"
+    },
+    {
+      "id": "hl_storage",
+      "type": "database",
+      "label": "Volúmenes Persistentes Host",
+      "sublabel": "postgres-data & databasus-data",
+      "pos": [980, 640],
+      "size": [210, 64],
+      "tag": "Almacenamiento NVMe/SSD"
+    },
+    {
+      "id": "hl_databasus",
+      "type": "database",
+      "label": "bevadmin-databasus",
+      "sublabel": "Panel Web & Backups Locales",
+      "pos": [980, 780],
+      "size": [210, 64],
+      "tag": "Red Ops & Data (:8085)"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Ecosistema GitHub Cloud (CI / SaaS)",
+      "wraps": [
+        "gh_repo",
+        "gh_actions_ci",
+        "gh_sast",
+        "gh_secrets",
+        "gh_registry",
+        "gh_builder"
+      ],
+      "pad": 20
+    },
+    {
+      "kind": "security-group",
+      "label": "Servidor Homelab On-Premise (Mini PC / Ubuntu / Proxmox)",
+      "wraps": [
+        "gh_runner",
+        "deploy_script",
+        "hl_docker",
+        "hl_autoheal",
+        "hl_kuma",
+        "hl_proxy",
+        "hl_frontend",
+        "hl_backend",
+        "hl_database",
+        "hl_databasus",
+        "hl_storage"
+      ],
+      "pad": 20
+    }
+  ],
+  "connections": [
+    {
+      "from": "dev_user",
+      "to": "gh_repo",
+      "label": "Push / PR",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gh_repo",
+      "to": "gh_actions_ci",
+      "label": "Trigger Evento",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gh_actions_ci",
+      "to": "gh_sast",
+      "label": "Test Aprobado",
+      "variant": "security"
+    },
+    {
+      "from": "gh_sast",
+      "to": "gh_builder",
+      "label": "Gate SAST OK",
+      "variant": "security"
+    },
+    {
+      "from": "gh_secrets",
+      "to": "gh_builder",
+      "label": "Token GHCR",
+      "variant": "security"
+    },
+    {
+      "from": "gh_builder",
+      "to": "gh_registry",
+      "label": "Push Imágenes",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gh_actions_ci",
+      "to": "notif_alerts",
+      "label": "Estado Build",
+      "variant": "security"
+    },
+    {
+      "from": "gh_runner",
+      "to": "gh_repo",
+      "label": "Poll HTTPS :443",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gh_runner",
+      "to": "deploy_script",
+      "label": "Ejecuta CD",
+      "variant": "emphasis"
+    },
+    {
+      "from": "deploy_script",
+      "to": "gh_registry",
+      "label": "Pull OCI Images",
+      "variant": "emphasis"
+    },
+    {
+      "from": "deploy_script",
+      "to": "hl_docker",
+      "label": "docker compose up",
+      "variant": "emphasis"
+    },
+    {
+      "from": "hl_docker",
+      "to": "hl_frontend",
+      "label": "Despliega SPA",
+      "variant": "default"
+    },
+    {
+      "from": "hl_docker",
+      "to": "hl_backend",
+      "label": "Despliega API",
+      "variant": "default"
+    },
+    {
+      "from": "hl_proxy",
+      "to": "hl_frontend",
+      "label": "Proxy Web :80",
+      "variant": "default"
+    },
+    {
+      "from": "hl_frontend",
+      "to": "hl_backend",
+      "label": "REST /api/v1",
+      "variant": "default"
+    },
+    {
+      "from": "hl_backend",
+      "to": "hl_database",
+      "label": "JDBC HikariCP :5432",
+      "variant": "emphasis"
+    },
+    {
+      "from": "hl_autoheal",
+      "to": "hl_docker",
+      "label": "Autoheal Unhealthy",
+      "variant": "dashed"
+    },
+    {
+      "from": "hl_kuma",
+      "to": "hl_backend",
+      "label": "Smoke /auth/health",
+      "variant": "security"
+    },
+    {
+      "from": "hl_kuma",
+      "to": "notif_alerts",
+      "label": "Alerta Caída",
+      "variant": "security"
+    },
+    {
+      "from": "hl_databasus",
+      "to": "hl_storage",
+      "label": "Backups /backups",
+      "variant": "default"
+    },
+    {
+      "from": "hl_database",
+      "to": "hl_storage",
+      "label": "Persistencia Datos",
+      "variant": "default"
+    }
+  ]
+}

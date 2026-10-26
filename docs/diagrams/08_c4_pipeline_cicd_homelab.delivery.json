@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "b4d2446c-ce7c-4f44-9849-b44b6a3658e7",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\08_c4_pipeline_cicd_homelab.architecture.json",
+  "output": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\08_c4_pipeline_cicd_homelab.html",
+  "specification": {
+    "sha256": "da2516210493a65c76cb8d971fcce6ba4dc77d90e4f757e66e4b2539ae306dcd",
+    "bytes": 8484
+  },
+  "artifact": {
+    "sha256": "940a0be3659d87766514cc450332a7cf9b2ac09849fdfa476228da00e430b656",
+    "bytes": 860798
+  }
+}

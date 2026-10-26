@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C4 Nivel 2: Segmentación de Redes (Ops, App y Datos) — Video Animado HyperFrames</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --accent: #2563eb;
+      --success: #059669;
+      --success-light: #10b981;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+      --purple: #7c3aed;
+      --text-dark: #0f172a;
+      --text-muted: #475569;
+      --card-border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 1.5rem;
+    }
+
+    /* ENCABEZADO SUPERIOR LUMINOSO */
+    .header-bar {
+      width: 100%;
+      max-width: 1080px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding: 0 0.5rem;
+    }
+
+    .brand-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--text-dark);
+    }
+
+    .brand-text p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .badge-audience {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #059669;
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.1);
+    }
+
+    /* CONTENEDOR UNIFICADO DEL REPRODUCTOR (PANTALLA + IDEA + CONTROLES) */
+    .video-viewport-frame {
+      width: 100%;
+      max-width: 1080px;
+      background: #ffffff;
+      border-radius: 24px;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 25px 60px -15px rgba(2, 132, 199, 0.22), 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ÁREA DE VIDEO 16:9 100% LIMPIA (SIN SOLAPAMIENTO DE CONTROLES NI SUBTÍTULOS) */
+    .video-screen-area {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 20%, #ffffff 0%, #f0f7ff 60%, #e0f2fe 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* CANVAS DE FONDO CINEMÁTICO */
+    .canvas-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ESCENAS / CLIPS HYPERFRAMES */
+    .clip {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 2.8rem;
+      text-align: center;
+      z-index: 2;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: scale(0.96);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .clip.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    /* TIPOGRAFÍA CINEMÁTICA Y BADGES */
+    .badge-commercial {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ffffff;
+      border: 1px solid #bae6fd;
+      color: #0284c7;
+      padding: 0.35rem 1.15rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+      animation: pulseBadge 2s infinite;
+    }
+
+    @keyframes pulseBadge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .scene-title {
+      font-size: 2.35rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--text-dark);
+      margin-bottom: 0.65rem;
+      max-width: 880px;
+    }
+
+    .scene-title span.blue {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .scene-title span.green {
+      background: linear-gradient(135deg, #059669, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .scene-title span.purple {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .scene-title span.red {
+      color: #dc2626;
+      text-decoration: underline wavy #f87171;
+    }
+
+    .scene-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    /* ESCENA 1: EL PELIGRO DE LA RED PLANA */
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 1.25rem;
+    }
+
+    .card-pain {
+      background: #ffffff;
+      border: 1px solid #fee2e2;
+      border-radius: 18px;
+      padding: 1.25rem 1rem;
+      box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.1);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+
+    .card-pain .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: #fef2f2;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 0.65rem;
+    }
+
+    .card-pain h4 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #991b1b;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-pain p {
+      font-size: 0.8rem;
+      color: #64748b;
+      line-height: 1.35;
+    }
+
+    /* ESCENA 2: LA SOLUCIÓN (LAS 3 REDES AISLADAS) */
+    .networks-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 920px;
+      margin-top: 1.25rem;
+    }
+
+    .card-network {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 1.25rem 1.1rem;
+      text-align: left;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .card-network.net-ops {
+      border-color: #bae6fd;
+      background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+    }
+
+    .card-network.net-app {
+      border-color: #ddd6fe;
+      background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%);
+    }
+
+    .card-network.net-data {
+      border-color: #a7f3d0;
+      background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
+    }
+
+    .card-network .net-header {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-network .net-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .net-ops .net-icon { background: #e0f2fe; color: #0284c7; }
+    .net-app .net-icon { background: #ede9fe; color: #7c3aed; }
+    .net-data .net-icon { background: #d1fae5; color: #059669; }
+
+    .card-network h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .card-network .net-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    .card-network ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .card-network ul li {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ESCENA 3: CONTENEDORES PROTAGONISTAS */
+    .containers-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.95rem;
+      width: 100%;
+      max-width: 940px;
+      margin-top: 1.25rem;
+    }
+
+    .card-container-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.15rem 0.85rem;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+      transition: all 0.25s ease;
+    }
+
+    .card-container-item:hover {
+      transform: translateY(-5px);
+      border-color: #0284c7;
+      box-shadow: 0 12px 28px rgba(2, 132, 199, 0.18);
+    }
+
+    .badge-tag-net {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 0.15rem 0.45rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-tag-ops { background: #e0f2fe; color: #0284c7; }
+    .badge-tag-app { background: #ede9fe; color: #7c3aed; }
+    .badge-tag-data { background: #d1fae5; color: #059669; }
+
+    .c-icon-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      margin: 0.25rem auto 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.55rem;
+    }
+
+    .card-container-item h4 {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 0.2rem;
+    }
+
+    .card-container-item p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* ESCENA 4: FLUJO DE UNA PETICIÓN EN TIEMPO REAL */
+    .flow-card-box {
+      width: 100%;
+      max-width: 920px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 12px 35px rgba(2, 132, 199, 0.08);
+      margin-top: 1rem;
+    }
+
+    .flow-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.65rem;
+      align-items: center;
+    }
+
+    .step-box-item {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 0.85rem 0.45rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .step-box-item.active {
+      border-color: #0284c7;
+      background: #f0f9ff;
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.2);
+      transform: scale(1.05);
+    }
+
+    .step-box-item i {
+      font-size: 1.4rem;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+
+    .step-box-item .step-name {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      display: block;
+    }
+
+    .step-box-item .step-port {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .flow-blocked-alert {
+      margin-top: 1rem;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 0.65rem 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #991b1b;
+    }
+
+    /* ESCENA 5: LAS 3 REGLAS DE ORO */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.15rem;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 1.25rem;
+    }
+
+    .rule-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 1.35rem 1.15rem;
+      text-align: left;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .rule-circle-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: #f0fdf4;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .rule-card h4 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 0.35rem;
+    }
+
+    .rule-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* ========================================================================= */
+    /* FRANJA REUBICADA: MENSAJE O IDEA CLAVE (DEDICADA, SIN TAPAR EL VIDEO)     */
+    /* ========================================================================= */
+    .scene-idea-strip {
+      background: #f0f9ff;
+      border-top: 1px solid #bae6fd;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.75rem 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1.15rem;
+      z-index: 10;
+      box-shadow: inset 0 2px 5px rgba(2, 132, 199, 0.04);
+    }
+
+    .idea-tag {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.35rem 0.95rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .idea-message-text {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    /* ========================================================================= */
+    /* BARRA REUBICADA: CONTROLES DEL REPRODUCTOR HYPERFRAMES (ESTILO PRO)      */
+    /* ========================================================================= */
+    .player-controls {
+      background: #ffffff;
+      padding: 0.85rem 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1.15rem;
+      z-index: 10;
+    }
+
+    .btn-circle {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-circle:hover {
+      transform: scale(1.08);
+    }
+
+    .scrubber-track {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .scrubber-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #2563eb);
+      border-radius: 9999px;
+      width: 0%;
+      transition: width 0.08s linear;
+      position: relative;
+    }
+
+    .scrubber-thumb {
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border: 2px solid #0284c7;
+      border-radius: 50%;
+      position: absolute;
+      right: -7px;
+      top: -3px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .scene-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(0, 0, 0, 0.15);
+      pointer-events: none;
+    }
+
+    .timer-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #475569;
+      min-width: 95px;
+      flex-shrink: 0;
+    }
+
+    .speed-tag-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #0284c7;
+      padding: 0.38rem 0.7rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .speed-tag-btn:hover {
+      background: #e0f2fe;
+      border-color: #bae6fd;
+    }
+
+    .btn-tool-icon {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: 1.15rem;
+      cursor: pointer;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-tool-icon:hover { background: #e2e8f0; }
+    .btn-tool-icon.active { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+
+    /* INDICADOR DE MÚSICA BEAT */
+    .music-waves {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .wave-bar {
+      width: 3px;
+      height: 100%;
+      background: #0284c7;
+      border-radius: 2px;
+      animation: waveAnim 0.8s infinite ease-in-out alternate;
+    }
+
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+
+    @keyframes waveAnim {
+      0% { height: 20%; }
+      100% { height: 100%; }
+    }
+
+    /* BOTONES DE CAPÍTULOS INFERIORES */
+    .chapters-nav-bar {
+      width: 100%;
+      max-width: 1080px;
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .chapter-pill {
+      flex: 1;
+      min-width: 170px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s ease;
+    }
+
+    .chapter-pill:hover, .chapter-pill.active {
+      background: #f0f9ff;
+      color: #0284c7;
+      border-color: #bae6fd;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
+    }
+
+    .chapter-pill .num {
+      background: #e2e8f0;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      color: #334155;
+    }
+
+    .chapter-pill.active .num {
+      background: #0284c7;
+      color: #ffffff;
+    }
+
+    /* MODAL INSPECTOR ARQUITECTÓNICO */
+    .inspector-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .inspector-modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .inspector-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      max-width: 520px;
+      width: 100%;
+      padding: 2rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .close-inspector-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .close-inspector-btn:hover { background: #e2e8f0; }
+
+    /* SECCIÓN DE RESUMEN ARQUITECTÓNICO */
+    .edu-summary-section {
+      width: 100%;
+      max-width: 1080px;
+      margin-top: 1.5rem;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    }
+
+    .edu-summary-text h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .edu-summary-text p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .edu-summary-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .btn-action-diagram {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-diagram:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.35);
+    }
+
+    @media (max-width: 900px) {
+      .scene-title { font-size: 1.7rem; }
+      .scene-desc { font-size: 0.9rem; }
+      .cards-row, .networks-grid, .containers-row, .rules-grid { grid-template-columns: 1fr; }
+      .flow-steps-grid { grid-template-columns: 1fr; }
+      .edu-summary-section { grid-template-columns: 1fr; }
+      .scene-idea-strip { flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 0.75rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO SUPERIOR -->
+  <header class="header-bar">
+    <div class="brand-tag">
+      <div class="brand-icon">
+        <i class="bi bi-diagram-3-fill"></i>
+      </div>
+      <div class="brand-text">
+        <h1>C4 Nivel 2: Segmentación de Redes (Ops, App y Datos)</h1>
+        <p>Video Animado Educativo — Defensa en Profundidad en Contenedores Docker</p>
+      </div>
+    </div>
+    <div class="badge-audience">
+      <i class="bi bi-mortarboard-fill"></i> Nivel Básico & Intermedio
+    </div>
+  </header>
+
+  <!-- CONTENEDOR UNIFICADO DEL REPRODUCTOR -->
+  <main class="video-viewport-frame" id="videoContainer">
+    
+    <!-- 1. PANTALLA DE VIDEO 16:9 COMPLETA Y LIMPIA (HYPERFRAMES) -->
+    <div class="video-screen-area" 
+         data-composition-id="c4-container-networks-explanation" 
+         data-width="1920" 
+         data-height="1080" 
+         data-duration="76" 
+         data-fps="30">
+
+      <!-- CANVAS CON DESTELLOS Y ESFERAS DE LUZ (TEMA CLARO) -->
+      <canvas class="canvas-bg" id="lightCanvas"></canvas>
+
+      <!-- =================================================================== -->
+      <!-- ESCENA 1: EL PELIGRO DE LA RED PLANA (0s - 15s)                    -->
+      <!-- =================================================================== -->
+      <div class="clip" id="scene1" data-start="0" data-duration="15" data-track-index="1">
+        <div class="badge-commercial" style="color: #dc2626; border-color: #fca5a5;">
+          <i class="bi bi-exclamation-octagon-fill"></i> Vulnerabilidad Crítica en Docker
+        </div>
+        <h2 class="scene-title">
+          ¿Todos tus contenedores en una <span class="red">Red Plana</span> sin barreras?
+        </h2>
+        <p class="scene-desc">
+          En el Modelo C4, el Nivel 2 nos muestra los contenedores. El error más grave es poner todo en una sola red compartida: si vulneran la web, ¡tienen acceso total a tu base de datos!
+        </p>
+
+        <div class="cards-row">
+          <div class="card-pain" id="pain1">
+            <div class="icon-box"><i class="bi bi-incognito"></i></div>
+            <h4>Atacante Web</h4>
+            <p>Aprovecha una vulnerabilidad en la interfaz web pública.</p>
+          </div>
+          <div class="card-pain" id="pain2">
+            <div class="icon-box" style="background: #fffbeb; color: #d97706;"><i class="bi bi-diagram-2-fill"></i></div>
+            <h4 style="color: #b45309;">Red Plana Compartida</h4>
+            <p>Cero aislamiento: cualquier contenedor ve a los demás.</p>
+          </div>
+          <div class="card-pain" id="pain3">
+            <div class="icon-box"><i class="bi bi-database-fill-x"></i></div>
+            <h4>Base de Datos Expuesta</h4>
+            <p>Robo masivo de tablas y credenciales sin barreras.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- ESCENA 2: LA SOLUCIÓN — TRES REDES AISLADAS (15s - 31s)             -->
+      <!-- =================================================================== -->
+      <div class="clip" id="scene2" data-start="15" data-duration="16" data-track-index="1">
+        <div class="badge-commercial">
+          <i class="bi bi-shield-check"></i> Defensa en Profundidad Certificada
+        </div>
+        <h2 class="scene-title">
+          La Solución: <span class="blue">Tres Redes Aisladas</span> en Docker
+        </h2>
+        <p class="scene-desc">
+          Segmentamos el sistema para que cada contenedor solo hable con quien estrictamente necesita. ¡Si vulneran la web, la base de datos sigue 100% blindada e invisible!
+        </p>
+
+        <div class="networks-grid">
+          <!-- ZONA OPS -->
+          <div class="card-network net-ops" id="netCardOps">
+            <div class="net-header">
+              <div class="net-icon"><i class="bi bi-cloud-check-fill"></i></div>
+              <div>
+                <h3>1. Red Operaciones</h3>
+                <span class="net-id">bevadmin-ops-network</span>
+              </div>
+            </div>
+            <ul>
+              <li><i class="bi bi-shield-lock-fill" style="color: #0284c7;"></i> Traefik v3.2 (Ingress HTTPS :443)</li>
+              <li><i class="bi bi-radar" style="color: #0284c7;"></i> CrowdSec WAF & IPS</li>
+              <li><i class="bi bi-activity" style="color: #0284c7;"></i> Sondas Uptime Kuma</li>
+              <li><i class="bi bi-heart-pulse-fill" style="color: #0284c7;"></i> Autoheal Vigilante</li>
+            </ul>
+          </div>
+
+          <!-- ZONA APP -->
+          <div class="card-network net-app" id="netCardApp">
+            <div class="net-header">
+              <div class="net-icon"><i class="bi bi-cpu-fill"></i></div>
+              <div>
+                <h3>2. Red Aplicación</h3>
+                <span class="net-id">bevadmin-app-network</span>
+              </div>
+            </div>
+            <ul>
+              <li><i class="bi bi-browser-chrome" style="color: #7c3aed;"></i> dev-frontend (Angular 21 SPA)</li>
+              <li><i class="bi bi-hdd-network-fill" style="color: #7c3aed;"></i> dev-backend (Spring Boot 4)</li>
+              <li><i class="bi bi-threads" style="color: #7c3aed;"></i> Java 21 Loom Virtual Threads</li>
+              <li><i class="bi bi-lock-fill" style="color: #7c3aed;"></i> Sin puertos públicos directos</li>
+            </ul>
+          </div>
+
+          <!-- ZONA DATOS -->
+          <div class="card-network net-data" id="netCardData">
+            <div class="net-header">
+              <div class="net-icon"><i class="bi bi-safe2-fill"></i></div>
+              <div>
+                <h3>3. Red Aislada Datos</h3>
+                <span class="net-id">bevadmin-data-network</span>
+              </div>
+            </div>
+            <ul>
+              <li><i class="bi bi-database-fill" style="color: #059669;"></i> dev-postgres (PostgreSQL 17)</li>
+              <li><i class="bi bi-hdd-fill" style="color: #059669;"></i> Volúmenes Persistentes en Disco</li>
+              <li><i class="bi bi-floppy2-fill" style="color: #059669;"></i> Databasus & Copias Backup</li>
+              <li><i class="bi bi-slash-circle-fill" style="color: #dc2626;"></i> ¡Zero Acceso a Internet!</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- ESCENA 3: CONTENEDORES PROTAGONISTAS (31s - 47s)                    -->
+      <!-- =================================================================== -->
+      <div class="clip" id="scene3" data-start="31" data-duration="16" data-track-index="1">
+        <div class="badge-commercial" style="color: #7c3aed; border-color: #ddd6fe;">
+          <i class="bi bi-boxes"></i> Contenedores y sus Roles
+        </div>
+        <h2 class="scene-title">
+          Roles Claros: <span class="purple">Cada Contenedor en su Lugar</span>
+        </h2>
+        <p class="scene-desc">
+          Haz clic en cualquier tarjeta para pausar e inspeccionar sus puertos, protocolos y reglas de seguridad.
+        </p>
+
+        <div class="containers-row">
+          <!-- CARD TRAEFIK -->
+          <div class="card-container-item" onclick="openInspector('traefik')">
+            <span class="badge-tag-net badge-tag-ops">Red Ops + App</span>
+            <div class="c-icon-circle" style="background: #e0f2fe; color: #0284c7;">
+              <i class="bi bi-cloud-fog2-fill"></i>
+            </div>
+            <h4>Traefik v3.2</h4>
+            <p>Único Ingress HTTPS :443 con TLS 1.3 y enrutamiento dinámico.</p>
+          </div>
+
+          <!-- CARD CROWDSEC -->
+          <div class="card-container-item" onclick="openInspector('crowdsec')">
+            <span class="badge-tag-net badge-tag-ops">Red Ops</span>
+            <div class="c-icon-circle" style="background: #fee2e2; color: #dc2626;">
+              <i class="bi bi-shield-shaded"></i>
+            </div>
+            <h4>CrowdSec IPS</h4>
+            <p>Bouncer inteligente que detecta ataques y bloquea IPs hostiles.</p>
+          </div>
+
+          <!-- CARD BACKEND -->
+          <div class="card-container-item" onclick="openInspector('backend')">
+            <span class="badge-tag-net badge-tag-app">Red App + Data</span>
+            <div class="c-icon-circle" style="background: #ede9fe; color: #7c3aed;">
+              <i class="bi bi-filetype-java"></i>
+            </div>
+            <h4>Spring Boot 4</h4>
+            <p>Cerebro REST Java 21 Loom. Es el único puente hacia Postgres.</p>
+          </div>
+
+          <!-- CARD POSTGRES -->
+          <div class="card-container-item" onclick="openInspector('postgres')">
+            <span class="badge-tag-net badge-tag-data">Red Data Aislada</span>
+            <div class="c-icon-circle" style="background: #d1fae5; color: #059669;">
+              <i class="bi bi-database-fill-check"></i>
+            </div>
+            <h4>PostgreSQL 17</h4>
+            <p>Bóveda relacional. Jamás publica puertos a la red pública.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- ESCENA 4: EL VIAJE DE UNA PETICIÓN SEGURA (47s - 63s)               -->
+      <!-- =================================================================== -->
+      <div class="clip" id="scene4" data-start="47" data-duration="16" data-track-index="1">
+        <div class="badge-commercial" style="color: #059669; border-color: #86efac;">
+          <i class="bi bi-send-check-fill"></i> Simulación de Tráfico en Vivo
+        </div>
+        <h2 class="scene-title">
+          ¿Cómo Viaja una Petición <span class="green">Sin Ningún Riesgo</span>?
+        </h2>
+        <p class="scene-desc">
+          Observa el camino seguro desde el navegador del usuario hasta el almacenamiento físico persistente.
+        </p>
+
+        <div class="flow-card-box">
+          <div class="flow-steps-grid">
+            <div class="step-box-item active" id="step1">
+              <i class="bi bi-laptop" style="color: #0284c7;"></i>
+              <span class="step-name">1. Cliente POS</span>
+              <span class="step-port">HTTPS :443</span>
+            </div>
+            <div class="step-box-item" id="step2">
+              <i class="bi bi-shield-check" style="color: #0284c7;"></i>
+              <span class="step-name">2. Traefik + WAF</span>
+              <span class="step-port">Filtro TLS 1.3</span>
+            </div>
+            <div class="step-box-item" id="step3">
+              <i class="bi bi-window" style="color: #7c3aed;"></i>
+              <span class="step-name">3. dev-frontend</span>
+              <span class="step-port">Angular 21 SPA</span>
+            </div>
+            <div class="step-box-item" id="step4">
+              <i class="bi bi-cpu" style="color: #7c3aed;"></i>
+              <span class="step-name">4. dev-backend</span>
+              <span class="step-port">Spring Boot API</span>
+            </div>
+            <div class="step-box-item" id="step5">
+              <i class="bi bi-database-fill" style="color: #059669;"></i>
+              <span class="step-name">5. PostgreSQL</span>
+              <span class="step-port">Hikari JDBC :5432</span>
+            </div>
+          </div>
+
+          <div class="flow-blocked-alert">
+            <div>
+              <i class="bi bi-shield-fill-x" style="color: #dc2626; margin-right: 0.5rem; font-size: 1.1rem;"></i>
+              <strong>Ataque Simulado:</strong> Intruso intentando conectar directo a PostgreSQL por TCP :5432
+            </div>
+            <span style="background: #fee2e2; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 800; font-size: 0.75rem; border: 1px solid #fecaca;">
+              ACCESO DENEGADO (Sin Ruta de Red)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- ESCENA 5: LAS 3 REGLAS DE ORO DEL ARQUITECTO (63s - 76s)            -->
+      <!-- =================================================================== -->
+      <div class="clip" id="scene5" data-start="63" data-duration="13" data-track-index="1">
+        <div class="badge-commercial" style="color: #d97706; border-color: #fde68a;">
+          <i class="bi bi-award-fill"></i> Principios de Arquitectura Profesional
+        </div>
+        <h2 class="scene-title">
+          Las 3 Reglas de Oro de un <span class="blue">Sistema Blindado</span>
+        </h2>
+        <p class="scene-desc">
+          Aplica estos mandamientos en tus diagramas C4 y orquestaciones de Docker Compose.
+        </p>
+
+        <div class="rules-grid">
+          <div class="rule-card" id="rule1">
+            <div class="rule-circle-num">1</div>
+            <h4>Principio de Menor Privilegio</h4>
+            <p>Ningún contenedor debe tener acceso a redes que no necesita. El frontend jamás habla con la base de datos.</p>
+          </div>
+          <div class="rule-card" id="rule2">
+            <div class="rule-circle-num">2</div>
+            <h4>Puerta de Entrada Única</h4>
+            <p>Traefik centraliza certificados SSL y CrowdSec bloquea bots hostiles antes de que toquen tu código de negocio.</p>
+          </div>
+          <div class="rule-card" id="rule3">
+            <div class="rule-circle-num">3</div>
+            <h4>Bases de Datos Invisibles</h4>
+            <p>PostgreSQL nunca debe exponer `ports: 5432:5432` a Internet. Solo comunicación interna en su red.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE INSPECCIÓN ARQUITECTÓNICA -->
+      <div class="inspector-modal" id="inspectorModal">
+        <div class="inspector-card">
+          <button class="close-inspector-btn" onclick="closeInspector()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          <div id="inspectorContent"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 2. FRANJA REUBICADA: MENSAJE O IDEA CLAVE (DEDICADA Y SIEMPRE VISIBLE) -->
+    <!-- ===================================================================== -->
+    <div class="scene-idea-strip" id="ideaStrip">
+      <div class="idea-tag">
+        <i class="bi bi-lightbulb-fill"></i> Idea Clave
+      </div>
+      <div class="idea-message-text" id="subtitleText">
+        Cargando idea clave de la escena...
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 3. BARRA REUBICADA: CONTROLES DE REPRODUCCIÓN (BASE DE LA PANTALLA)   -->
+    <!-- ===================================================================== -->
+    <div class="player-controls">
+      <button class="btn-circle" id="btnPlayPause" onclick="togglePlay()" title="Reproducir / Pausar (Espacio)">
+        <i class="bi bi-play-fill" id="playIcon"></i>
+      </button>
+
+      <button class="btn-tool-icon" onclick="restartVideo()" title="Reiniciar desde el inicio">
+        <i class="bi bi-arrow-counterclockwise"></i>
+      </button>
+
+      <div class="timer-text" id="timeLabel">00:00 / 01:16</div>
+
+      <div class="scrubber-track" id="scrubberBar" onclick="seekVideo(event)">
+        <div class="scrubber-fill" id="scrubberFill">
+          <div class="scrubber-thumb"></div>
+        </div>
+        <!-- Marcadores de Escenas en el Scrubber -->
+        <div class="scene-marker" style="left: calc(15 / 76 * 100%);"></div>
+        <div class="scene-marker" style="left: calc(31 / 76 * 100%);"></div>
+        <div class="scene-marker" style="left: calc(47 / 76 * 100%);"></div>
+        <div class="scene-marker" style="left: calc(63 / 76 * 100%);"></div>
+      </div>
+
+      <div class="music-waves" id="musicVisualizer" style="opacity: 0.3;" title="Ritmo Musical Activo">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+
+      <button class="speed-tag-btn" id="btnSpeed" onclick="cycleSpeed()" title="Velocidad de Reproducción">
+        1.0x
+      </button>
+
+      <button class="btn-tool-icon active" id="btnSound" onclick="toggleAudio()" title="Activar/Silenciar Efectos y Música">
+        <i class="bi bi-volume-up-fill" id="soundIcon"></i>
+      </button>
+
+      <button class="btn-tool-icon active" id="btnVoice" onclick="toggleVoice()" title="Voz en Off (TTS)">
+        <i class="bi bi-mic-fill" id="voiceIcon"></i>
+      </button>
+
+      <button class="btn-tool-icon" onclick="toggleFs()" title="Pantalla Completa">
+        <i class="bi bi-fullscreen"></i>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- NAVEGACIÓN DIRECTA POR CAPÍTULOS -->
+  <nav class="chapters-nav-bar">
+    <div class="chapter-pill active" onclick="jumpTo(0)" id="pill0">
+      <span class="num">1</span> El Peligro: Red Plana
+    </div>
+    <div class="chapter-pill" onclick="jumpTo(15)" id="pill1">
+      <span class="num">2</span> Las 3 Redes Aisladas
+    </div>
+    <div class="chapter-pill" onclick="jumpTo(31)" id="pill2">
+      <span class="num">3</span> Contenedores Clave
+    </div>
+    <div class="chapter-pill" onclick="jumpTo(47)" id="pill3">
+      <span class="num">4</span> Viaje de una Petición
+    </div>
+    <div class="chapter-pill" onclick="jumpTo(63)" id="pill4">
+      <span class="num">5</span> 3 Reglas de Oro
+    </div>
+  </nav>
+
+  <!-- PANEL DE RESUMEN ARQUITECTÓNICO Y ACCESOS A DIAGRAMAS -->
+  <section class="edu-summary-section">
+    <div class="edu-summary-text">
+      <h3><i class="bi bi-award-fill" style="color: #0284c7;"></i> ¿Por qué el Modelo C4 Nivel 2 es fundamental?</h3>
+      <p>
+        El diagrama de contenedores permite a cualquier desarrollador, líder técnico o auditor de seguridad entender el <strong>perímetro de aislamiento</strong>, los protocolos involucrados (HTTPS, JDBC, WAF) y dónde residen los datos confidenciales antes de escribir una sola línea de código.
+      </p>
+    </div>
+    <div class="edu-summary-actions">
+      <a href="../diagrams/07_c4_interconexion_ops_aplicaciones.html" class="btn-action-diagram" target="_blank">
+        <i class="bi bi-diagram-3"></i> Abrir Diagrama C4 Completo
+      </a>
+      <a href="../diagrams/index.html" class="btn-action-diagram" style="background: #ffffff; color: #0284c7; border: 1px solid #bae6fd; box-shadow: none;" target="_blank">
+        <i class="bi bi-collection"></i> Ver Portal de 8 Diagramas
+      </a>
+    </div>
+  </section>
+
+  <!-- SCRIPT HYPERFRAMES ENGINE -->
+  <script>
+    // DURACIÓN TOTAL: 76 SEGUNDOS PARA EXPLICACIÓN COMPLETA
+    const DURATION = 76;
+    let currentTime = 0;
+    let isPlaying = false;
+    let animId = null;
+    let playbackSpeed = 1.0;
+    let audioActive = true;
+    let voiceActive = true;
+
+    // GUION DE LOCUCIÓN ENÉRGICA Y PERSUASIVA
+    const scenes = [
+      {
+        id: 'scene1',
+        start: 0,
+        end: 15,
+        subtitle: "⚠️ Peligro de la Red Plana: Si todos los contenedores comparten una sola red sin barreras, un intruso accederá directo a tu base de datos.",
+        voice: "¡Atención arquitectos! En el Nivel dos de C cuatro, el peor error es poner todos los contenedores en una red plana. Si un atacante entra a la web, ¡tendrá acceso total e inmediato a tus bases de datos!"
+      },
+      {
+        id: 'scene2',
+        start: 15,
+        end: 31,
+        subtitle: "🛡️ Defensa en Profundidad: Dividimos en tres redes Docker aisladas: Operaciones, Aplicación y Datos.",
+        voice: "¡Para blindar el sistema aplicamos defensa en profundidad! Dividimos los contenedores en tres redes aisladas: Operaciones para el ingreso seguro, Aplicación para la lógica y Datos para la bóveda protegida."
+      },
+      {
+        id: 'scene3',
+        start: 31,
+        end: 47,
+        subtitle: "📦 Roles y Contenedores: Traefik y CrowdSec en Ops, Angular y Spring Boot en App, y PostgreSQL aislado en Datos.",
+        voice: "En Operaciones, Traefik y CrowdSec actúan como porteros blindados. En Aplicación, Angular y Spring Boot procesan las ventas. Y en Datos, PostgreSQL vive seguro sin ningún puerto expuesto a Internet."
+      },
+      {
+        id: 'scene4',
+        start: 47,
+        end: 63,
+        subtitle: "🚀 Flujo en Tiempo Real: El cliente entra por Traefik, CrowdSec valida, Spring Boot procesa y consulta a Postgres. El intruso es bloqueado.",
+        voice: "¡Observa el flujo! Tu cliente entra por Traefik con TLS uno punto tres. CrowdSec valida la conexión, Spring Boot procesa el negocio y consulta a Postgres. ¡Cualquier ataque directo externo es bloqueado de inmediato!"
+      },
+      {
+        id: 'scene5',
+        start: 63,
+        end: 76,
+        subtitle: "✨ Las 3 Reglas de Oro: Menor privilegio, puerta de entrada única y bases de datos invisibles a la red pública.",
+        voice: "¡Reglas de oro! Aplica menor privilegio, centraliza la entrada con Traefik y mantén tu base de datos invisible a Internet. ¡Diseña tu arquitectura C cuatro con total seguridad!"
+      }
+    ];
+
+    let currentSceneObj = null;
+
+    // =========================================================================
+    // SINTETIZADOR DE MÚSICA & FX CON WEB AUDIO API
+    // =========================================================================
+    let audioCtx = null;
+    let isMusicPlaying = false;
+    let beatTimer = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playWhoosh() {
+      if (!audioActive || !audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch (e) { }
+    }
+
+    function playChime() {
+      if (!audioActive || !audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+      } catch (e) { }
+    }
+
+    function startBgmBeat() {
+      if (!audioActive || isMusicPlaying || !audioCtx) return;
+      isMusicPlaying = true;
+      let step = 0;
+      const bpm = 124;
+      const interval = (60 / bpm) * 1000 / 2;
+
+      beatTimer = setInterval(() => {
+        if (!isPlaying || !audioActive) return;
+        step = (step + 1) % 16;
+
+        if (step % 4 === 0) {
+          try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+          } catch (e) { }
+        }
+
+        if (step === 0 || step === 8) {
+          try {
+            const chord = step === 0 ? [261.63, 329.63, 392.00] : [220.00, 261.63, 329.63];
+            chord.forEach(freq => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.035, audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start();
+              osc.stop(audioCtx.currentTime + 0.4);
+            });
+          } catch (e) { }
+        }
+      }, interval);
+    }
+
+    function stopBgmBeat() {
+      isMusicPlaying = false;
+      if (beatTimer) clearInterval(beatTimer);
+    }
+
+    // =========================================================================
+    // LOCUCIÓN DE VOZ ENTUSIASTA Y ENÉRGICA
+    // =========================================================================
+    let selectedVoice = null;
+
+    function selectBestSpanishVoice() {
+      if (!('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      selectedVoice = voices.find(v => v.lang.startsWith('es') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Sabina') || v.name.includes('Paulina') || v.name.includes('Jorge')))
+        || voices.find(v => v.lang.startsWith('es-MX') || v.lang.startsWith('es-US') || v.lang.startsWith('es-ES') || v.lang.startsWith('es'))
+        || null;
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = selectBestSpanishVoice;
+      selectBestSpanishVoice();
+    }
+
+    function speakEnergetic(text) {
+      if (!voiceActive || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      if (selectedVoice) utt.voice = selectedVoice;
+      utt.lang = selectedVoice ? selectedVoice.lang : 'es-MX';
+      utt.rate = 1.16 * playbackSpeed;
+      utt.pitch = 1.12;
+      utt.volume = 1.0;
+      window.speechSynthesis.speak(utt);
+    }
+
+    // =========================================================================
+    // TIMELINE Y MOTOR HYPERFRAMES
+    // =========================================================================
+    function updateTimeline(t) {
+      currentTime = Math.max(0, Math.min(DURATION, t));
+
+      let activeObj = null;
+      let activeIndex = 0;
+      scenes.forEach((sc, idx) => {
+        const el = document.getElementById(sc.id);
+        if (currentTime >= sc.start && currentTime < sc.end) {
+          el.classList.add('active');
+          activeObj = sc;
+          activeIndex = idx;
+        } else {
+          el.classList.remove('active');
+        }
+      });
+
+      // Actualizar la franja de Idea Clave
+      if (activeObj) {
+        document.getElementById('subtitleText').innerText = activeObj.subtitle;
+      }
+
+      // Actualizar botones de capítulos activos
+      for (let i = 0; i < 5; i++) {
+        const pill = document.getElementById(`pill${i}`);
+        if (pill) pill.classList.toggle('active', i === activeIndex);
+      }
+
+      // Cambio de escena detectado
+      if (activeObj && activeObj !== currentSceneObj) {
+        currentSceneObj = activeObj;
+        playWhoosh();
+        if (isPlaying) {
+          speakEnergetic(activeObj.voice);
+        }
+
+        if (activeObj.id === 'scene1') {
+          gsap.fromTo('#pain1, #pain2, #pain3', 
+            { y: 35, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 0.5, stagger: 0.15, ease: 'back.out(1.7)' }
+          );
+        } else if (activeObj.id === 'scene2') {
+          gsap.fromTo('#netCardOps, #netCardApp, #netCardData',
+            { y: 35, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 0.55, stagger: 0.15, ease: 'back.out(1.5)' }
+          );
+        } else if (activeObj.id === 'scene4') {
+          playChime();
+          gsap.timeline()
+            .to('#step1', { scale: 1.08, duration: 0.3 })
+            .to('#step2', { scale: 1.08, duration: 0.3 }, "+=0.2")
+            .to('#step3', { scale: 1.08, duration: 0.3 }, "+=0.2")
+            .to('#step4', { scale: 1.08, duration: 0.3 }, "+=0.2")
+            .to('#step5', { scale: 1.08, duration: 0.3 }, "+=0.2")
+            .to('.step-box-item', { scale: 1, duration: 0.2 });
+        } else if (activeObj.id === 'scene5') {
+          playChime();
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 50,
+              spread: 60,
+              origin: { y: 0.6 }
+            });
+          }
+        }
+      }
+
+      // Actualizar scrubber y cronómetro
+      const pct = (currentTime / DURATION) * 100;
+      document.getElementById('scrubberFill').style.width = `${pct}%`;
+
+      const sec = Math.floor(currentTime);
+      const min = Math.floor(sec / 60);
+      const remSec = sec % 60;
+      const str = `0${min}:${remSec < 10 ? '0' : ''}${remSec}`;
+      document.getElementById('timeLabel').innerText = `${str} / 01:16`;
+
+      if (currentTime >= DURATION) {
+        pauseVideo();
+        currentTime = 0;
+        updateTimeline(0);
+      }
+    }
+
+    let lastTimestamp = null;
+    function renderLoop(timestamp) {
+      if (!isPlaying) return;
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const delta = ((timestamp - lastTimestamp) / 1000) * playbackSpeed;
+      lastTimestamp = timestamp;
+
+      // Guarda inteligente de locución: espera a que termine de hablar antes de pasar de escena
+      let isStillSpeaking = ('speechSynthesis' in window) && window.speechSynthesis.speaking;
+      if (isStillSpeaking && currentSceneObj && (currentTime + delta >= currentSceneObj.end - 0.2)) {
+        // Pausar avance temporal hasta que termine la locución
+      } else {
+        updateTimeline(currentTime + delta);
+      }
+
+      animId = requestAnimationFrame(renderLoop);
+    }
+
+    function playVideo() {
+      initAudioContext();
+      isPlaying = true;
+      lastTimestamp = null;
+      document.getElementById('playIcon').className = 'bi bi-pause-fill';
+      document.getElementById('musicVisualizer').style.opacity = '1';
+      startBgmBeat();
+      if (currentSceneObj) {
+        speakEnergetic(currentSceneObj.voice);
+      }
+      animId = requestAnimationFrame(renderLoop);
+    }
+
+    function pauseVideo() {
+      isPlaying = false;
+      document.getElementById('playIcon').className = 'bi bi-play-fill';
+      document.getElementById('musicVisualizer').style.opacity = '0.3';
+      stopBgmBeat();
+      if (animId) cancelAnimationFrame(animId);
+      if ('speechSynthesis' in window) window.speechSynthesis.pause();
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        pauseVideo();
+      } else {
+        playVideo();
+      }
+    }
+
+    function restartVideo() {
+      pauseVideo();
+      updateTimeline(0);
+      playVideo();
+    }
+
+    function seekVideo(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const pct = clickX / rect.width;
+      updateTimeline(pct * DURATION);
+      if (isPlaying && currentSceneObj) {
+        speakEnergetic(currentSceneObj.voice);
+      }
+    }
+
+    function jumpTo(timeSeconds) {
+      updateTimeline(timeSeconds);
+      if (!isPlaying) {
+        playVideo();
+      } else if (currentSceneObj) {
+        speakEnergetic(currentSceneObj.voice);
+      }
+    }
+
+    function cycleSpeed() {
+      const speeds = [1.0, 1.25, 1.5, 0.75];
+      const curIdx = speeds.indexOf(playbackSpeed);
+      playbackSpeed = speeds[(curIdx + 1) % speeds.length];
+      document.getElementById('btnSpeed').innerText = `${playbackSpeed}x`;
+    }
+
+    function toggleAudio() {
+      audioActive = !audioActive;
+      const btn = document.getElementById('btnSound');
+      const icon = document.getElementById('soundIcon');
+      btn.classList.toggle('active', audioActive);
+      icon.className = audioActive ? 'bi bi-volume-up-fill' : 'bi bi-volume-mute-fill';
+
+      if (!audioActive) {
+        stopBgmBeat();
+      } else if (isPlaying) {
+        initAudioContext();
+        startBgmBeat();
+      }
+    }
+
+    function toggleVoice() {
+      voiceActive = !voiceActive;
+      const btn = document.getElementById('btnVoice');
+      const icon = document.getElementById('voiceIcon');
+      btn.classList.toggle('active', voiceActive);
+      icon.className = voiceActive ? 'bi bi-mic-fill' : 'bi bi-mic-mute-fill';
+
+      if (!voiceActive && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      } else if (isPlaying && currentSceneObj) {
+        speakEnergetic(currentSceneObj.voice);
+      }
+    }
+
+    function toggleFs() {
+      const el = document.getElementById('videoContainer');
+      if (!document.fullscreenElement) {
+        el.requestFullscreen().catch(err => console.error(err));
+      } else {
+        document.exitFullscreen().catch(err => console.error(err));
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+        e.preventDefault();
+        togglePlay();
+      }
+    });
+
+    // =========================================================================
+    // MODAL INSPECTOR ARQUITECTÓNICO
+    // =========================================================================
+    const containerDetails = {
+      traefik: {
+        title: "bevadmin-proxy (Traefik v3.2)",
+        net: "bevadmin-ops-network & bevadmin-app-network",
+        port: "HTTPS :443, Dashboard :8088",
+        rule: "Único punto de entrada permitido desde el exterior. Termina el cifrado TLS 1.3 y enruta hacia los servicios internos sin exponer sus puertos.",
+        icon: "bi-cloud-fog2-fill",
+        color: "#0284c7"
+      },
+      crowdsec: {
+        title: "bevadmin-crowdsec (CrowdSec IPS / WAF)",
+        net: "bevadmin-ops-network",
+        port: "API Local :8080 (Bouncer Traefik)",
+        rule: "Analiza logs en tiempo real. Si detecta escaneos sospechosos o ataques de inyección, ordena a Traefik cortar la conexión de inmediato.",
+        icon: "bi-shield-shaded",
+        color: "#dc2626"
+      },
+      backend: {
+        title: "dev-backend (Spring Boot 4 / Java 21 Loom)",
+        net: "bevadmin-app-network & bevadmin-data-network",
+        port: "REST API :8080 (Interno)",
+        rule: "Actúa como frontera de confianza. Es el ÚNICO contenedor que tiene permiso de conectar a PostgreSQL mediante pool HikariCP.",
+        icon: "bi-filetype-java",
+        color: "#7c3aed"
+      },
+      postgres: {
+        title: "dev-postgres (PostgreSQL 17 Relacional)",
+        net: "bevadmin-data-network (Completamente Aislada)",
+        port: "JDBC :5432 (Solo accesible por backend)",
+        rule: "¡La Bóveda Acorazada! No tiene binding al host 0.0.0.0. Ningún cliente externo ni el frontend pueden intentar una conexión TCP.",
+        icon: "bi-database-fill-check",
+        color: "#059669"
+      }
+    };
+
+    function openInspector(key) {
+      pauseVideo();
+      const info = containerDetails[key];
+      if (!info) return;
+
+      document.getElementById('inspectorContent').innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.25rem;">
+          <div style="width: 48px; height: 48px; border-radius: 14px; background: #f0f9ff; color: ${info.color}; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 1px solid #bae6fd;">
+            <i class="bi ${info.icon}"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a;">${info.title}</h3>
+            <span style="font-size: 0.78rem; color: #64748b; font-family: 'JetBrains Mono', monospace; font-weight: 700;">Red: ${info.net}</span>
+          </div>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.95rem; border-radius: 12px; margin-bottom: 1.15rem;">
+          <strong style="color: #334155; font-size: 0.82rem; display: block; margin-bottom: 0.25rem;">Puertos & Protocolo:</strong>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; color: #0284c7; font-weight: 800;">${info.port}</span>
+        </div>
+        <div>
+          <strong style="color: #334155; font-size: 0.82rem; display: block; margin-bottom: 0.35rem;">🛡️ Regla de Oro Arquitectónica:</strong>
+          <p style="font-size: 0.86rem; color: #475569; line-height: 1.5; font-weight: 500;">${info.rule}</p>
+        </div>
+      `;
+      document.getElementById('inspectorModal').classList.add('open');
+    }
+
+    function closeInspector() {
+      document.getElementById('inspectorModal').classList.remove('open');
+    }
+
+    // =========================================================================
+    // CANVAS DE LUCES BRILLANTES Y DESTELLOS LUMINOSOS
+    // =========================================================================
+    const canvas = document.getElementById('lightCanvas');
+    const ctx = canvas.getContext('2d');
+    let lights = [];
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < 15; i++) {
+      lights.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 80 + 40,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        color: i % 2 === 0 ? 'rgba(56, 189, 248, 0.18)' : 'rgba(129, 140, 248, 0.14)'
+      });
+    }
+
+    function drawLights() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lights.forEach(l => {
+        l.x += l.vx;
+        l.y += l.vy;
+        if (l.x < -100) l.x = canvas.width + 100;
+        if (l.x > canvas.width + 100) l.x = -100;
+        if (l.y < -100) l.y = canvas.height + 100;
+        if (l.y > canvas.height + 100) l.y = -100;
+
+        const grad = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+        grad.addColorStop(0, l.color);
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(l.x, l.y, l.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(drawLights);
+    }
+    drawLights();
+
+    updateTimeline(0);
+  </script>
+</body>
+</html>
