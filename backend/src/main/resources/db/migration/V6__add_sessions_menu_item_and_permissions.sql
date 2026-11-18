@@ -5,6 +5,8 @@
 --              para el Administrador General (ADMIN).
 -- =============================================================================
 
+SET search_path TO auth, rbac, core, inventario, ventas, compras, tesoreria, notificaciones, public;
+
 -- 1. Insertar el elemento en opciones_menu bajo 'Administración' (MOD_ADMIN)
 INSERT INTO opciones_menu (
     id,

@@ -1,0 +1,8 @@
+server:
+  port: 8081
+
+logging:
+  level:
+    root: WARN
+    com.auth.identity: INFO
+    org.springframework.security: WARN

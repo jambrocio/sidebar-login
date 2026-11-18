@@ -15,6 +15,7 @@ export interface BackendUserPrincipal {
   fullName: string;
   businessId: string;
   businessCode: string;
+  businessName?: string;
   assignedBranchId: string;
   assignedBranchName: string;
   authorizedBranchIds: string[];
@@ -165,6 +166,13 @@ export class AuthApiService {
     const { user, passwordStatus, daysUntilExpiration, passwordExpiresAt, mustChangePassword } = response;
     const roleName = user.roles && user.roles.length > 0 ? user.roles[0] : 'ANALYST';
 
+    let defaultBizName = 'Distribuidora de Licores y Bebidas El Roble S.A.C.';
+    if (user.businessCode === 'BIZ-003') {
+      defaultBizName = 'COTIC S.A.C.';
+    } else if (user.businessCode === 'BIZ-002') {
+      defaultBizName = 'Corporación Licorera Andina del Sur S.A.C.';
+    }
+
     return {
       id: user.userCode || 'USR-001',
       name: user.fullName || user.username,
@@ -172,9 +180,9 @@ export class AuthApiService {
       email: `${user.username}@empresa.com`,
       role: roleName === 'ADMIN' ? 'Administrador General' : 'Cajero / Vendedor (Mayor/Menor)',
       businessId: user.businessCode || 'BIZ-001',
-      businessName: 'Distribuidora de Licores y Bebidas El Roble S.A.C.',
-      assignedBranch: user.assignedBranchName || 'Sede Central (Mayorista)',
-      assignedBranches: [user.assignedBranchName || 'Sede Central (Mayorista)'],
+      businessName: user.businessName || defaultBizName,
+      assignedBranch: user.assignedBranchName || 'Sede Central',
+      assignedBranches: [user.assignedBranchName || 'Sede Central'],
       clientType: 'Personal Interno',
       status: 'Activo',
       lastAccess: 'En línea ahora',

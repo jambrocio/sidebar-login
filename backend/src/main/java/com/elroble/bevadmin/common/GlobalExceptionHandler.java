@@ -170,10 +170,52 @@ public class GlobalExceptionHandler {
      * @param ex excepción de regla de negocio
      * @return detalle del problema HTTP 422
      */
-    @ExceptionHandler({BusinessRuleException.class, IllegalArgumentException.class})
-    public ProblemDetail handleBusinessRuleViolation(RuntimeException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
-        problem.setTitle("Regla de Negocio No Cumplida");
+    /**
+     * Captura violaciones de integridad de base de datos (claves duplicadas, RUC o código ya existente).
+     *
+     * @param ex excepción de violación de integridad
+     * @return detalle del problema HTTP 409 Conflict
+     */
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        String msg = (ex.getMessage() != null) ? ex.getMessage() : "";
+        String detailMessage = "El registro no pudo guardarse porque ya existe un registro duplicado en la base de datos.";
+        if (msg.contains("empresas_codigo_key")) {
+            detailMessage = "El código del negocio ya se encuentra registrado. Utilice un código diferente (ej. BIZ-004).";
+        } else if (msg.contains("empresas_identificacion_fiscal_key")) {
+            detailMessage = "El RUC ingresado ya pertenece a otra empresa registrada en el sistema.";
+        } else if (msg.contains("sedes_codigo_key")) {
+            detailMessage = "El código del local ya se encuentra registrado en el sistema.";
+        } else if (msg.contains("sedes_empresa_id_nombre_key")) {
+            detailMessage = "Ya existe un local con ese nombre dentro del mismo negocio matriz.";
+        } else if (msg.contains("usuarios_codigo_usuario_key")) {
+            detailMessage = "El código de usuario ya se encuentra registrado en el sistema.";
+        } else if (msg.contains("usuarios_nombre_usuario_key")) {
+            detailMessage = "El nombre de usuario (username) ya se encuentra registrado en el sistema.";
+        } else if (msg.contains("usuarios_correo_electronico_key")) {
+            detailMessage = "El correo electrónico institucional ya se encuentra registrado para otro usuario.";
+        }
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, detailMessage);
+        problem.setTitle("Conflicto de Datos Duplicados");
+        problem.setType(URI.create("https://elroble.com/errors/duplicate-key"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    /**
+     * Captura cualquier excepción no controlada en el servidor.
+     *
+     * @param ex excepción inesperada
+     * @return detalle del problema HTTP 500
+     */
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail handleGenericException(Exception ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ocurrió un error inesperado en el servidor: " + (ex.getMessage() != null ? ex.getMessage() : "Error interno")
+        );
+        problem.setTitle("Error Interno del Servidor");
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }

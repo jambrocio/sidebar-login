@@ -1,5 +1,6 @@
 package com.elroble.bevadmin.modules.organization.service;
 
+import com.elroble.bevadmin.modules.organization.dto.CreateBranchRequest;
 import com.elroble.bevadmin.modules.organization.dto.CreateBusinessRequest;
 
 import java.util.List;
@@ -32,4 +33,12 @@ public interface OrganizationService {
      * @return lista de locales y almacenes
      */
     List<Map<String, Object>> listBranches(String businessCode);
+
+    /**
+     * Registra un nuevo Local o Sucursal vinculado a un Negocio Matriz.
+     *
+     * @param request DTO con los datos del local o sucursal
+     * @return resumen con el código creado y su estado
+     */
+    Map<String, Object> createBranch(CreateBranchRequest request);
 }

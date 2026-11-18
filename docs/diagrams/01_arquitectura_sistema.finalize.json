@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-10-23T15:40:49.940Z",
+  "startedAt": "2026-11-18T02:04:27.203Z",
   "specification": {
-    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
-    "sha256": "f8b8acde1a041867177dbe0a2a19ea6972d2ea21e8a729f59dd0a31fcab70fdb",
-    "bytes": 4713
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
+    "sha256": "9bb36b818d2df28e4aca76c3c0c2a94616ef3a6c80fb8401772776fc35d5225d",
+    "bytes": 5505
   },
   "artifact": {
-    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
-    "sha256": "6df899b225b92495820b02833e00798084ec6614cc4f339480594ff3ed4541b6",
-    "bytes": 831251
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+    "sha256": "61b6f42590af8105d2b40fd50866ff96042304721835a296d9fb9bf03e8caae6",
+    "bytes": 838620
   },
   "stages": {
     "validate": {
@@ -23,12 +23,12 @@
       "durationMs": null,
       "execution": "embedded-in-deliver",
       "command": [
-        "C:\\nvm4w\\nodejs\\node.exe",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "C:\\Program Files\\nodejs\\node.exe",
+        "D:\\tools\\Proyectos\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
         "deliver",
         "architecture",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+        "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
+        "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
         "--quality",
         "showcase",
         "--json"
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "f8b8acde1a041867177dbe0a2a19ea6972d2ea21e8a729f59dd0a31fcab70fdb",
-          "bytes": 4713
+          "sha256": "9bb36b818d2df28e4aca76c3c0c2a94616ef3a6c80fb8401772776fc35d5225d",
+          "bytes": 5505
         },
         "validation": {
           "checksPassed": 9,
@@ -54,33 +54,33 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 913,
+      "durationMs": 707,
       "command": [
-        "C:\\nvm4w\\nodejs\\node.exe",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "C:\\Program Files\\nodejs\\node.exe",
+        "D:\\tools\\Proyectos\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
         "deliver",
         "architecture",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+        "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
+        "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
         "--quality",
         "showcase",
         "--json"
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "a32c98f1-877b-4632-85d5-8f7be6f9551a",
+        "receiptId": "cf35934c-8e03-4bfb-b25c-08c555c569d2",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
-        "input": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
-        "output": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+        "input": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
+        "output": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
         "specification": {
-          "sha256": "f8b8acde1a041867177dbe0a2a19ea6972d2ea21e8a729f59dd0a31fcab70fdb",
-          "bytes": 4713
+          "sha256": "9bb36b818d2df28e4aca76c3c0c2a94616ef3a6c80fb8401772776fc35d5225d",
+          "bytes": 5505
         },
         "artifact": {
-          "sha256": "6df899b225b92495820b02833e00798084ec6614cc4f339480594ff3ed4541b6",
-          "bytes": 831251
+          "sha256": "61b6f42590af8105d2b40fd50866ff96042304721835a296d9fb9bf03e8caae6",
+          "bytes": 838620
         },
         "validation": {
           "checksPassed": 9,
@@ -106,20 +106,20 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 343,
+      "durationMs": 251,
       "command": [
-        "C:\\nvm4w\\nodejs\\node.exe",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "C:\\Program Files\\nodejs\\node.exe",
+        "D:\\tools\\Proyectos\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
         "check",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+        "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
         "--require-provenance"
       ],
       "receipt": {
         "ok": true,
-        "file": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+        "file": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
         "artifact": {
-          "sha256": "6df899b225b92495820b02833e00798084ec6614cc4f339480594ff3ed4541b6",
-          "bytes": 831251
+          "sha256": "61b6f42590af8105d2b40fd50866ff96042304721835a296d9fb9bf03e8caae6",
+          "bytes": 838620
         },
         "checks": [
           {
@@ -186,16 +186,16 @@
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 63,
+            "minLabelRouteClearance": 14,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
-            "minProjectedNodeTextPx": 7.5,
+            "minProjectedNodeTextPx": 7.914893617021277,
             "maxBends": 3,
-            "routesOverSuggestedBends": 1,
-            "maxStretch": 1.259,
+            "routesOverSuggestedBends": 5,
+            "maxStretch": 1.298,
             "routesOverSuggestedStretch": 0,
             "minSegmentPx": 24,
-            "minInteriorSegmentPx": 54,
+            "minInteriorSegmentPx": 44.9,
             "shortSegmentCount": 0,
             "shortEndpointSegmentCount": 0,
             "shortInteriorSegmentCount": 0,
@@ -212,35 +212,83 @@
             "detours": [
               {
                 "relationship": {
-                  "id": "tables-views",
-                  "from": "tables",
-                  "to": "views",
-                  "label": "Vistas y Funciones",
-                  "collectionIndex": 7,
-                  "artifactIndex": 8
+                  "id": "proxy-frontend",
+                  "from": "proxy",
+                  "to": "frontend",
+                  "label": "Proxy Web (SPA)",
+                  "collectionIndex": 1,
+                  "artifactIndex": 2
                 },
                 "bends": 3,
-                "stretch": 1.259
+                "stretch": 1.298
+              },
+              {
+                "relationship": {
+                  "id": "frontend-ls",
+                  "from": "frontend",
+                  "to": "ls",
+                  "label": "Persistir Sesión",
+                  "collectionIndex": 2,
+                  "artifactIndex": 3
+                },
+                "bends": 3,
+                "stretch": 1.291
+              },
+              {
+                "relationship": {
+                  "id": "backend-guard",
+                  "from": "backend",
+                  "to": "guard",
+                  "label": "Validar Scope",
+                  "collectionIndex": 5,
+                  "artifactIndex": 6
+                },
+                "bends": 3,
+                "stretch": 1.291
+              },
+              {
+                "relationship": {
+                  "id": "postgres-schemas",
+                  "from": "postgres",
+                  "to": "schemas",
+                  "label": "Tablas Físicas",
+                  "collectionIndex": 8,
+                  "artifactIndex": 9
+                },
+                "bends": 3,
+                "stretch": 1.296
+              },
+              {
+                "relationship": {
+                  "id": "schemas-views",
+                  "from": "schemas",
+                  "to": "views",
+                  "label": "Vistas y Funciones",
+                  "collectionIndex": 9,
+                  "artifactIndex": 10
+                },
+                "bends": 3,
+                "stretch": 1.291
               }
             ]
           },
           "leadingSpace": {
             "measured": true,
             "emptyTopPx": 50,
-            "emptyTopRatio": 0.098,
+            "emptyTopRatio": 0.094,
             "occupiedTop": 50,
             "viewBoxTop": 0,
-            "canvasHeight": 508,
+            "canvasHeight": 532,
             "typicalNodeHeight": 60,
             "reviewSuggested": false
           },
           "desktopReadability": {
             "budgetBasis": "recognized-declared-wide",
             "readerContract": "declared-wide-v1",
-            "availableDiagramWidth": 937.5,
-            "actualBudgetPx": 937.5,
-            "actualReaderWidth": 967.5,
-            "desiredReaderWidth": 967.5,
+            "availableDiagramWidth": 930,
+            "actualBudgetPx": 930,
+            "actualReaderWidth": 960,
+            "desiredReaderWidth": 960,
             "viewportCap": 1376,
             "limit": "source-size",
             "requestedTargetPx": 7.5,
@@ -249,29 +297,29 @@
             "hardFloorMet": true,
             "minimumOwner": {
               "kind": "edge",
-              "id": "users-frontend",
+              "id": "users-proxy",
               "from": "users",
-              "to": "frontend"
+              "to": "proxy"
             },
             "minimumSourceTextPx": 8,
-            "minimumProjectedTextPx": 7.5,
-            "semanticTextCount": 28
+            "minimumProjectedTextPx": 7.914893617021277,
+            "semanticTextCount": 33
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "a32c98f1-877b-4632-85d5-8f7be6f9551a"
+        "deliveryReceiptId": "cf35934c-8e03-4bfb-b25c-08c555c569d2"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 3606,
+      "durationMs": 2113,
       "command": [
-        "C:\\nvm4w\\nodejs\\node.exe",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "C:\\Program Files\\nodejs\\node.exe",
+        "D:\\tools\\Proyectos\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
         "browser-check",
-        "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+        "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
         "--json",
         "--require-provenance"
       ],
@@ -284,11 +332,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "a32c98f1-877b-4632-85d5-8f7be6f9551a",
+        "deliveryReceiptId": "cf35934c-8e03-4bfb-b25c-08c555c569d2",
         "artifact": {
-          "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
-          "sha256": "6df899b225b92495820b02833e00798084ec6614cc4f339480594ff3ed4541b6",
-          "bytes": 831251
+          "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+          "sha256": "61b6f42590af8105d2b40fd50866ff96042304721835a296d9fb9bf03e8caae6",
+          "bytes": 838620
         },
         "state": {
           "detail": "read",
@@ -319,27 +367,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1348,
+              "diagramWidth": 1318,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 684,
+                "svgPx": 746,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -371,27 +419,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1500,
+              "readerWidth": 1408,
+              "diagramWidth": 1378,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 102,
-                "svgPx": 762,
+                "diagramChromePx": 84,
+                "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -402,7 +450,7 @@
               "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 36,
+              "viewerChromeReserve": 54,
               "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
@@ -423,27 +471,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1829,
-              "diagramWidth": 1500,
+              "readerWidth": 1645,
+              "diagramWidth": 1410,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 182,
-                "svgPx": 762,
+                "diagramChromePx": 146,
+                "svgPx": 798,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -451,7 +499,7 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 32,
+              "dockStageGap": 14,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
               "viewerChromeReserve": 0,
@@ -476,26 +524,26 @@
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 1920,
-              "diagramWidth": 1500,
+              "diagramWidth": 1410,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
-                "diagramChromePx": 414,
-                "svgPx": 762,
+                "diagramChromePx": 378,
+                "svgPx": 798,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -503,7 +551,7 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 148,
+              "dockStageGap": 130,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
               "viewerChromeReserve": 0,
@@ -580,27 +628,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1348,
+              "diagramWidth": 1318,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 684,
+                "svgPx": 746,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -632,27 +680,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1500,
+              "readerWidth": 1408,
+              "diagramWidth": 1378,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 102,
-                "svgPx": 762,
+                "diagramChromePx": 84,
+                "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -663,7 +711,7 @@
               "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 36,
+              "viewerChromeReserve": 54,
               "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
@@ -684,27 +732,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1829,
-              "diagramWidth": 1500,
+              "readerWidth": 1645,
+              "diagramWidth": 1410,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 182,
-                "svgPx": 762,
+                "diagramChromePx": 146,
+                "svgPx": 798,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -712,7 +760,7 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 32,
+              "dockStageGap": 14,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
               "viewerChromeReserve": 0,
@@ -737,26 +785,26 @@
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 1920,
-              "diagramWidth": 1500,
+              "diagramWidth": 1410,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
-                "diagramChromePx": 414,
-                "svgPx": 762,
+                "diagramChromePx": 378,
+                "svgPx": 798,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -764,7 +812,7 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 148,
+              "dockStageGap": 130,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
               "viewerChromeReserve": 0,
@@ -793,27 +841,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1348,
+              "diagramWidth": 1318,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 684,
+                "svgPx": 746,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -845,27 +893,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1500,
+              "readerWidth": 1408,
+              "diagramWidth": 1378,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 102,
-                "svgPx": 762,
+                "diagramChromePx": 84,
+                "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -876,7 +924,7 @@
               "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 36,
+              "viewerChromeReserve": 54,
               "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
@@ -897,27 +945,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1829,
-              "diagramWidth": 1500,
+              "readerWidth": 1645,
+              "diagramWidth": 1410,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 182,
-                "svgPx": 762,
+                "diagramChromePx": 146,
+                "svgPx": 798,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -925,7 +973,7 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 32,
+              "dockStageGap": 14,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
               "viewerChromeReserve": 0,
@@ -950,26 +998,26 @@
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 1920,
-              "diagramWidth": 1500,
+              "diagramWidth": 1410,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
-                "diagramChromePx": 414,
-                "svgPx": 762,
+                "diagramChromePx": 378,
+                "svgPx": 798,
                 "cardsPx": 0,
-                "viewBoxHeight": 508
+                "viewBoxHeight": 532
               },
-              "viewBoxWidth": 1000,
+              "viewBoxWidth": 940,
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8.4,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "HTTPS :4200",
+              "minimumProjectedNodeText": "HTTPS :443",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "users-frontend",
+                "id": "users-proxy",
                 "from": "users",
-                "to": "frontend"
+                "to": "proxy"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -977,7 +1025,7 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 148,
+              "dockStageGap": 130,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
               "viewerChromeReserve": 0,
@@ -1005,19 +1053,19 @@
   },
   "diagnostics": [],
   "evidence": {
-    "receipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize.json",
-    "summaryReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize-summary.json",
-    "browserCheckReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.browser-check.json"
+    "receipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-23T15:40:56.691Z",
-  "durationMs": 6750,
+  "finishedAt": "2026-11-18T02:04:31.051Z",
+  "durationMs": 3848,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-10-23T15:37:03.513Z",
+    "checkedAt": "2026-11-18T02:01:17.186Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null

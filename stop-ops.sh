@@ -22,8 +22,8 @@ echo -e "\n${YELLOW}[1/2] Deteniendo suite operativa (Traefik, CrowdSec, Uptime 
 docker compose -f docker-compose.ops.yml stop bevadmin-proxy bevadmin-crowdsec bevadmin-uptime-kuma bevadmin-autoheal bevadmin-db-backup bevadmin-databasus >/dev/null 2>&1 || true
 
 # 2. Restaurar puertos HTTP directos de aplicación
-echo -e "\n${YELLOW}[2/2] Rehabilitando puertos directos HTTP (4200 para Frontend y 8080 para Backend)...${NC}"
-docker compose -f docker-compose.yml up -d --no-build dev-frontend dev-backend dev-postgres >/dev/null 2>&1 || true
+echo -e "\n${YELLOW}[2/2] Rehabilitando puertos directos HTTP (4200 Frontend, 8080 Backend y 8081 Auth Service)...${NC}"
+docker compose -f docker-compose.yml up -d --no-build dev-frontend dev-backend dev-auth-service dev-postgres >/dev/null 2>&1 || true
 
 echo -e "  ${DARKGRAY}Esperando disponibilidad de salud en http://localhost:4200...${NC}"
 for i in {1..25}; do

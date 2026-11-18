@@ -121,7 +121,7 @@ export class UsersManagementComponent implements OnInit {
 
   /** Locales pertenecientes al Negocio elegido en el formulario */
   readonly branchesForSelectedBusiness = computed<BusinessBranch[]>(() =>
-    this.branches().filter(b => b.businessId === this.selectedFormBusinessId())
+    this.branches().filter(b => b.businessId?.toUpperCase() === this.selectedFormBusinessId()?.toUpperCase())
   );
 
   /** Lista de locales marcados como autorizados para el usuario en el formulario */
@@ -157,10 +157,27 @@ export class UsersManagementComponent implements OnInit {
 
   onBusinessChange(businessId: string): void {
     this.selectedFormBusinessId.set(businessId);
-    const bizBranches = this.branches().filter(b => b.businessId === businessId);
+    const bizBranches = this.branches().filter(b => b.businessId?.toUpperCase() === businessId?.toUpperCase());
     const firstBranchName = bizBranches[0]?.name || '';
     this.userForm.assignedBranch = firstBranchName;
     this.selectedAuthorizedBranches.set(firstBranchName ? [firstBranchName] : []);
+  }
+
+  /**
+   * Calcula correlativamente el siguiente código disponible para un usuario (ej. USR-007).
+   */
+  suggestNextUserCode(): string {
+    const userList = this.users();
+    let maxNum = 0;
+    for (const u of userList) {
+      const match = u.id?.match(/^USR-(\d+)$/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    }
+    const next = maxNum + 1;
+    return `USR-${next < 10 ? '00' + next : next < 100 ? '0' + next : next}`;
   }
 
   isBranchAuthorized(branchName: string): boolean {
@@ -184,9 +201,9 @@ export class UsersManagementComponent implements OnInit {
       return;
     }
 
-    const biz = this.businesses().find(b => b.id === this.userForm.businessId);
+    const biz = this.businesses().find(b => b.id?.toUpperCase() === this.userForm.businessId?.toUpperCase());
     const businessName =
-      biz?.legalName || 'Distribuidora de Licores y Bebidas El Roble S.A.C.';
+      biz?.commercialName || biz?.legalName || 'Distribuidora de Licores y Bebidas El Roble S.A.C.';
     const authorized = [...this.selectedAuthorizedBranches()];
     if (
       !authorized.includes(this.userForm.assignedBranch) &&
@@ -234,7 +251,7 @@ export class UsersManagementComponent implements OnInit {
       return;
     }
 
-    const newId = `USR-00${this.users().length + 1}`;
+    const newId = this.suggestNextUserCode();
     const createdUser: SystemUser = {
       id: newId,
       name: this.userForm.name.trim(),
@@ -291,16 +308,18 @@ export class UsersManagementComponent implements OnInit {
         clientType: createdUser.clientType,
       })
       .subscribe({
-        next: () => {
+        next: (resp) => {
+          const assignedCode = resp?.userCode || newId;
           this.feedbackMessage.set(
-            `Usuario "${createdUser.name}" (${newId}) registrado exitosamente en PostgreSQL con rol ${roleCode}.`
+            `Usuario "${createdUser.name}" (${assignedCode}) registrado exitosamente en PostgreSQL con rol ${roleCode}.`
           );
           this.loadUsersFromBackend();
         },
         error: err => {
           console.warn('Usuario persistido localmente (backend devolvió):', err?.status);
+          const errorDetail = err?.error?.detail || err?.error?.title || 'sesión offline o token faltante';
           this.feedbackMessage.set(
-            `Usuario "${createdUser.name}" (${newId}) registrado localmente. (Nota: ${err?.error?.detail || 'sesión offline o token faltante'}).`
+            `Usuario "${createdUser.name}" (${newId}) registrado localmente. (Nota: ${errorDetail}).`
           );
         },
       });

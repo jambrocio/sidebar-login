@@ -4,37 +4,42 @@
       <h1>Estructura del Negocio y Locales Asociados</h1>
       <p class="subtitle">
         Negocio Activo: <strong>{{ businessInfo().legalName }} (RUC: {{ businessInfo().taxId }})</strong>
-        — Local Asignado a tu Sesión: <strong>{{ assignedBranch() }}</strong>
+        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
       </p>
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <!-- Banner de Notificación / Feedback -->
+  <div *ngIf="feedbackMessage()" class="feedback-banner" [ngClass]="'feedback-' + feedbackMessage()?.type" role="status">
+    <i class="bi" [ngClass]="{
+      'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+      'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'error',
+      'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+    }"></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
-  <!-- Tarjetas de Identidad del Negocio Matriz -->
+  <!-- Tarjetas de Identidad y KPIs -->
   <div class="kpi-grid">
+    <div class="card kpi-card">
+      <div class="kpi-icon">
+        <i class="bi bi-briefcase-fill"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Empresas en el Sistema</span>
+        <strong class="kpi-value">{{ businesses().length }} Empresas</strong>
+        <span class="kpi-trend">Negocios matrices registrados</span>
+      </div>
+    </div>
+
     <div class="card kpi-card">
       <div class="kpi-icon">
         <i class="bi bi-building-check"></i>
       </div>
       <div class="kpi-info">
-        <span class="kpi-label">Negocio Matriz ({{ businessInfo().id }})</span>
+        <span class="kpi-label">Negocio Matriz Actual</span>
         <strong class="kpi-value" style="font-size: 1.05rem">{{ businessInfo().commercialName }}</strong>
-        <span class="kpi-trend">{{ businessInfo().legalName }}</span>
-      </div>
-    </div>
-
-    <div class="card kpi-card">
-      <div class="kpi-icon">
-        <i class="bi bi-card-heading"></i>
-      </div>
-      <div class="kpi-info">
-        <span class="kpi-label">RUC / Identificación Fiscal</span>
-        <strong class="kpi-value">{{ businessInfo().taxId }}</strong>
-        <span class="kpi-trend">{{ businessInfo().fiscalAddress }}</span>
+        <span class="kpi-trend">{{ businessInfo().legalName }} ({{ businessInfo().id }})</span>
       </div>
     </div>
 
@@ -45,141 +50,356 @@
       <div class="kpi-info">
         <span class="kpi-label">Total de Locales en Red</span>
         <strong class="kpi-value">{{ branches().length }} Locales</strong>
-        <span class="kpi-trend">{{ businesses().length }} Negocios registrados</span>
+        <span class="kpi-trend">Distribución de sedes y almacenes</span>
       </div>
     </div>
   </div>
 
-  <!-- Formulario para afiliar un nuevo Local a un Negocio -->
-  <div class="card">
-    <h2 class="section-title">
-      Registrar Nuevo Local / Sucursal para un Negocio
-    </h2>
-    <form (ngSubmit)="registerBusinessBranch()" class="grid-form">
-      <div class="form-group">
-        <label>Negocio Propietario</label>
-        <select name="brBizId" [(ngModel)]="newBranch.businessId">
-          <option *ngFor="let biz of businesses()" [value]="biz.id">
-            {{ biz.legalName }} (RUC: {{ biz.taxId }})
-          </option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Nombre del Nuevo Local / Tienda</label>
-        <input
-          type="text"
-          name="brName"
-          [(ngModel)]="newBranch.name"
-          placeholder="Ej. Sucursal Callao (Mayorista)"
-        />
-      </div>
-      <div class="form-group">
-        <label>Tipo de Operación del Local</label>
-        <select name="brType" [(ngModel)]="newBranch.type">
-          <option value="Almacén Central y Mayorista">Almacén Central y Mayorista</option>
-          <option value="Centro Mayorista y Minorista">Centro Mayorista y Minorista</option>
-          <option value="Tienda Minorista / Express">Tienda Minorista / Express</option>
-          <option value="Sucursal Mixta HORECA">Sucursal Mixta HORECA</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Dirección del Local</label>
-        <input
-          type="text"
-          name="brAddress"
-          [(ngModel)]="newBranch.address"
-          placeholder="Av. Argentina 2410, Callao"
-        />
-      </div>
-      <div class="form-group">
-        <label>Serie de Facturación Electrónica</label>
-        <input
-          type="text"
-          name="brSeries"
-          [(ngModel)]="newBranch.invoiceSeries"
-          placeholder="F005 / B005"
-        />
-      </div>
-      <div class="form-group">
-        <label>Responsable / Administrador del Local</label>
-        <input
-          type="text"
-          name="brManager"
-          [(ngModel)]="newBranch.managerUser"
-        />
-      </div>
-      <div class="form-actions full-width">
-        <button type="submit" class="btn-primary">
-          <i class="bi bi-plus-circle-fill"></i>
-          <span>Registrar Local dentro del Negocio</span>
-        </button>
-      </div>
-    </form>
-  </div>
+  <!-- Pestañas de Navegación: Empresas (1º) y Locales (2º) -->
+  <nav class="tab-navigation" aria-label="Gestión de Negocios y Locales">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'businesses'"
+      (click)="switchTab('businesses')"
+    >
+      <i class="bi bi-building-fill"></i>
+      <span>Negocios y Empresas</span>
+      <span class="tab-badge">{{ businesses().length }}</span>
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'branches'"
+      (click)="switchTab('branches')"
+    >
+      <i class="bi bi-shop"></i>
+      <span>Locales y Sucursales</span>
+      <span class="tab-badge">{{ branches().length }}</span>
+    </button>
+  </nav>
 
-  <!-- Tabla de Locales asociados a cada Negocio -->
-  <div class="card">
-    <div class="toolbar">
-      <h2 class="section-title" style="margin: 0">
-        Directorio de Locales por Negocio ({{ filteredBranches().length }})
+  <!-- ========================================================================= -->
+  <!-- TAB 1: NEGOCIOS Y EMPRESAS MATRIZ (POR DEFECTO Y PRIMERA POSICIÓN)        -->
+  <!-- ========================================================================= -->
+  <ng-container *ngIf="activeTab() === 'businesses'">
+    <!-- Formulario para Registrar Nuevo Negocio Matriz -->
+    <div class="card">
+      <h2 class="section-title">
+        <i class="bi bi-building-add"></i>
+        Registrar Nuevo Negocio Matriz (Empresa)
       </h2>
-      <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem">
-        <label style="margin: 0">Filtrar por Negocio:</label>
-        <select
-          name="filterBiz"
-          [ngModel]="selectedBusinessFilter()"
-          (ngModelChange)="selectedBusinessFilter.set($event)"
-        >
-          <option value="ALL">Todos los Negocios</option>
-          <option *ngFor="let biz of businesses()" [value]="biz.id">
-            {{ biz.commercialName }} ({{ biz.id }})
-          </option>
-        </select>
-      </div>
+      <p class="section-description">
+        Crea una nueva entidad fiscal y comercial en PostgreSQL. Una vez creada, podrás afiliar múltiples locales y asignar usuarios.
+      </p>
+
+      <form (ngSubmit)="registerBusiness()" class="grid-form">
+        <div class="form-group">
+          <label>Código del Negocio *</label>
+          <input
+            type="text"
+            name="bizCode"
+            [(ngModel)]="newBusiness.code"
+            placeholder="Ej. BIZ-004"
+            maxlength="20"
+            required
+          />
+          <small class="field-hint">Código único correlativo identificador en el sistema</small>
+        </div>
+
+        <div class="form-group">
+          <label>Razón Social Legal (SUNAT) *</label>
+          <input
+            type="text"
+            name="bizLegalName"
+            [(ngModel)]="newBusiness.legalName"
+            placeholder="Ej. Distribuidora de Bebidas del Sur S.A.C."
+            maxlength="200"
+            required
+          />
+          <small class="field-hint">Nombre oficial registrado tributariamente</small>
+        </div>
+
+        <div class="form-group">
+          <label>Nombre Comercial / Marca *</label>
+          <input
+            type="text"
+            name="bizCommercialName"
+            [(ngModel)]="newBusiness.commercialName"
+            placeholder="Ej. Bebidas del Sur — Matriz"
+            maxlength="150"
+            required
+          />
+          <small class="field-hint">Nombre visible en cabeceras y menú</small>
+        </div>
+
+        <div class="form-group">
+          <label>RUC / Identificación Fiscal (11 dígitos) *</label>
+          <input
+            type="text"
+            name="bizTaxId"
+            [(ngModel)]="newBusiness.taxId"
+            placeholder="Ej. 20609988771"
+            maxlength="11"
+            pattern="[0-9]{11}"
+            required
+          />
+          <small class="field-hint">11 dígitos numéricos sin guiones</small>
+        </div>
+
+        <div class="form-group">
+          <label>Domicilio Fiscal Oficial *</label>
+          <input
+            type="text"
+            name="bizFiscalAddress"
+            [(ngModel)]="newBusiness.fiscalAddress"
+            placeholder="Ej. Av. Panamericana Sur Km 14.5, Arequipa"
+            maxlength="250"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Teléfono Corporativo Central</label>
+          <input
+            type="text"
+            name="bizPhone"
+            [(ngModel)]="newBusiness.phone"
+            placeholder="Ej. +51 54 234-567"
+            maxlength="40"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Correo Electrónico de Soporte / Facturación</label>
+          <input
+            type="email"
+            name="bizSupportEmail"
+            [(ngModel)]="newBusiness.supportEmail"
+            placeholder="Ej. administracion@bebidasdelsur.pe"
+            maxlength="150"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Moneda Principal</label>
+          <select name="bizCurrency" [(ngModel)]="newBusiness.currency">
+            <option value="PEN">PEN (Soles — S/)</option>
+            <option value="USD">USD (Dólares — $)</option>
+          </select>
+        </div>
+
+        <div class="form-actions full-width">
+          <button type="submit" class="btn-primary" [disabled]="isSubmittingBusiness()">
+            <i class="bi" [ngClass]="isSubmittingBusiness() ? 'bi-hourglass-split' : 'bi-plus-circle-fill'"></i>
+            <span>{{ isSubmittingBusiness() ? 'Registrando Negocio...' : 'Crear y Registrar Negocio Matriz' }}</span>
+          </button>
+        </div>
+      </form>
     </div>
 
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Código Local</th>
-            <th>Negocio Propietario</th>
-            <th>Nombre del Local / Sucursal</th>
-            <th>Modalidad / Tipo</th>
-            <th>Dirección</th>
-            <th>Serie Comprobantes</th>
-            <th>Responsable</th>
-            <th>Cajas POS</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let branch of filteredBranches()">
-            <td><code>{{ branch.code }}</code></td>
-            <td><strong>{{ getBusinessName(branch.businessId) }}</strong></td>
-            <td><strong>{{ branch.name }}</strong></td>
-            <td><span class="badge badge-info">{{ branch.type }}</span></td>
-            <td>{{ branch.address }}</td>
-            <td><code>{{ branch.invoiceSeries }}</code></td>
-            <td>{{ branch.managerUser }}</td>
-            <td>{{ branch.posTerminals }} cajas</td>
-            <td>
-              <span
-                *ngIf="branch.name === assignedBranch()"
-                class="badge badge-success"
-              >
-                Tu Local Asignado
-              </span>
-              <span
-                *ngIf="branch.name !== assignedBranch()"
-                class="text-muted"
-              >
-                {{ branch.status }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Catálogo de Negocios y Empresas Registradas -->
+    <div class="card">
+      <div class="toolbar">
+        <h2 class="section-title" style="margin: 0">
+          Catálogo de Negocios Matrices Registrados ({{ businesses().length }})
+        </h2>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre Comercial</th>
+              <th>Razón Social (SUNAT)</th>
+              <th>RUC</th>
+              <th>Domicilio Fiscal</th>
+              <th>Teléfono</th>
+              <th>Moneda</th>
+              <th>Locales</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let biz of businesses()">
+              <td><code>{{ biz.id }}</code></td>
+              <td><strong>{{ biz.commercialName }}</strong></td>
+              <td>{{ biz.legalName }}</td>
+              <td><code>{{ biz.taxId }}</code></td>
+              <td>{{ biz.fiscalAddress }}</td>
+              <td>{{ biz.phone }}</td>
+              <td><span class="badge badge-info">{{ biz.currency || 'PEN' }}</span></td>
+              <td>
+                <span class="badge badge-primary">
+                  {{ getBranchCount(biz.id) }} locales
+                </span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn-sm btn-outline"
+                  (click)="prepareNewBranchForBusiness(biz.id)"
+                  title="Registrar un nuevo local para esta empresa"
+                >
+                  <i class="bi bi-plus-lg"></i>
+                  <span>Agregar Local</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  </ng-container>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 2: LOCALES Y SUCURSALES EN RED                                        -->
+  <!-- ========================================================================= -->
+  <ng-container *ngIf="activeTab() === 'branches'">
+    <!-- Formulario para afiliar un nuevo Local a un Negocio -->
+    <div class="card">
+      <h2 class="section-title">
+        <i class="bi bi-plus-circle-fill"></i>
+        Registrar Nuevo Local / Sucursal para un Negocio
+      </h2>
+      <form (ngSubmit)="registerBusinessBranch()" class="grid-form">
+        <div class="form-group">
+          <label>Negocio Propietario *</label>
+          <select name="brBizId" [(ngModel)]="newBranch.businessId" required>
+            <option *ngFor="let biz of businesses()" [value]="biz.id">
+              {{ biz.legalName }} ({{ biz.id }} - RUC: {{ biz.taxId }})
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nombre del Nuevo Local / Tienda *</label>
+          <input
+            type="text"
+            name="brName"
+            [(ngModel)]="newBranch.name"
+            placeholder="Ej. Sucursal Callao (Mayorista)"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Tipo de Operación del Local *</label>
+          <select name="brType" [(ngModel)]="newBranch.type">
+            <option value="Almacén Central y Mayorista">Almacén Central y Mayorista</option>
+            <option value="Centro Mayorista y Minorista">Centro Mayorista y Minorista</option>
+            <option value="Tienda Minorista / Express">Tienda Minorista / Express</option>
+            <option value="Sucursal Mixta HORECA">Sucursal Mixta HORECA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dirección del Local</label>
+          <input
+            type="text"
+            name="brAddress"
+            [(ngModel)]="newBranch.address"
+            placeholder="Av. Argentina 2410, Callao"
+          />
+        </div>
+        <div class="form-group">
+          <label>Serie de Facturación Electrónica</label>
+          <input
+            type="text"
+            name="brSeries"
+            [(ngModel)]="newBranch.invoiceSeries"
+            placeholder="F005 / B005"
+          />
+        </div>
+        <div class="form-group">
+          <label>Responsable / Administrador del Local</label>
+          <input
+            type="text"
+            name="brManager"
+            [(ngModel)]="newBranch.managerUser"
+          />
+        </div>
+        <div class="form-group">
+          <label>Terminales POS / Cajas</label>
+          <input
+            type="number"
+            name="brPosTerminals"
+            min="1"
+            max="20"
+            [(ngModel)]="newBranch.posTerminals"
+          />
+        </div>
+        <div class="form-actions full-width">
+          <button type="submit" class="btn-primary" [disabled]="isSubmittingBranch()">
+            <i class="bi bi-shop-window"></i>
+            <span>Registrar Local dentro del Negocio</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabla de Locales asociados a cada Negocio -->
+    <div class="card">
+      <div class="toolbar">
+        <h2 class="section-title" style="margin: 0">
+          Directorio de Locales por Negocio ({{ filteredBranches().length }})
+        </h2>
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem">
+          <label style="margin: 0">Filtrar por Negocio:</label>
+          <select
+            name="filterBiz"
+            [ngModel]="selectedBusinessFilter()"
+            (ngModelChange)="selectedBusinessFilter.set($event)"
+          >
+            <option value="ALL">Todos los Negocios ({{ businesses().length }})</option>
+            <option *ngFor="let biz of businesses()" [value]="biz.id">
+              {{ biz.commercialName }} ({{ biz.id }})
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código Local</th>
+              <th>Negocio Propietario</th>
+              <th>Nombre del Local / Sucursal</th>
+              <th>Modalidad / Tipo</th>
+              <th>Dirección</th>
+              <th>Serie Comprobantes</th>
+              <th>Responsable</th>
+              <th>Cajas POS</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let branch of filteredBranches()">
+              <td><code>{{ branch.code }}</code></td>
+              <td><strong>{{ getBusinessName(branch.businessId) }}</strong></td>
+              <td><strong>{{ branch.name }}</strong></td>
+              <td><span class="badge badge-info">{{ branch.type }}</span></td>
+              <td>{{ branch.address }}</td>
+              <td><code>{{ branch.invoiceSeries }}</code></td>
+              <td>{{ branch.managerUser }}</td>
+              <td>{{ branch.posTerminals }} cajas</td>
+              <td>
+                <span
+                  *ngIf="branch.name === assignedBranch()"
+                  class="badge badge-success"
+                >
+                  Tu Local Asignado
+                </span>
+                <span
+                  *ngIf="branch.name !== assignedBranch()"
+                  class="text-muted"
+                >
+                  {{ branch.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
 </section>

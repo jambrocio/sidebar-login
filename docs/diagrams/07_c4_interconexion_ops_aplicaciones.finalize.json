@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-10-24T23:33:12.156Z",
+  "startedAt": "2026-11-18T02:05:35.609Z",
   "specification": {
     "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\07_c4_interconexion_ops_aplicaciones.architecture.json",
-    "sha256": "f3d075767a811d2bead5842cbea541e221e63782d7c763f2a866d6b1b2e446dd",
-    "bytes": 6966
+    "sha256": "03cf9d6343b6ff82566a418b377ecc937978ecc9b7ffa3cba3749e69e8270828",
+    "bytes": 7372
   },
   "artifact": {
     "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
-    "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
-    "bytes": 848165
+    "sha256": "d504d452c0d4bb7ed3ca69a564e3db5a06ccaf4643b1eb74aeb3a73626016fca",
+    "bytes": 851166
   },
   "stages": {
     "validate": {
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "f3d075767a811d2bead5842cbea541e221e63782d7c763f2a866d6b1b2e446dd",
-          "bytes": 6966
+          "sha256": "03cf9d6343b6ff82566a418b377ecc937978ecc9b7ffa3cba3749e69e8270828",
+          "bytes": 7372
         },
         "validation": {
           "checksPassed": 9,
@@ -54,7 +54,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 897,
+      "durationMs": 729,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "D:\\tools\\Proyectos\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "2a2a01f7-8318-49a5-972c-eae90a33c9c9",
+        "receiptId": "56625336-2318-4f3a-a14a-deef61acaa33",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
         "input": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\07_c4_interconexion_ops_aplicaciones.architecture.json",
         "output": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
         "specification": {
-          "sha256": "f3d075767a811d2bead5842cbea541e221e63782d7c763f2a866d6b1b2e446dd",
-          "bytes": 6966
+          "sha256": "03cf9d6343b6ff82566a418b377ecc937978ecc9b7ffa3cba3749e69e8270828",
+          "bytes": 7372
         },
         "artifact": {
-          "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
-          "bytes": 848165
+          "sha256": "d504d452c0d4bb7ed3ca69a564e3db5a06ccaf4643b1eb74aeb3a73626016fca",
+          "bytes": 851166
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 349,
+      "durationMs": 249,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "D:\\tools\\Proyectos\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
         "artifact": {
-          "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
-          "bytes": 848165
+          "sha256": "d504d452c0d4bb7ed3ca69a564e3db5a06ccaf4643b1eb74aeb3a73626016fca",
+          "bytes": 851166
         },
         "checks": [
           {
@@ -180,7 +180,7 @@
           },
           "metrics": {
             "properCrossings": 0,
-            "resolvedCrossovers": 0,
+            "resolvedCrossovers": 4,
             "ambiguousCorridors": 0,
             "arrowheadCollisions": 0,
             "containerBorderRuns": 0,
@@ -190,12 +190,12 @@
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
             "minProjectedNodeTextPx": 6,
-            "maxBends": 2,
-            "routesOverSuggestedBends": 0,
-            "maxStretch": 1,
-            "routesOverSuggestedStretch": 0,
-            "minSegmentPx": 96,
-            "minInteriorSegmentPx": 145,
+            "maxBends": 4,
+            "routesOverSuggestedBends": 1,
+            "maxStretch": 2.127,
+            "routesOverSuggestedStretch": 1,
+            "minSegmentPx": 24,
+            "minInteriorSegmentPx": 118,
             "shortSegmentCount": 0,
             "shortEndpointSegmentCount": 0,
             "shortInteriorSegmentCount": 0,
@@ -208,8 +208,115 @@
             "microSegmentPx": 8
           },
           "routeReview": {
-            "crossings": [],
-            "detours": []
+            "crossings": [
+              {
+                "left": {
+                  "from": "ops_traefik",
+                  "to": "app_auth",
+                  "label": "Auth Proxy (/api/v1/auth)",
+                  "collectionIndex": 2,
+                  "artifactIndex": 3
+                },
+                "right": {
+                  "from": "ops_traefik",
+                  "to": "app_backend",
+                  "label": "API Gateway (/api/v1)",
+                  "collectionIndex": 3,
+                  "artifactIndex": 4
+                },
+                "point": [
+                  916,
+                  188
+                ],
+                "sharedNode": "ops_traefik"
+              },
+              {
+                "left": {
+                  "from": "ops_traefik",
+                  "to": "app_backend",
+                  "label": "API Gateway (/api/v1)",
+                  "collectionIndex": 3,
+                  "artifactIndex": 4
+                },
+                "right": {
+                  "from": "app_auth",
+                  "to": "app_database",
+                  "label": "JDBC HikariCP :5432",
+                  "collectionIndex": 5,
+                  "artifactIndex": 6
+                },
+                "point": [
+                  928,
+                  271
+                ]
+              },
+              {
+                "left": {
+                  "from": "app_auth",
+                  "to": "app_database",
+                  "label": "JDBC HikariCP :5432",
+                  "collectionIndex": 5,
+                  "artifactIndex": 6
+                },
+                "right": {
+                  "from": "ops_autoheal",
+                  "to": "app_backend",
+                  "label": "Auto-Restart si Unhealthy",
+                  "collectionIndex": 9,
+                  "artifactIndex": 10
+                },
+                "point": [
+                  928,
+                  286.0499999999993
+                ]
+              },
+              {
+                "left": {
+                  "from": "ops_kuma",
+                  "to": "app_database",
+                  "label": "Sonda TCP :5432",
+                  "collectionIndex": 10,
+                  "artifactIndex": 11
+                },
+                "right": {
+                  "from": "app_database",
+                  "to": "app_storage",
+                  "label": "Persistencia Tablas y WAL",
+                  "collectionIndex": 14,
+                  "artifactIndex": 15
+                },
+                "point": [
+                  1060,
+                  592
+                ],
+                "sharedNode": "app_database"
+              }
+            ],
+            "detours": [
+              {
+                "relationship": {
+                  "from": "app_auth",
+                  "to": "app_database",
+                  "label": "JDBC HikariCP :5432",
+                  "collectionIndex": 5,
+                  "artifactIndex": 6
+                },
+                "bends": 4,
+                "stretch": 2.127,
+                "directCorridorBlockers": [
+                  {
+                    "id": "app_backend",
+                    "label": "dev-backend (Spring Boot 4)",
+                    "box": [
+                      940,
+                      250,
+                      240,
+                      56
+                    ]
+                  }
+                ]
+              }
+            ]
           },
           "leadingSpace": {
             "measured": false,
@@ -233,18 +340,18 @@
             },
             "minimumSourceTextPx": 8,
             "minimumProjectedTextPx": 6,
-            "semanticTextCount": 47
+            "semanticTextCount": 50
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "2a2a01f7-8318-49a5-972c-eae90a33c9c9"
+        "deliveryReceiptId": "56625336-2318-4f3a-a14a-deef61acaa33"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 2216,
+      "durationMs": 1788,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "D:\\tools\\Proyectos\\sidebar-login\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -262,11 +369,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "2a2a01f7-8318-49a5-972c-eae90a33c9c9",
+        "deliveryReceiptId": "56625336-2318-4f3a-a14a-deef61acaa33",
         "artifact": {
           "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
-          "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
-          "bytes": 848165
+          "sha256": "d504d452c0d4bb7ed3ca69a564e3db5a06ccaf4643b1eb74aeb3a73626016fca",
+          "bytes": 851166
         },
         "state": {
           "detail": "read",
@@ -1012,17 +1119,16 @@
     "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-24T23:33:16.561Z",
-  "durationMs": 4404,
+  "finishedAt": "2026-11-18T02:05:39.229Z",
+  "durationMs": 3619,
   "update": {
-    "status": "unavailable",
-    "installedVersion": null,
-    "availableVersion": null,
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": null,
-    "source": null,
+    "checkedAt": "2026-11-18T02:01:17.186Z",
+    "source": "cache",
     "noticeRequired": false,
-    "noticeText": null,
-    "reason": "invalid-local-release"
+    "noticeText": null
   }
 }

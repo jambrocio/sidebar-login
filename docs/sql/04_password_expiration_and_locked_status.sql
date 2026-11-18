@@ -2,6 +2,8 @@
 -- Script 04: Control de Expiración de Contraseña, Cambio Obligatorio y Bloqueo de Cuenta
 -- ==============================================================================
 
+SET search_path TO auth, rbac, core, inventario, ventas, compras, tesoreria, notificaciones, public;
+
 -- 1. Agregar columnas de expiración y cambio obligatorio en usuarios si no existen
 ALTER TABLE usuarios 
 ADD COLUMN IF NOT EXISTS fecha_expiracion_contrasena TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '90 days'),

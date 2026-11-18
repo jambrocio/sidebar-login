@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "2a2a01f7-8318-49a5-972c-eae90a33c9c9",
+  "deliveryReceiptId": "56625336-2318-4f3a-a14a-deef61acaa33",
   "artifact": {
     "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
-    "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
-    "bytes": 848165
+    "sha256": "d504d452c0d4bb7ed3ca69a564e3db5a06ccaf4643b1eb74aeb3a73626016fca",
+    "bytes": 851166
   },
   "state": {
     "detail": "read",

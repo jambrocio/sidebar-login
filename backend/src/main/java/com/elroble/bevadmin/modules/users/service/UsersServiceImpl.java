@@ -53,12 +53,31 @@ public class UsersServiceImpl implements UsersService {
                 .orElseThrow(() -> new ResourceNotFoundException("Negocio Matriz", request.businessCode()));
 
         UUID primaryBranchId = usersRepository.findBranchIdByBusinessAndName(businessId, request.primaryBranchName())
+                .or(() -> usersRepository.findFirstBranchIdByBusiness(businessId))
                 .orElseThrow(() -> new ResourceNotFoundException("Local Principal", request.primaryBranchName()));
+
+        String userCode = request.userCode();
+        if (userCode == null || userCode.isBlank() || usersRepository.existsByUserCode(userCode)) {
+            userCode = usersRepository.findNextAvailableUserCode();
+        }
 
         UUID newUserId = UUID.randomUUID();
         String encodedPassword = passwordEncoder.encode(request.password());
 
-        usersRepository.insertUser(newUserId, request, encodedPassword, businessId, primaryBranchId);
+        CreateUserWithBranchesRequest resolvedRequest = new CreateUserWithBranchesRequest(
+                userCode,
+                request.fullName(),
+                request.username(),
+                request.email(),
+                request.password(),
+                request.roleCode(),
+                request.businessCode(),
+                request.primaryBranchName(),
+                request.authorizedBranchNames(),
+                request.clientType()
+        );
+
+        usersRepository.insertUser(newUserId, resolvedRequest, encodedPassword, businessId, primaryBranchId);
 
         for (String branchName : request.authorizedBranchNames()) {
             usersRepository.insertUserBranchAssignment(newUserId, businessId, branchName, request.primaryBranchName());
@@ -68,7 +87,7 @@ public class UsersServiceImpl implements UsersService {
 
         return Map.of(
                 "userId", newUserId,
-                "userCode", request.userCode(),
+                "userCode", userCode,
                 "status", "Registrado"
         );
     }

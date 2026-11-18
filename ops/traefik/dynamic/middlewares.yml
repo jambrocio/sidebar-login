@@ -4,13 +4,13 @@
 
 http:
   middlewares:
-    # 1. Cabeceras de Seguridad Estrictas (HSTS, Anti-Clickjacking, Anti-Sniffing)
+    # 1. Cabeceras de Seguridad Estrictas (Anti-Clickjacking, Anti-Sniffing, HSTS)
     secHeaders:
       headers:
-        stsSeconds: 31536000
-        stsIncludeSubdomains: true
-        stsPreload: true
-        forceSTSHeader: true
+        stsSeconds: 0
+        stsIncludeSubdomains: false
+        stsPreload: false
+        forceSTSHeader: false
         contentTypeNosniff: true
         browserXssFilter: true
         customFrameOptionsValue: "SAMEORIGIN"
@@ -40,16 +40,4 @@ http:
           - rateLimit
           - compression
 
-# Configuración Criptográfica TLS Estricta (Bloqueo de SSLv3, TLS 1.0 y TLS 1.1)
-tls:
-  options:
-    default:
-      minVersion: "VersionTLS12"
-      cipherSuites:
-        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
-        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
-        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
-        - "TLS_AES_128_GCM_SHA256"
-        - "TLS_AES_256_GCM_SHA384"
-        - "TLS_CHACHA20_POLY1305_SHA256"
-      sniStrict: false
+

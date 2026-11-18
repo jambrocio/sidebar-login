@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\09_secuencia_autenticacion_centralizada_multitenant.sequence.json",
+    "sha256": "40066c6e79b7da28280a3119d5787495321b836fcaa0a5cd06e81a9e9ce9286a",
+    "bytes": 4066
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\09_secuencia_autenticacion_centralizada_multitenant.html",
+    "sha256": "85a22d3147cb3f9fcc361e4d0516f5ace469143cd6025133c2b8c3a1697ba63f",
+    "bytes": 822558
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\09_secuencia_autenticacion_centralizada_multitenant.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\09_secuencia_autenticacion_centralizada_multitenant.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\09_secuencia_autenticacion_centralizada_multitenant.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-18T02:01:17.186Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4954,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

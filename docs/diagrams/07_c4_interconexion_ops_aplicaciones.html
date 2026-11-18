@@ -5252,9 +5252,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <!-- Boundaries (behind everything) -->
         <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="0" data-composition-frame-label="Red Operaciones e Ingress (bevadmin-ops-network)" x="436" y="56" width="288" height="908" rx="8" class="c-security-group" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" data-composition-frame-label="Red de Aplicación (bevadmin-app-network)" x="920" y="56" width="280" height="268" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" data-composition-frame-label="Red de Aplicación (bevadmin-app-network)" x="920" y="46" width="280" height="280" rx="12" class="c-region" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="2" data-composition-frame-label="Red Aislada de Datos (bevadmin-data-network)" x="920" y="376" width="280" height="588" rx="8" class="c-security-group" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="2" data-composition-frame-label="Red Aislada de Datos (bevadmin-data-network)" x="920" y="366" width="280" height="598" rx="8" class="c-security-group" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
         <g data-graph-role="automatic-crossover" style="--step:0">
@@ -5262,56 +5262,60 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <path data-edge-from="client_user" data-edge-to="ops_traefik" data-edge-label="HTTPS :443 (TLS 1.3)" data-edge-key="0" data-composition-points="220,103.95;460,103.95" data-composition-crossover="halo" data-composition-independent="true" d="M 220 103.95 L 460 103.95" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:1">
-          <path data-graph-role="automatic-crossover-underlay" d="M 700 102.9 L 940 102.9" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_traefik" data-edge-to="app_frontend" data-edge-label="Proxy Web (localhost / app)" data-edge-key="1" data-composition-points="700,102.9;940,102.9" data-composition-crossover="halo" data-composition-independent="true" d="M 700 102.9 L 940 102.9" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 700 96.95 L 940 96.95" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_traefik" data-edge-to="app_frontend" data-edge-label="Proxy Web (localhost / app)" data-edge-key="1" data-composition-points="700,96.95;940,96.95" data-composition-crossover="halo" data-composition-independent="true" d="M 700 96.95 L 940 96.95" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:2">
-          <path data-graph-role="automatic-crossover-underlay" d="M 700 119 L 812 119 Q 820 119 820 127 L 820 255.95 Q 820 263.95 828 263.95 L 940 263.95" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_traefik" data-edge-to="app_backend" data-edge-label="API Gateway (/api/v1)" data-edge-key="2" data-composition-points="700,119;820,119;820,263.95;940,263.95" data-composition-crossover="halo" data-composition-independent="true" d="M 700 119 L 812 119 Q 820 119 820 127 L 820 255.95 Q 820 263.95 828 263.95 L 940 263.95" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 594 144 L 594 180 Q 594 188 602 188 L 940 188" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_traefik" data-edge-to="app_auth" data-edge-label="Auth Proxy (/api/v1/auth)" data-edge-key="2" data-composition-points="594,144;594,188;940,188" data-composition-crossover="halo" data-composition-independent="true" d="M 594 144 L 594 180 Q 594 188 602 188 L 940 188" class="a-security" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:3">
-          <path data-graph-role="automatic-crossover-underlay" d="M 580 240 L 580 144" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_crowdsec" data-edge-to="ops_traefik" data-edge-label="AppSec Bouncer (WAF/IPS)" data-edge-key="3" data-composition-points="580,240;580,144" data-composition-crossover="halo" data-composition-independent="true" d="M 580 240 L 580 144" class="a-security" data-animate="edge" style="--step:3" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 700 126 L 908 126 Q 916 126 916 134 L 916 263 Q 916 271 924 271 L 940 271" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_traefik" data-edge-to="app_backend" data-edge-label="API Gateway (/api/v1)" data-edge-key="3" data-composition-points="700,126;916,126;916,271;940,271" data-composition-crossover="halo" data-composition-independent="true" d="M 700 126 L 908 126 Q 916 126 916 134 L 916 263 Q 916 271 924 271 L 940 271" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:4">
-          <path data-graph-role="automatic-crossover-underlay" d="M 1060 144 L 1060 240" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="app_frontend" data-edge-to="app_backend" data-edge-label="REST JSON (/api/v1/auth)" data-edge-key="4" data-composition-points="1060,144;1060,240" data-composition-crossover="halo" data-composition-independent="true" d="M 1060 144 L 1060 240" class="a-emphasis" data-animate="edge" style="--step:4" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 580 240 L 580 144" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_crowdsec" data-edge-to="ops_traefik" data-edge-label="AppSec Bouncer (WAF/IPS)" data-edge-key="4" data-composition-points="580,240;580,144" data-composition-crossover="halo" data-composition-independent="true" d="M 580 240 L 580 144" class="a-security" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:5">
-          <path data-graph-role="automatic-crossover-underlay" d="M 1060 304 L 1060 400" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="app_backend" data-edge-to="app_database" data-edge-label="JDBC HikariCP :5432" data-edge-key="5" data-composition-points="1060,304;1060,400" data-composition-crossover="halo" data-composition-independent="true" d="M 1060 304 L 1060 400" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 1060 216 L 1060 232 Q 1060 240 1052 240 L 936 240 Q 928 240 928 248 L 928 470 Q 928 478 936 478 L 1038 478 Q 1046 478 1046 470 L 1046 454" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="app_auth" data-edge-to="app_database" data-edge-label="JDBC HikariCP :5432" data-edge-key="5" data-composition-points="1060,216;1060,240;928,240;928,478;1046,478;1046,454" data-composition-crossover="halo" data-composition-independent="true" d="M 1060 216 L 1060 232 Q 1060 240 1052 240 L 936 240 Q 928 240 928 248 L 928 470 Q 928 478 936 478 L 1038 478 Q 1046 478 1046 470 L 1046 454" class="a-security" data-animate="edge" style="--step:5" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:6">
-          <path data-graph-role="automatic-crossover-underlay" d="M 220 272 L 332 272 Q 340 272 340 264 L 340 127 Q 340 119 348 119 L 460 119" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="client_ops" data-edge-to="ops_traefik" data-edge-label="Dashboard Traefik :8088" data-edge-key="6" data-composition-points="220,272;340,272;340,119;460,119" data-composition-crossover="halo" data-composition-independent="true" d="M 220 272 L 332 272 Q 340 272 340 264 L 340 127 Q 340 119 348 119 L 460 119" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 1068.05 306 L 1068.05 390" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="app_backend" data-edge-to="app_database" data-edge-label="JDBC HikariCP :5432" data-edge-key="6" data-composition-points="1068.05,306;1068.05,390" data-composition-crossover="halo" data-composition-independent="true" d="M 1068.05 306 L 1068.05 390" class="a-emphasis" data-animate="edge" style="--step:6" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:7">
-          <path data-graph-role="automatic-crossover-underlay" d="M 460 432 L 220 432" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_autoheal" data-edge-to="docker_daemon" data-edge-label="Docker Engine Events" data-edge-key="7" data-composition-points="460,432;220,432" data-composition-crossover="halo" data-composition-independent="true" d="M 460 432 L 220 432" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 220 272 L 332 272 Q 340 272 340 264 L 340 127 Q 340 119 348 119 L 460 119" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="client_ops" data-edge-to="ops_traefik" data-edge-label="Dashboard Traefik :8088" data-edge-key="7" data-composition-points="220,272;340,272;340,119;460,119" data-composition-crossover="halo" data-composition-independent="true" d="M 220 272 L 332 272 Q 340 272 340 264 L 340 127 Q 340 119 348 119 L 460 119" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:8">
-          <path data-graph-role="automatic-crossover-underlay" d="M 700 432 L 812 432 Q 820 432 820 424 L 820 287 Q 820 279 828 279 L 940 279" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_autoheal" data-edge-to="app_backend" data-edge-label="Auto-Restart si Unhealthy" data-edge-key="8" data-composition-points="700,432;820,432;820,279;940,279" data-composition-crossover="halo" data-composition-independent="true" d="M 700 432 L 812 432 Q 820 432 820 424 L 820 287 Q 820 279 828 279 L 940 279" class="a-dashed" data-animate="edge" style="--step:8" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 460 432 L 220 432" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_autoheal" data-edge-to="docker_daemon" data-edge-label="Docker Engine Events" data-edge-key="8" data-composition-points="460,432;220,432" data-composition-crossover="halo" data-composition-independent="true" d="M 460 432 L 220 432" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:9">
-          <path data-graph-role="automatic-crossover-underlay" d="M 700 576 L 948 576 Q 956 576 956 568 L 956 464" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_kuma" data-edge-to="app_database" data-edge-label="Sonda TCP :5432" data-edge-key="9" data-composition-points="700,576;956,576;956,464" data-composition-crossover="halo" data-composition-independent="true" d="M 700 576 L 948 576 Q 956 576 956 568 L 956 464" class="a-default" data-animate="edge" style="--step:9" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 700 432 L 908 432 Q 916 432 916 424 L 916 294.05 Q 916 286.05 924 286.05 L 940 286.05" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_autoheal" data-edge-to="app_backend" data-edge-label="Auto-Restart si Unhealthy" data-edge-key="9" data-composition-points="700,432;916,432;916,286.05;940,286.05" data-composition-crossover="halo" data-composition-independent="true" d="M 700 432 L 908 432 Q 916 432 916 424 L 916 294.05 Q 916 286.05 924 286.05 L 940 286.05" class="a-dashed" data-animate="edge" style="--step:9" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:10">
-          <path data-graph-role="automatic-crossover-underlay" d="M 460 592 L 220 592" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_kuma" data-edge-to="ext_alerts" data-edge-label="Alert-on-Down Webhook" data-edge-key="10" data-composition-points="460,592;220,592" data-composition-crossover="halo" data-composition-independent="true" d="M 460 592 L 220 592" class="a-security" data-animate="edge" style="--step:10" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 700 592 L 1066 592 Q 1074 592 1074 584 L 1074 454" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_kuma" data-edge-to="app_database" data-edge-label="Sonda TCP :5432" data-edge-key="10" data-composition-points="700,592;1074,592;1074,454" data-composition-crossover="halo" data-composition-independent="true" d="M 700 592 L 1066 592 Q 1074 592 1074 584 L 1074 454" class="a-default" data-animate="edge" style="--step:10" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:11">
-          <path data-graph-role="automatic-crossover-underlay" d="M 700 752 L 940 752" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_backup" data-edge-to="app_storage" data-edge-label="Volcado diario dump.sql.gz" data-edge-key="11" data-composition-points="700,752;940,752" data-composition-crossover="halo" data-composition-independent="true" d="M 700 752 L 940 752" class="a-dashed" data-animate="edge" style="--step:11" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 460 592 L 220 592" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_kuma" data-edge-to="ext_alerts" data-edge-label="Alert-on-Down Webhook" data-edge-key="11" data-composition-points="460,592;220,592" data-composition-crossover="halo" data-composition-independent="true" d="M 460 592 L 220 592" class="a-security" data-animate="edge" style="--step:11" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:12">
-          <path data-graph-role="automatic-crossover-underlay" d="M 700 912 L 940 912" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ops_databasus" data-edge-to="app_databasus_storage" data-edge-label="Gestión y Almacén /databasus-data" data-edge-key="12" data-composition-points="700,912;940,912" data-composition-crossover="halo" data-composition-independent="true" d="M 700 912 L 940 912" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 700 752 L 940 752" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_backup" data-edge-to="app_storage" data-edge-label="Volcado diario dump.sql.gz" data-edge-key="12" data-composition-points="700,752;940,752" data-composition-crossover="halo" data-composition-independent="true" d="M 700 752 L 940 752" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:13">
-          <path data-graph-role="automatic-crossover-underlay" d="M 1060 464 L 1060 720" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="app_database" data-edge-to="app_storage" data-edge-label="Persistencia Tablas y WAL" data-edge-key="13" data-composition-points="1060,464;1060,720" data-composition-crossover="halo" data-composition-independent="true" d="M 1060 464 L 1060 720" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 700 912 L 940 912" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ops_databasus" data-edge-to="app_databasus_storage" data-edge-label="Gestión y Almacén /databasus-data" data-edge-key="13" data-composition-points="700,912;940,912" data-composition-crossover="halo" data-composition-independent="true" d="M 700 912 L 940 912" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:14">
+          <path data-graph-role="automatic-crossover-underlay" d="M 1060 454 L 1060 720" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="app_database" data-edge-to="app_storage" data-edge-label="Persistencia Tablas y WAL" data-edge-key="14" data-composition-points="1060,454;1060,720" data-composition-crossover="halo" data-composition-independent="true" d="M 1060 454 L 1060 720" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
 
         <!-- Components -->
@@ -5331,7 +5335,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <g id="node-client_ops" data-node-id="client_ops" data-node-label="Administrador / DevOps" tabindex="0" role="button" aria-label="Enfocar Administrador / DevOps, Consola de Operaciones &amp; Métricas, Componente de arquitectura" aria-pressed="false" data-node-kind="external" data-node-sublabel="Consola de Operaciones &amp; Métricas" data-node-tag="Dashboards :8088 / :3001 / :8085" data-node-context="Componente de arquitectura">
           <title>Administrador / DevOps · Consola de Operaciones &amp; Métricas · Componente de arquitectura · Dashboards :8088 / :3001 / :8085</title>
           <rect x="40" y="240" width="180" height="64" rx="8" class="c-mask"/>
-          <rect x="40" y="240" width="180" height="64" rx="8" class="c-external" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <rect x="40" y="240" width="180" height="64" rx="8" class="c-external" data-animate="node" style="--step:7" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(46 246) scale(0.6875)">
             <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
             <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
@@ -5344,7 +5348,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <g id="node-docker_daemon" data-node-id="docker_daemon" data-node-label="Docker Engine Host" tabindex="0" role="button" aria-label="Enfocar Docker Engine Host, /var/run/docker.sock, Componente de arquitectura" aria-pressed="false" data-node-kind="external" data-node-sublabel="/var/run/docker.sock" data-node-tag="Daemon API Local" data-node-context="Componente de arquitectura">
           <title>Docker Engine Host · /var/run/docker.sock · Componente de arquitectura · Daemon API Local</title>
           <rect x="40" y="400" width="180" height="64" rx="8" class="c-mask"/>
-          <rect x="40" y="400" width="180" height="64" rx="8" class="c-external" data-animate="node" style="--step:8" stroke-width="1.5"/>
+          <rect x="40" y="400" width="180" height="64" rx="8" class="c-external" data-animate="node" style="--step:9" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(46 406) scale(0.6875)">
             <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
             <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
@@ -5357,7 +5361,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <g id="node-ext_alerts" data-node-id="ext_alerts" data-node-label="Canales de Alerta" tabindex="0" role="button" aria-label="Enfocar Canales de Alerta, Telegram / Discord / Slack, Componente de arquitectura" aria-pressed="false" data-node-kind="external" data-node-sublabel="Telegram / Discord / Slack" data-node-tag="Alert-on-Down Push" data-node-context="Componente de arquitectura">
           <title>Canales de Alerta · Telegram / Discord / Slack · Componente de arquitectura · Alert-on-Down Push</title>
           <rect x="40" y="560" width="180" height="64" rx="8" class="c-mask"/>
-          <rect x="40" y="560" width="180" height="64" rx="8" class="c-external" data-animate="node" style="--step:11" stroke-width="1.5"/>
+          <rect x="40" y="560" width="180" height="64" rx="8" class="c-external" data-animate="node" style="--step:12" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(46 566) scale(0.6875)">
             <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
             <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
@@ -5382,7 +5386,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <g id="node-ops_crowdsec" data-node-id="ops_crowdsec" data-node-label="bevadmin-crowdsec (CrowdSec)" tabindex="0" role="button" aria-label="Enfocar bevadmin-crowdsec (CrowdSec), IPS / Detección de Amenazas, Red Operaciones e Ingress (bevadmin-ops-network)" aria-pressed="false" data-node-kind="security" data-node-sublabel="IPS / Detección de Amenazas" data-node-tag="Red Ops (WAF / IPS)" data-node-context="Red Operaciones e Ingress (bevadmin-ops-network)">
           <title>bevadmin-crowdsec (CrowdSec) · IPS / Detección de Amenazas · Red Operaciones e Ingress (bevadmin-ops-network) · Red Ops (WAF / IPS)</title>
           <rect x="460" y="240" width="240" height="64" rx="8" class="c-mask"/>
-          <rect x="460" y="240" width="240" height="64" rx="8" class="c-security" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <rect x="460" y="240" width="240" height="64" rx="8" class="c-security" data-animate="node" style="--step:4" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(466 246) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
@@ -5395,7 +5399,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <g id="node-ops_autoheal" data-node-id="ops_autoheal" data-node-label="bevadmin-autoheal (Autoheal)" tabindex="0" role="button" aria-label="Enfocar bevadmin-autoheal (Autoheal), Vigilante de Salud de Contenedores, Red Operaciones e Ingress (bevadmin-ops-network)" aria-pressed="false" data-node-kind="security" data-node-sublabel="Vigilante de Salud de Contenedores" data-node-tag="Red Ops (Docker Socket)" data-node-context="Red Operaciones e Ingress (bevadmin-ops-network)">
           <title>bevadmin-autoheal (Autoheal) · Vigilante de Salud de Contenedores · Red Operaciones e Ingress (bevadmin-ops-network) · Red Ops (Docker Socket)</title>
           <rect x="460" y="400" width="240" height="64" rx="8" class="c-mask"/>
-          <rect x="460" y="400" width="240" height="64" rx="8" class="c-security" data-animate="node" style="--step:7" stroke-width="1.5"/>
+          <rect x="460" y="400" width="240" height="64" rx="8" class="c-security" data-animate="node" style="--step:8" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(466 406) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
@@ -5408,7 +5412,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <g id="node-ops_kuma" data-node-id="ops_kuma" data-node-label="bevadmin-uptime-kuma" tabindex="0" role="button" aria-label="Enfocar bevadmin-uptime-kuma, Sonda Monitoreo Sintético, Red Operaciones e Ingress (bevadmin-ops-network)" aria-pressed="false" data-node-kind="security" data-node-sublabel="Sonda Monitoreo Sintético" data-node-tag="Redes Ops, App &amp; Data (:3001)" data-node-context="Red Operaciones e Ingress (bevadmin-ops-network)">
           <title>bevadmin-uptime-kuma · Sonda Monitoreo Sintético · Red Operaciones e Ingress (bevadmin-ops-network) · Redes Ops, App &amp; Data (:3001)</title>
           <rect x="460" y="560" width="240" height="64" rx="8" class="c-mask"/>
-          <rect x="460" y="560" width="240" height="64" rx="8" class="c-security" data-animate="node" style="--step:9" stroke-width="1.5"/>
+          <rect x="460" y="560" width="240" height="64" rx="8" class="c-security" data-animate="node" style="--step:10" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(466 566) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
@@ -5421,7 +5425,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <g id="node-ops_backup" data-node-id="ops_backup" data-node-label="bevadmin-db-backup" tabindex="0" role="button" aria-label="Enfocar bevadmin-db-backup, Respaldos Programados (pg_dump), Red Operaciones e Ingress (bevadmin-ops-network)" aria-pressed="false" data-node-kind="database" data-node-sublabel="Respaldos Programados (pg_dump)" data-node-tag="Redes Ops &amp; Data (pg_dump)" data-node-context="Red Operaciones e Ingress (bevadmin-ops-network)">
           <title>bevadmin-db-backup · Respaldos Programados (pg_dump) · Red Operaciones e Ingress (bevadmin-ops-network) · Redes Ops &amp; Data (pg_dump)</title>
           <rect x="460" y="720" width="240" height="64" rx="8" class="c-mask"/>
-          <rect x="460" y="720" width="240" height="64" rx="8" class="c-database" data-animate="node" style="--step:11" stroke-width="1.5"/>
+          <rect x="460" y="720" width="240" height="64" rx="8" class="c-database" data-animate="node" style="--step:12" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(466 726) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
@@ -5446,42 +5450,55 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
         <g id="node-app_frontend" data-node-id="app_frontend" data-node-label="dev-frontend (Angular 21 + Nginx)" tabindex="0" role="button" aria-label="Enfocar dev-frontend (Angular 21 + Nginx), SPA PWA / Signals / Proxy Inverso, Red de Aplicación (bevadmin-app-network)" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="SPA PWA / Signals / Proxy Inverso" data-node-tag="Red App :80 (:4200 Inactivo)" data-node-context="Red de Aplicación (bevadmin-app-network)">
           <title>dev-frontend (Angular 21 + Nginx) · SPA PWA / Signals / Proxy Inverso · Red de Aplicación (bevadmin-app-network) · Red App :80 (:4200 Inactivo)</title>
-          <rect x="940" y="80" width="240" height="64" rx="8" class="c-mask"/>
-          <rect x="940" y="80" width="240" height="64" rx="8" class="c-frontend" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(946 86) scale(0.6875)">
+          <rect x="940" y="70" width="240" height="56" rx="8" class="c-mask"/>
+          <rect x="940" y="70" width="240" height="56" rx="8" class="c-frontend" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(946 76) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="1060" y="110" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">dev-frontend (Angular 21 + Nginx)</text>
-        <text data-detail="context" x="1060" y="126" class="t-muted" font-size="9" text-anchor="middle">SPA PWA / Signals / Proxy Inverso</text>
-        <text data-detail="fine" x="1060" y="136" class="t-frontend" font-size="7" text-anchor="middle">Red App :80 (:4200 Inactivo)</text>
+          <text data-node-label="" data-detail-anchor="" x="1060" y="96" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">dev-frontend (Angular 21 + Nginx)</text>
+        <text data-detail="context" x="1060" y="112" class="t-muted" font-size="9" text-anchor="middle">SPA PWA / Signals / Proxy Inverso</text>
+        <text data-detail="fine" x="1060" y="118" class="t-frontend" font-size="7" text-anchor="middle">Red App :80 (:4200 Inactivo)</text>
+        </g>
+
+        <g id="node-app_auth" data-node-id="app_auth" data-node-label="dev-auth-service (Spring Boot 4)" tabindex="0" role="button" aria-label="Enfocar dev-auth-service (Spring Boot 4), Auth Microservice / JWT / BCrypt, Red de Aplicación (bevadmin-app-network)" aria-pressed="false" data-node-kind="security" data-node-sublabel="Auth Microservice / JWT / BCrypt" data-node-tag="Redes App &amp; Data :8081" data-node-context="Red de Aplicación (bevadmin-app-network)">
+          <title>dev-auth-service (Spring Boot 4) · Auth Microservice / JWT / BCrypt · Red de Aplicación (bevadmin-app-network) · Redes App &amp; Data :8081</title>
+          <rect x="940" y="160" width="240" height="56" rx="8" class="c-mask"/>
+          <rect x="940" y="160" width="240" height="56" rx="8" class="c-security" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(946 166) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="1060" y="186" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">dev-auth-service (Spring Boot 4)</text>
+        <text data-detail="context" x="1060" y="202" class="t-muted" font-size="9" text-anchor="middle">Auth Microservice / JWT / BCrypt</text>
+        <text data-detail="fine" x="1060" y="208" class="t-security" font-size="7" text-anchor="middle">Redes App &amp; Data :8081</text>
         </g>
 
         <g id="node-app_backend" data-node-id="app_backend" data-node-label="dev-backend (Spring Boot 4)" tabindex="0" role="button" aria-label="Enfocar dev-backend (Spring Boot 4), Java 21 Loom / Spring Security 7, Red de Aplicación (bevadmin-app-network)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Java 21 Loom / Spring Security 7" data-node-tag="Redes App &amp; Data :8080" data-node-context="Red de Aplicación (bevadmin-app-network)">
           <title>dev-backend (Spring Boot 4) · Java 21 Loom / Spring Security 7 · Red de Aplicación (bevadmin-app-network) · Redes App &amp; Data :8080</title>
-          <rect x="940" y="240" width="240" height="64" rx="8" class="c-mask"/>
-          <rect x="940" y="240" width="240" height="64" rx="8" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(946 246) scale(0.6875)">
+          <rect x="940" y="250" width="240" height="56" rx="8" class="c-mask"/>
+          <rect x="940" y="250" width="240" height="56" rx="8" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(946 256) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="1060" y="270" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">dev-backend (Spring Boot 4)</text>
-        <text data-detail="context" x="1060" y="286" class="t-muted" font-size="9" text-anchor="middle">Java 21 Loom / Spring Security 7</text>
-        <text data-detail="fine" x="1060" y="296" class="t-backend" font-size="7" text-anchor="middle">Redes App &amp; Data :8080</text>
+          <text data-node-label="" data-detail-anchor="" x="1060" y="276" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">dev-backend (Spring Boot 4)</text>
+        <text data-detail="context" x="1060" y="292" class="t-muted" font-size="9" text-anchor="middle">Java 21 Loom / Spring Security 7</text>
+        <text data-detail="fine" x="1060" y="298" class="t-backend" font-size="7" text-anchor="middle">Redes App &amp; Data :8080</text>
         </g>
 
         <g id="node-app_database" data-node-id="app_database" data-node-label="dev-postgres (PostgreSQL 17)" tabindex="0" role="button" aria-label="Enfocar dev-postgres (PostgreSQL 17), Base de Datos Relacional Multi-Sede, Red Aislada de Datos (bevadmin-data-network)" aria-pressed="false" data-node-kind="database" data-node-sublabel="Base de Datos Relacional Multi-Sede" data-node-tag="Red Data :5432 (Aislada)" data-node-context="Red Aislada de Datos (bevadmin-data-network)">
           <title>dev-postgres (PostgreSQL 17) · Base de Datos Relacional Multi-Sede · Red Aislada de Datos (bevadmin-data-network) · Red Data :5432 (Aislada)</title>
-          <rect x="940" y="400" width="240" height="64" rx="8" class="c-mask"/>
-          <rect x="940" y="400" width="240" height="64" rx="8" class="c-database" data-animate="node" style="--step:6" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(946 406) scale(0.6875)">
+          <rect x="940" y="390" width="240" height="64" rx="8" class="c-mask"/>
+          <rect x="940" y="390" width="240" height="64" rx="8" class="c-database" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(946 396) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="1060" y="430" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">dev-postgres (PostgreSQL 17)</text>
-        <text data-detail="context" x="1060" y="446" class="t-muted" font-size="9" text-anchor="middle">Base de Datos Relacional Multi-Sede</text>
-        <text data-detail="fine" x="1060" y="456" class="t-database" font-size="7" text-anchor="middle">Red Data :5432 (Aislada)</text>
+          <text data-node-label="" data-detail-anchor="" x="1060" y="420" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">dev-postgres (PostgreSQL 17)</text>
+        <text data-detail="context" x="1060" y="436" class="t-muted" font-size="9" text-anchor="middle">Base de Datos Relacional Multi-Sede</text>
+        <text data-detail="fine" x="1060" y="446" class="t-database" font-size="7" text-anchor="middle">Red Data :5432 (Aislada)</text>
         </g>
 
         <g id="node-app_storage" data-node-id="app_storage" data-node-label="postgres-data Volume" tabindex="0" role="button" aria-label="Enfocar postgres-data Volume, Almacenamiento Físico Persistente, Red Aislada de Datos (bevadmin-data-network)" aria-pressed="false" data-node-kind="database" data-node-sublabel="Almacenamiento Físico Persistente" data-node-tag="Volumen Docker Host" data-node-context="Red Aislada de Datos (bevadmin-data-network)">
@@ -5516,56 +5533,60 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <text x="340" y="93.95" class="t-edge-emphasis" font-size="8" text-anchor="middle">HTTPS :443 (TLS 1.3)</text>
         </g>
         <g data-detail="context" data-edge-from="ops_traefik" data-edge-to="app_frontend" data-edge-label="Proxy Web (localhost / app)" data-edge-key="1">
-          <rect x="750.2" y="82.9" width="139.6" height="14" rx="3" class="c-mask"/>
-          <text x="820" y="92.9" class="t-edge-emphasis" font-size="8" text-anchor="middle">Proxy Web (localhost / app)</text>
+          <rect x="750.2" y="76.95" width="139.6" height="14" rx="3" class="c-mask"/>
+          <text x="820" y="86.95" class="t-edge-emphasis" font-size="8" text-anchor="middle">Proxy Web (localhost / app)</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_traefik" data-edge-to="app_backend" data-edge-label="API Gateway (/api/v1)" data-edge-key="2">
-          <rect x="764.6" y="171.475" width="110.8" height="14" rx="3" class="c-mask"/>
-          <text x="820" y="181.475" class="t-edge-emphasis" font-size="8" text-anchor="middle">API Gateway (/api/v1)</text>
+        <g data-detail="context" data-edge-from="ops_traefik" data-edge-to="app_auth" data-edge-label="Auth Proxy (/api/v1/auth)" data-edge-key="2">
+          <rect x="702" y="168" width="130" height="14" rx="3" class="c-mask"/>
+          <text x="767" y="178" class="t-edge-security" font-size="8" text-anchor="middle">Auth Proxy (/api/v1/auth)</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_crowdsec" data-edge-to="ops_traefik" data-edge-label="AppSec Bouncer (WAF/IPS)" data-edge-key="3">
+        <g data-detail="context" data-edge-from="ops_traefik" data-edge-to="app_backend" data-edge-label="API Gateway (/api/v1)" data-edge-key="3">
+          <rect x="752.6" y="106" width="110.8" height="14" rx="3" class="c-mask"/>
+          <text x="808" y="116" class="t-edge-emphasis" font-size="8" text-anchor="middle">API Gateway (/api/v1)</text>
+        </g>
+        <g data-detail="context" data-edge-from="ops_crowdsec" data-edge-to="ops_traefik" data-edge-label="AppSec Bouncer (WAF/IPS)" data-edge-key="4">
           <rect x="517.4" y="220" width="125.19999999999999" height="14" rx="3" class="c-mask"/>
           <text x="580" y="230" class="t-edge-security" font-size="8" text-anchor="middle">AppSec Bouncer (WAF/IPS)</text>
         </g>
-        <g data-detail="context" data-edge-from="app_frontend" data-edge-to="app_backend" data-edge-label="REST JSON (/api/v1/auth)" data-edge-key="4">
-          <rect x="928.8" y="185" width="125.19999999999999" height="14" rx="3" class="c-mask"/>
-          <text x="991.4" y="195" class="t-edge-emphasis" font-size="8" text-anchor="middle">REST JSON (/api/v1/auth)</text>
+        <g data-detail="context" data-edge-from="app_auth" data-edge-to="app_database" data-edge-label="JDBC HikariCP :5432" data-edge-key="5">
+          <rect x="943.4" y="220" width="101.2" height="14" rx="3" class="c-mask"/>
+          <text x="994" y="230" class="t-edge-security" font-size="8" text-anchor="middle">JDBC HikariCP :5432</text>
         </g>
-        <g data-detail="context" data-edge-from="app_backend" data-edge-to="app_database" data-edge-label="JDBC HikariCP :5432" data-edge-key="5">
-          <rect x="952.8" y="345" width="101.2" height="14" rx="3" class="c-mask"/>
-          <text x="1003.4" y="355" class="t-edge-emphasis" font-size="8" text-anchor="middle">JDBC HikariCP :5432</text>
+        <g data-detail="context" data-edge-from="app_backend" data-edge-to="app_database" data-edge-label="JDBC HikariCP :5432" data-edge-key="6">
+          <rect x="1074.05" y="341" width="101.2" height="14" rx="3" class="c-mask"/>
+          <text x="1124.6499999999999" y="351" class="t-edge-emphasis" font-size="8" text-anchor="middle">JDBC HikariCP :5432</text>
         </g>
-        <g data-detail="context" data-edge-from="client_ops" data-edge-to="ops_traefik" data-edge-label="Dashboard Traefik :8088" data-edge-key="6">
+        <g data-detail="context" data-edge-from="client_ops" data-edge-to="ops_traefik" data-edge-label="Dashboard Traefik :8088" data-edge-key="7">
           <rect x="279.8" y="175.5" width="120.39999999999999" height="14" rx="3" class="c-mask"/>
           <text x="340" y="185.5" class="t-edge-default" font-size="8" text-anchor="middle">Dashboard Traefik :8088</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_autoheal" data-edge-to="docker_daemon" data-edge-label="Docker Engine Events" data-edge-key="7">
+        <g data-detail="context" data-edge-from="ops_autoheal" data-edge-to="docker_daemon" data-edge-label="Docker Engine Events" data-edge-key="8">
           <rect x="287" y="412" width="106" height="14" rx="3" class="c-mask"/>
           <text x="340" y="422" class="t-edge-default" font-size="8" text-anchor="middle">Docker Engine Events</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_autoheal" data-edge-to="app_backend" data-edge-label="Auto-Restart si Unhealthy" data-edge-key="8">
-          <rect x="755" y="335.5" width="130" height="14" rx="3" class="c-mask"/>
-          <text x="820" y="345.5" class="t-edge-dashed" font-size="8" text-anchor="middle">Auto-Restart si Unhealthy</text>
+        <g data-detail="context" data-edge-from="ops_autoheal" data-edge-to="app_backend" data-edge-label="Auto-Restart si Unhealthy" data-edge-key="9">
+          <rect x="743" y="412" width="130" height="14" rx="3" class="c-mask"/>
+          <text x="808" y="422" class="t-edge-dashed" font-size="8" text-anchor="middle">Auto-Restart si Unhealthy</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_kuma" data-edge-to="app_database" data-edge-label="Sonda TCP :5432" data-edge-key="9">
-          <rect x="915" y="500" width="82" height="14" rx="3" class="c-mask"/>
-          <text x="956" y="510" class="t-edge-default" font-size="8" text-anchor="middle">Sonda TCP :5432</text>
+        <g data-detail="context" data-edge-from="ops_kuma" data-edge-to="app_database" data-edge-label="Sonda TCP :5432" data-edge-key="10">
+          <rect x="846" y="572" width="82" height="14" rx="3" class="c-mask"/>
+          <text x="887" y="582" class="t-edge-default" font-size="8" text-anchor="middle">Sonda TCP :5432</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_kuma" data-edge-to="ext_alerts" data-edge-label="Alert-on-Down Webhook" data-edge-key="10">
+        <g data-detail="context" data-edge-from="ops_kuma" data-edge-to="ext_alerts" data-edge-label="Alert-on-Down Webhook" data-edge-key="11">
           <rect x="284.6" y="572" width="110.8" height="14" rx="3" class="c-mask"/>
           <text x="340" y="582" class="t-edge-security" font-size="8" text-anchor="middle">Alert-on-Down Webhook</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_backup" data-edge-to="app_storage" data-edge-label="Volcado diario dump.sql.gz" data-edge-key="11">
+        <g data-detail="context" data-edge-from="ops_backup" data-edge-to="app_storage" data-edge-label="Volcado diario dump.sql.gz" data-edge-key="12">
           <rect x="752.6" y="732" width="134.8" height="14" rx="3" class="c-mask"/>
           <text x="820" y="742" class="t-edge-dashed" font-size="8" text-anchor="middle">Volcado diario dump.sql.gz</text>
         </g>
-        <g data-detail="context" data-edge-from="ops_databasus" data-edge-to="app_databasus_storage" data-edge-label="Gestión y Almacén /databasus-data" data-edge-key="12">
+        <g data-detail="context" data-edge-from="ops_databasus" data-edge-to="app_databasus_storage" data-edge-label="Gestión y Almacén /databasus-data" data-edge-key="13">
           <rect x="735.8" y="892" width="168.4" height="14" rx="3" class="c-mask"/>
           <text x="820" y="902" class="t-edge-emphasis" font-size="8" text-anchor="middle">Gestión y Almacén /databasus-data</text>
         </g>
-        <g data-detail="context" data-edge-from="app_database" data-edge-to="app_storage" data-edge-label="Persistencia Tablas y WAL" data-edge-key="13">
-          <rect x="924" y="585" width="130" height="14" rx="3" class="c-mask"/>
-          <text x="989" y="595" class="t-edge-default" font-size="8" text-anchor="middle">Persistencia Tablas y WAL</text>
+        <g data-detail="context" data-edge-from="app_database" data-edge-to="app_storage" data-edge-label="Persistencia Tablas y WAL" data-edge-key="14">
+          <rect x="924" y="513.5" width="130" height="14" rx="3" class="c-mask"/>
+          <text x="989" y="523.5" class="t-edge-default" font-size="8" text-anchor="middle">Persistencia Tablas y WAL</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
@@ -5575,13 +5596,13 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </g>
 
         <g data-graph-role="structural-frame-label" data-composition-frame-id="1" data-composition-frame-kind="region" data-composition-frame-label="Red de Aplicación (bevadmin-app-network)">
-          <rect data-graph-role="structural-frame-label-mask" x="924" y="60" width="226" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="928" y="73" class="t-cloud" font-size="9" font-weight="600">Red de Aplicación (bevadmin-app-network)</text>
+          <rect data-graph-role="structural-frame-label-mask" x="924" y="50" width="226" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="928" y="63" class="t-cloud" font-size="9" font-weight="600">Red de Aplicación (bevadmin-app-network)</text>
         </g>
 
         <g data-graph-role="structural-frame-label" data-composition-frame-id="2" data-composition-frame-kind="security-group" data-composition-frame-label="Red Aislada de Datos (bevadmin-data-network)">
-          <rect data-graph-role="structural-frame-label-mask" x="924" y="380" width="247.6" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="928" y="393" class="t-security" font-size="9" font-weight="600">Red Aislada de Datos (bevadmin-data-network)</text>
+          <rect data-graph-role="structural-frame-label-mask" x="924" y="370" width="247.6" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="928" y="383" class="t-security" font-size="9" font-weight="600">Red Aislada de Datos (bevadmin-data-network)</text>
         </g>
 
         <!-- Legend -->

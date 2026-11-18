@@ -4,6 +4,8 @@
 --              y AUDITOR (Auditor de Caja e Inventario) en permisos_rol_menu.
 -- =============================================================================
 
+SET search_path TO auth, rbac, core, inventario, ventas, compras, tesoreria, notificaciones, public;
+
 -- 1. Permisos para ANALYST (Cajero / Vendedor)
 INSERT INTO permisos_rol_menu (
     rol_id, opcion_menu_id, visible_en_menu, puede_ver, puede_crear, puede_editar, puede_eliminar, puede_exportar

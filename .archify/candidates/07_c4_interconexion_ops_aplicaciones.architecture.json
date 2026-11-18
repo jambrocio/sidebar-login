@@ -105,17 +105,26 @@
       "type": "frontend",
       "label": "dev-frontend (Angular 21 + Nginx)",
       "sublabel": "SPA PWA / Signals / Proxy Inverso",
-      "pos": [940, 80],
-      "size": [240, 64],
+      "pos": [940, 70],
+      "size": [240, 56],
       "tag": "Red App :80 (:4200 Inactivo)"
+    },
+    {
+      "id": "app_auth",
+      "type": "security",
+      "label": "dev-auth-service (Spring Boot 4)",
+      "sublabel": "Auth Microservice / JWT / BCrypt",
+      "pos": [940, 160],
+      "size": [240, 56],
+      "tag": "Redes App & Data :8081"
     },
     {
       "id": "app_backend",
       "type": "backend",
       "label": "dev-backend (Spring Boot 4)",
       "sublabel": "Java 21 Loom / Spring Security 7",
-      "pos": [940, 240],
-      "size": [240, 64],
+      "pos": [940, 250],
+      "size": [240, 56],
       "tag": "Redes App & Data :8080"
     },
     {
@@ -123,7 +132,7 @@
       "type": "database",
       "label": "dev-postgres (PostgreSQL 17)",
       "sublabel": "Base de Datos Relacional Multi-Sede",
-      "pos": [940, 400],
+      "pos": [940, 390],
       "size": [240, 64],
       "tag": "Red Data :5432 (Aislada)"
     },
@@ -165,6 +174,7 @@
       "label": "Red de Aplicación (bevadmin-app-network)",
       "wraps": [
         "app_frontend",
+        "app_auth",
         "app_backend"
       ],
       "pad": 20
@@ -195,6 +205,12 @@
     },
     {
       "from": "ops_traefik",
+      "to": "app_auth",
+      "label": "Auth Proxy (/api/v1/auth)",
+      "variant": "security"
+    },
+    {
+      "from": "ops_traefik",
       "to": "app_backend",
       "label": "API Gateway (/api/v1)",
       "variant": "emphasis"
@@ -206,10 +222,10 @@
       "variant": "security"
     },
     {
-      "from": "app_frontend",
-      "to": "app_backend",
-      "label": "REST JSON (/api/v1/auth)",
-      "variant": "emphasis"
+      "from": "app_auth",
+      "to": "app_database",
+      "label": "JDBC HikariCP :5432",
+      "variant": "security"
     },
     {
       "from": "app_backend",

@@ -15,6 +15,8 @@
 
 BEGIN;
 
+SET search_path TO auth, rbac, core, inventario, ventas, compras, tesoreria, notificaciones, public;
+
 -- =============================================================================
 -- 1. NEGOCIOS MATRIZ (json/business-and-branches.json -> "businesses")
 -- =============================================================================
@@ -189,7 +191,7 @@ INSERT INTO usuarios (
     'USR-001',
     'agarcia',
     'ana.garcia@empresa.com',
-    '$2b$12$K8p9mZ0Q1r2s3t4u5v6w7x8y9z0A1B2C3D4E5F6G7H8I9J0K1L2M3',
+    '$2a$10$h3AZ/SYsMB7J6aoLSAhAIOJxAbiga8eOCtXXPoP.jmUY/9GXRQauu', -- AdminRoble2026#
     'Ana García López',
     'AG',
     'a0000000-0000-4000-8000-000000000001', -- BIZ-001
@@ -205,7 +207,7 @@ INSERT INTO usuarios (
     'USR-002',
     'ltorres',
     'lucia.torres@empresa.com',
-    '$2b$12$K8p9mZ0Q1r2s3t4u5v6w7x8y9z0A1B2C3D4E5F6G7H8I9J0K1L2M3',
+    '$2a$10$h3AZ/SYsMB7J6aoLSAhAIOJxAbiga8eOCtXXPoP.jmUY/9GXRQauu', -- AdminRoble2026#
     'Lucía Torres Vega',
     'LT',
     'a0000000-0000-4000-8000-000000000001', -- BIZ-001
@@ -221,7 +223,7 @@ INSERT INTO usuarios (
     'USR-003',
     'cmendoza',
     'carlos.mendoza@empresa.com',
-    '$2b$12$K8p9mZ0Q1r2s3t4u5v6w7x8y9z0A1B2C3D4E5F6G7H8I9J0K1L2M3',
+    '$2a$10$h3AZ/SYsMB7J6aoLSAhAIOJxAbiga8eOCtXXPoP.jmUY/9GXRQauu', -- AdminRoble2026#
     'Carlos Mendoza Ríos',
     'CM',
     'a0000000-0000-4000-8000-000000000001', -- BIZ-001
@@ -237,7 +239,7 @@ INSERT INTO usuarios (
     'USR-004',
     'mparedes',
     'mparedes@andinadrinks.com',
-    '$2b$12$K8p9mZ0Q1r2s3t4u5v6w7x8y9z0A1B2C3D4E5F6G7H8I9J0K1L2M3',
+    '$2a$10$h3AZ/SYsMB7J6aoLSAhAIOJxAbiga8eOCtXXPoP.jmUY/9GXRQauu', -- AdminRoble2026#
     'Marco Paredes Salas',
     'MP',
     'a0000000-0000-4000-8000-000000000002', -- BIZ-002

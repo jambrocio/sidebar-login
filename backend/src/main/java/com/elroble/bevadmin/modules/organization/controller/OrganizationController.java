@@ -1,6 +1,7 @@
 package com.elroble.bevadmin.modules.organization.controller;
 
 import com.elroble.bevadmin.audit.Auditable;
+import com.elroble.bevadmin.modules.organization.dto.CreateBranchRequest;
 import com.elroble.bevadmin.modules.organization.dto.CreateBusinessRequest;
 import com.elroble.bevadmin.modules.organization.service.OrganizationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -96,5 +97,23 @@ public class OrganizationController {
             @Parameter(description = "Código opcional del Negocio Matriz para filtrar sus locales", example = "BIZ-001")
             @RequestParam(required = false) String businessCode) {
         return organizationService.listBranches(businessCode);
+    }
+
+    /**
+     * Registra un nuevo Local o Sucursal vinculado a un Negocio Matriz y genera un evento de auditoría.
+     *
+     * @param req datos de la nueva sede/sucursal
+     * @return mapa confirmando el código creado
+     */
+    @PostMapping("/branches")
+    @PreAuthorize("@menuPermissionEvaluator.hasAccess(authentication, 'MGMT_BUSINESS_BRANCHES', 'CREATE')")
+    @Auditable(module = "Seguridad", eventType = "BRANCH_CREATED")
+    @Operation(
+            summary = "Registrar un nuevo Local o Sucursal",
+            description = "Inserta un nuevo local en la tabla 'sedes' vinculado al Negocio Matriz especificado."
+    )
+    @ApiResponse(responseCode = "200", description = "Local o sucursal registrado exitosamente.")
+    public Map<String, Object> createBranch(@Valid @RequestBody CreateBranchRequest req) {
+        return organizationService.createBranch(req);
     }
 }

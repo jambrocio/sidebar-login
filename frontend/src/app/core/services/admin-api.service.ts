@@ -22,8 +22,22 @@ export interface CreateBusinessRequestDto {
   legalName: string;
   taxId: string;
   fiscalAddress: string;
-  phone: string;
-  currency: string;
+  phone?: string;
+  supportEmail?: string;
+  currency?: string;
+}
+
+/** DTO para registrar un nuevo Local / Sucursal en PostgreSQL */
+export interface CreateBranchRequestDto {
+  businessCode: string;
+  code: string;
+  name: string;
+  type?: string;
+  address: string;
+  phone?: string;
+  invoiceSeries?: string;
+  manager?: string;
+  posTerminals?: number;
 }
 
 /** DTO de Local / Sucursal devuelto por /api/v1/branches */
@@ -194,6 +208,15 @@ export class AdminApiService {
    */
   createBusiness(data: CreateBusinessRequestDto): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/businesses`, data, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  /**
+   * Registra un nuevo Local o Sucursal en PostgreSQL.
+   */
+  createBranch(data: CreateBranchRequestDto): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/branches`, data, {
       headers: this.getHeaders(),
     });
   }

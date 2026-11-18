@@ -5,6 +5,8 @@
 --              y soporte para cierre remoto de sesiones y bloqueo de intrusos.
 -- =============================================================================
 
+SET search_path TO auth, rbac, core, inventario, ventas, compras, tesoreria, notificaciones, public;
+
 -- 1. Ampliación de la tabla sesiones_usuario con campos de auditoría y geolocalización
 ALTER TABLE sesiones_usuario ADD COLUMN IF NOT EXISTS tipo_dispositivo VARCHAR(60) DEFAULT 'Desktop - Windows';
 ALTER TABLE sesiones_usuario ADD COLUMN IF NOT EXISTS nombre_navegador VARCHAR(80) DEFAULT 'Chrome 122';

@@ -371,10 +371,19 @@
           <span class="item-badge badge-arch">C4 Model Nivel 2</span>
         </div>
       </button>
+
+      <!-- Item 9 -->
+      <button class="diagram-item" onclick="selectDiagram(8)">
+        <i class="bi bi-key-fill item-icon"></i>
+        <div class="item-content">
+          <div class="item-title">09. Autenticación & Multi-Tenant</div>
+          <span class="item-badge badge-seq">Sequence</span>
+        </div>
+      </button>
     </div>
 
     <div class="sidebar-footer">
-      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 8 Diagramas Listos</span>
+      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 9 Diagramas Listos</span>
       <span style="font-family: 'JetBrains Mono', monospace;">100% Pasaron Gates</span>
     </div>
   </aside>
@@ -467,6 +476,13 @@
         badgeClass: "badge-arch",
         desc: "Integración Continua (CI) en GitHub Cloud y Despliegue Continuo (CD) Seguro Pull-Based mediante Self-Hosted Runner en Homelab On-Premise.",
         url: "08_c4_pipeline_cicd_homelab.html"
+      },
+      {
+        title: "09. Secuencia: Autenticación Centralizada y Multi-Tenant Contextual",
+        badge: "Sequence",
+        badgeClass: "badge-seq",
+        desc: "Autenticación centralizada en dev-auth-service (:8081), emisión JWT, resolución dinámica de tenant y sedes en dev-backend (:8080) e inicialización en Angular SPA.",
+        url: "09_secuencia_autenticacion_centralizada_multitenant.html"
       }
     ];
 
@@ -524,9 +540,9 @@
       document.getElementById('sidebar').classList.toggle('open');
     }
 
-    // Keyboard navigation: 1-8 or arrows
+    // Keyboard navigation: 1-9 or arrows
     window.addEventListener('keydown', (e) => {
-      if (e.key >= '1' && e.key <= '8') {
+      if (e.key >= '1' && e.key <= '9') {
         selectDiagram(parseInt(e.key) - 1);
       } else if (e.key === 'ArrowDown') {
         selectDiagram((currentIndex + 1) % diagrams.length);

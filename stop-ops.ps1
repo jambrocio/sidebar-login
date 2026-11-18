@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # BevAdmin Pro - Script de Detención de Ops y Restauración de Modo HTTP
 # ==============================================================================
 param(
@@ -25,9 +25,9 @@ Write-Color "===================================================================
 Write-Color "`n[1/2] Deteniendo suite operativa (Traefik, CrowdSec, Uptime Kuma, etc.)..." "Yellow"
 docker compose -f docker-compose.ops.yml stop bevadmin-proxy bevadmin-crowdsec bevadmin-uptime-kuma bevadmin-autoheal bevadmin-db-backup bevadmin-databasus | Out-Null
 
-# 2. Restaurar puertos HTTP directos (4200 y 8080) en los contenedores de aplicación
-Write-Color "`n[2/2] Rehabilitando puertos directos HTTP (4200 Frontend y 8080 Backend)..." "Yellow"
-docker compose -f docker-compose.yml up -d --no-build dev-frontend dev-backend dev-postgres | Out-Null
+# 2. Restaurar puertos HTTP directos (4200, 8080 y 8081) en los contenedores de aplicación
+Write-Color "`n[2/2] Rehabilitando puertos directos HTTP (4200 Frontend, 8080 Backend y 8081 Auth Service)..." "Yellow"
+docker compose -f docker-compose.yml up -d --no-build dev-frontend dev-backend dev-auth-service dev-postgres | Out-Null
 
 Write-Color "  Esperando disponibilidad de salud en http://localhost:4200 y http://localhost:8080..." "DarkGray"
 $ready = $false

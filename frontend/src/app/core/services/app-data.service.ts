@@ -86,7 +86,7 @@ export class AppDataService {
   /** Locales pertenecientes exclusivamente al Negocio Matriz activo en sesión */
   readonly activeBusinessBranches = computed<BusinessBranch[]>(() => {
     const bizId = this.businessInfo().id;
-    return this.branches().filter(b => b.businessId === bizId || !b.businessId);
+    return this.branches().filter(b => b.businessId?.toUpperCase() === bizId?.toUpperCase() || !b.businessId);
   });
 
   /** Perfil del usuario autenticado */
@@ -231,23 +231,34 @@ export class AppDataService {
 
   /** Indicadores KPI calculados en tiempo real a partir de los datos del Backend */
   readonly kpis = computed<KpiCard[]>(() => {
-    const totalSales = this.salesList().reduce((acc, s) => acc + (s.total || 0), 0);
+    const activeBranches = this.activeBusinessBranches();
+    const activeBranchNames = new Set(activeBranches.map(b => b.name.trim().toLowerCase()));
+
+    const relevantSales = this.salesList().filter(s =>
+      s.branchName && activeBranchNames.has(s.branchName.trim().toLowerCase())
+    );
+    const totalSales = relevantSales.reduce((acc, s) => acc + (s.total || 0), 0);
     const totalStockBoxes = this.products().reduce((acc, p) => acc + (p.stockBoxes || 0), 0);
-    const totalPurchases = this.purchasesList().length;
-    const latestCashAudit = this.cashAuditsList()[0];
-    const cashInRegister = latestCashAudit ? latestCashAudit.expectedCash : 385;
+    const relevantPurchases = this.purchasesList().filter(p =>
+      p.branchName && activeBranchNames.has(p.branchName.trim().toLowerCase())
+    );
+    const totalPurchases = relevantPurchases.length;
+    const latestCashAudit = this.cashAuditsList().find(c =>
+      c.branchName && activeBranchNames.has(c.branchName.trim().toLowerCase())
+    );
+    const cashInRegister = latestCashAudit ? latestCashAudit.expectedCash : (totalSales > 0 ? totalSales : 0);
 
     return [
       {
         label: 'Ventas Totales Registradas',
-        value: `$${totalSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        trend: '+18.4% vs mes anterior',
+        value: `S/ ${totalSales.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        trend: totalSales > 0 ? '+18.4% vs mes anterior' : 'Sin operaciones aún',
         positive: true,
         icon: 'bi-currency-dollar',
       },
       {
         label: 'Stock Total de Bebidas (Cajas)',
-        value: `${totalStockBoxes.toLocaleString('en-US')} Cajas`,
+        value: `${totalStockBoxes.toLocaleString('es-PE')} Cajas`,
         trend: 'Inventario abastecido',
         positive: true,
         icon: 'bi-boxes',
@@ -255,13 +266,13 @@ export class AppDataService {
       {
         label: 'Órdenes de Abastecimiento',
         value: `${totalPurchases} Recepciones`,
-        trend: 'Proveedores oficiales',
+        trend: totalPurchases > 0 ? 'Proveedores oficiales' : 'Sin compras registradas',
         positive: true,
         icon: 'bi-truck',
       },
       {
         label: 'Efectivo en Caja (Turno Actual)',
-        value: `$${cashInRegister.toFixed(2)}`,
+        value: `S/ ${cashInRegister.toFixed(2)}`,
         trend: 'Cuadre Conforme',
         positive: true,
         icon: 'bi-cash-coin',
@@ -269,21 +280,34 @@ export class AppDataService {
     ];
   });
 
-  /** Bitácora de auditoría reciente construida dinámicamente desde las ventas y compras reales */
+  /** Bitácora de auditoría reciente construida dinámicamente desde las operaciones reales del negocio */
   readonly recentActivities = computed<AuditActivityItem[]>(() => {
     const activities: AuditActivityItem[] = [];
+    const activeBranches = this.activeBusinessBranches();
+    const activeBranchNames = new Set(activeBranches.map(b => b.name.trim().toLowerCase()));
 
-    this.salesList().slice(0, 3).forEach(s => {
+    // Filtrar operaciones que correspondan a locales del negocio activo
+    const filteredSales = this.salesList().filter(s =>
+      s.branchName && activeBranchNames.has(s.branchName.trim().toLowerCase())
+    );
+    const filteredPurchases = this.purchasesList().filter(p =>
+      p.branchName && activeBranchNames.has(p.branchName.trim().toLowerCase())
+    );
+    const filteredAudits = this.cashAuditsList().filter(c =>
+      c.branchName && activeBranchNames.has(c.branchName.trim().toLowerCase())
+    );
+
+    filteredSales.slice(0, 3).forEach(s => {
       activities.push({
         user: s.sellerUser,
         branch: s.branchName,
-        action: `Emitió ${s.documentType} (${s.id}) por $${s.total.toFixed(2)} (${s.itemsSummary})`,
+        action: `Emitió ${s.documentType} (${s.id}) por S/ ${s.total.toFixed(2)} (${s.itemsSummary})`,
         time: s.date || 'Hoy',
         badge: 'Venta',
       });
     });
 
-    this.purchasesList().slice(0, 2).forEach(p => {
+    filteredPurchases.slice(0, 2).forEach(p => {
       activities.push({
         user: p.buyerUser,
         branch: p.branchName,
@@ -293,15 +317,26 @@ export class AppDataService {
       });
     });
 
-    this.cashAuditsList().slice(0, 1).forEach(c => {
+    filteredAudits.slice(0, 1).forEach(c => {
       activities.push({
         user: c.cashierUser,
         branch: c.branchName,
-        action: `Cerró turno de caja: ${c.status} (Total contado: $${c.countedCash.toFixed(2)})`,
+        action: `Cerró turno de caja: ${c.status} (Total contado: S/ ${c.countedCash.toFixed(2)})`,
         time: c.closedAt || 'Hoy',
         badge: 'Cierre Caja',
       });
     });
+
+    // Evento inaugural cuando el negocio aún no tiene movimientos
+    if (activities.length === 0) {
+      activities.push({
+        user: this.currentUserProfile().name || 'Administración',
+        branch: this.assignedBranch() || (activeBranches[0]?.name ?? 'Sede Central'),
+        action: `Apertura de operaciones comerciales en red para ${this.businessInfo().commercialName}`,
+        time: 'Hoy',
+        badge: 'Auditoría',
+      });
+    }
 
     return activities;
   });
@@ -312,7 +347,11 @@ export class AppDataService {
       const savedUser = sessionStorage.getItem('currentUserProfile');
       if (savedUser) {
         try {
-          this.currentUserProfile.set(JSON.parse(savedUser));
+          const parsed = JSON.parse(savedUser);
+          this.currentUserProfile.set(parsed);
+          if (parsed.assignedBranch) {
+            this.assignedBranch.set(parsed.assignedBranch);
+          }
         } catch {}
       }
       if (sessionStorage.getItem('accessToken')) {
@@ -369,7 +408,9 @@ export class AppDataService {
             currency: b.currency || 'USD',
           }));
           this.businesses.set(mapped);
-          this.businessInfo.set(mapped[0]);
+          const userBizId = this.currentUserProfile().assignedBusinessId;
+          const userBiz = userBizId ? mapped.find(b => b.id?.toUpperCase() === userBizId.toUpperCase()) : null;
+          this.businessInfo.set(userBiz || mapped[0]);
         }
       },
       error: () => {},
@@ -379,17 +420,17 @@ export class AppDataService {
     this.adminApi.getBranches().subscribe({
       next: (branchList) => {
         if (branchList && branchList.length > 0) {
-          const mapped: BusinessBranch[] = branchList.map(b => ({
-            code: b.code,
-            businessId: b.businessCode,
-            name: b.name,
-            type: b.branchType || 'Mixto',
-            address: b.address || 'Sede Principal',
-            phone: b.phone || '+51 1 555-0101',
-            invoiceSeries: b.invoiceSeries || 'F001/B001',
-            managerUser: b.managerName || 'Administrador',
-            posTerminals: b.posTerminals || 2,
-            status: 'Operativo',
+          const mapped: BusinessBranch[] = branchList.map((b: any) => ({
+            code: b.code || b.id || '',
+            businessId: b.businessCode || b.businessId || '',
+            name: b.name || '',
+            type: b.branchType || b.type || 'Centro Mayorista y Minorista',
+            address: b.address || 'Dirección comercial registrada',
+            phone: b.phone || '+51 01 440-1200',
+            invoiceSeries: b.invoiceSeries || b.series || 'F001 / B001',
+            managerUser: b.managerName || b.managerUser || b.manager || 'Encargado de Sede',
+            posTerminals: Number(b.posTerminals) || 1,
+            status: (b.status as any) || 'Operativo',
           }));
           this.branches.set(mapped);
           if (mapped[0]) {
@@ -909,6 +950,21 @@ export class AppDataService {
     });
 
     this.assignedBranch.set(user.assignedBranch);
+
+    if (user.businessId) {
+      const match = this.businesses().find(b => b.id?.toUpperCase() === user.businessId?.toUpperCase());
+      if (match) {
+        this.businessInfo.set(match);
+      } else if (user.businessName) {
+        this.businessInfo.update(current => ({
+          ...current,
+          id: user.businessId,
+          commercialName: user.businessName.split(' ')[0] || user.businessName,
+          legalName: user.businessName,
+        }));
+      }
+    }
+
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.setItem('currentUserProfile', JSON.stringify(this.currentUserProfile()));
     }

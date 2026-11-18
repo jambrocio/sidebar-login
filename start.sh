@@ -102,11 +102,21 @@ for i in {1..15}; do
     sleep 2
 done
 
-# 4. Construcción y Despliegue de Backend y Frontend
-echo -e "\n${YELLOW}[3/4] Compilando y levantando contenedores de Backend y Frontend...${NC}"
-docker compose up -d --build dev-backend dev-frontend
+# 4. Construcción y Despliegue de Auth Service, Backend y Frontend
+echo -e "\n${YELLOW}[3/4] Compilando y levantando contenedores de Auth Service, Backend y Frontend...${NC}"
+docker compose up -d --build dev-auth-service dev-backend dev-frontend
 
 echo -e "\n${YELLOW}[4/4] Verificando salud de los servicios HTTP...${NC}"
+echo -n "  Esperando respuesta de Centralized Auth Service (http://localhost:8081)..."
+for i in {1..30}; do
+    if curl -s -f http://localhost:8081/api/v1/auth/health >/dev/null 2>&1; then
+        echo -e "\n${GREEN}  ✓ Centralized Auth Service ONLINE en http://localhost:8081.${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 2
+done
+
 echo -n "  Esperando respuesta del servicio Backend (http://localhost:8080)..."
 for i in {1..30}; do
     if curl -s -f http://localhost:8080/api/v1/auth/health >/dev/null 2>&1; then
@@ -122,9 +132,12 @@ echo -e "\n${GREEN}=============================================================
 echo -e "${GREEN}                  DESPLIEGUE FINALIZADO EXITOSAMENTE                            ${NC}"
 echo -e "${GREEN}================================================================================${NC}\n"
 echo -e "  Ambiente Activo:        ${YELLOW}${ENV_NAME}${NC}"
+echo -e "  Centralized Auth (IdP): ${CYAN}http://localhost:8081/api/v1/auth${NC}"
+echo -e "  Auth JWKS Discovery:    ${CYAN}http://localhost:8081/.well-known/jwks.json${NC}"
+echo -e "  Auth Swagger UI:        ${CYAN}http://localhost:8081/swagger-ui.html${NC}"
 echo -e "  Frontend Angular:       ${CYAN}http://localhost:4200${NC}"
 echo -e "  Backend REST API:       ${CYAN}http://localhost:8080/api/v1${NC}"
-echo -e "  Swagger UI OpenAPI:     ${CYAN}http://localhost:8080/swagger-ui.html${NC}"
+echo -e "  Backend Swagger UI:     ${CYAN}http://localhost:8080/swagger-ui.html${NC}"
 echo -e "  Base de Datos (DB):     ${CYAN}localhost:5432/admin_dashboard_db (PostgreSQL 17)${NC}\n"
 echo -e "  Cuentas de Acceso Disponibles:"
 echo "    - Administrador General: agarcia    / AdminRoble2026#"

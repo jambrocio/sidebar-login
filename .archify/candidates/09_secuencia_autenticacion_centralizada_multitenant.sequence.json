@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Secuencia: Autenticación Centralizada y Contexto Multi-Tenant",
+    "locale": "es",
+    "output": "docs/diagrams/09_secuencia_autenticacion_centralizada_multitenant.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "Operador", "sublabel": "jambrocio" },
+    { "id": "spa", "type": "frontend", "label": "Angular 21 SPA", "sublabel": "dev-frontend :80" },
+    { "id": "traefik", "type": "cloud", "label": "Traefik Ingress", "sublabel": "bevadmin-proxy :443" },
+    { "id": "auth_svc", "type": "security", "label": "Auth Service", "sublabel": "dev-auth-service :8081" },
+    { "id": "app_api", "type": "backend", "label": "Backend Negocio", "sublabel": "dev-backend :8080" },
+    { "id": "db", "type": "database", "label": "PostgreSQL 17", "sublabel": "auth / core / rbac" }
+  ],
+  "segments": [
+    { "from": 140, "to": 260, "label": "1. Solicitud de Login e Ingress TLS Seguro" },
+    { "from": 270, "to": 420, "label": "2. Verificación de Identidad y Emisión de Token JWT" },
+    { "from": 430, "to": 670, "label": "3. Sincronización Multi-Tenant y Consulta de Locales" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "user", "to": "spa", "y": 160, "label": "Ingresa credenciales (jambrocio)", "variant": "default" },
+    { "id": "m2", "from": "spa", "to": "traefik", "y": 195, "label": "POST /api/v1/auth/login", "variant": "emphasis" },
+    { "id": "m3", "from": "traefik", "to": "auth_svc", "y": 230, "label": "Enruta a dev-auth-service (:8081)", "variant": "emphasis" },
+    { "id": "m4", "from": "auth_svc", "to": "db", "y": 280, "label": "Consulta credenciales y empresa (auth.usuarios)", "variant": "emphasis" },
+    { "id": "m5", "from": "db", "to": "auth_svc", "y": 320, "label": "Retorna hash BCrypt, empresa (BIZ-003) y sede", "variant": "return" },
+    { "id": "m6", "from": "auth_svc", "to": "traefik", "y": 365, "label": "200 OK (JWT firmado con businessCode y branch)", "variant": "return" },
+    { "id": "m7", "from": "traefik", "to": "spa", "y": 405, "label": "200 OK (Token JWT y contexto del usuario)", "variant": "return" },
+    { "id": "m8", "from": "spa", "to": "traefik", "y": 450, "label": "GET /api/v1/branches?businessCode=BIZ-003", "variant": "emphasis" },
+    { "id": "m9", "from": "traefik", "to": "app_api", "y": 490, "label": "Enruta a dev-backend (:8080)", "variant": "emphasis" },
+    { "id": "m10", "from": "app_api", "to": "db", "y": 530, "label": "SELECT sedes WHERE empresa='BIZ-003'", "variant": "emphasis" },
+    { "id": "m11", "from": "db", "to": "app_api", "y": 570, "label": "Retorna Sede Central COTIC (LOC-07)", "variant": "return" },
+    { "id": "m12", "from": "app_api", "to": "spa", "y": 610, "label": "200 OK ([BackendBranchDto])", "variant": "return" },
+    { "id": "m13", "from": "spa", "to": "user", "y": 650, "label": "Muestra Dashboard y Bitácora para COTIC", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "spa", "from": 160, "to": 655, "type": "frontend" },
+    { "participant": "traefik", "from": 195, "to": 410, "type": "cloud" },
+    { "participant": "auth_svc", "from": 230, "to": 370, "type": "security" },
+    { "participant": "db", "from": 280, "to": 325, "type": "database" },
+    { "participant": "app_api", "from": 490, "to": 615, "type": "backend" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Microservicio Centralizado de Autenticación",
+      "items": [
+        "dev-auth-service opera en el puerto 8081 gestionando inicio de sesión, renovación de claves y RBAC",
+        "Genera tokens JWT firmados conteniendo el identificador de Negocio Matriz y Sede Asignada"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Aislamiento y Contexto Multi-Tenant",
+      "items": [
+        "El frontend adapta en tiempo real Navbar, Sidebar, KPIs y Bitácora al negocio autenticado",
+        "Previene fuga de información entre empresas distintas (ej. COTIC S.A.C. vs El Roble S.A.C.)"
+      ]
+    }
+  ]
+}

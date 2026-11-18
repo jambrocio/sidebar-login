@@ -36,5 +36,8 @@ public record CreateBusinessRequest(
         String phone,
 
         @Schema(description = "Correo de soporte y facturación", example = "contacto@bebidasnorte.pe")
-        String supportEmail
+        String supportEmail,
+
+        @Schema(description = "Moneda principal de operaciones", example = "PEN")
+        String currency
 ) {}

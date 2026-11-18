@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\07_c4_interconexion_ops_aplicaciones.architecture.json",
-    "sha256": "f3d075767a811d2bead5842cbea541e221e63782d7c763f2a866d6b1b2e446dd",
-    "bytes": 6966
+    "sha256": "03cf9d6343b6ff82566a418b377ecc937978ecc9b7ffa3cba3749e69e8270828",
+    "bytes": 7372
   },
   "artifact": {
     "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.html",
-    "sha256": "81ebc1e8d3dcefbae9f0debed2999479d6dd6114abcf0e8555dd06ca751456f7",
-    "bytes": 848165
+    "sha256": "d504d452c0d4bb7ed3ca69a564e3db5a06ccaf4643b1eb74aeb3a73626016fca",
+    "bytes": 851166
   },
   "gates": {
     "validate": "pass",
@@ -32,10 +32,148 @@
     "summaryReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.finalize-summary.json",
     "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\07_c4_interconexion_ops_aplicaciones.browser-check.json"
   },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-18T02:01:17.186Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
   "visualReview": "not-requested",
-  "durationMs": 4404,
+  "durationMs": 3619,
   "browserCheck": {
     "requested": true,
     "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 4,
+      "routesOverSuggestedBends": 1,
+      "routesOverSuggestedStretch": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "from": "ops_traefik",
+            "to": "app_auth",
+            "label": "Auth Proxy (/api/v1/auth)",
+            "collectionIndex": 2,
+            "artifactIndex": 3
+          },
+          "right": {
+            "from": "ops_traefik",
+            "to": "app_backend",
+            "label": "API Gateway (/api/v1)",
+            "collectionIndex": 3,
+            "artifactIndex": 4
+          },
+          "point": [
+            916,
+            188
+          ],
+          "sharedNode": "ops_traefik"
+        },
+        {
+          "left": {
+            "from": "ops_traefik",
+            "to": "app_backend",
+            "label": "API Gateway (/api/v1)",
+            "collectionIndex": 3,
+            "artifactIndex": 4
+          },
+          "right": {
+            "from": "app_auth",
+            "to": "app_database",
+            "label": "JDBC HikariCP :5432",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "point": [
+            928,
+            271
+          ]
+        },
+        {
+          "left": {
+            "from": "app_auth",
+            "to": "app_database",
+            "label": "JDBC HikariCP :5432",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "right": {
+            "from": "ops_autoheal",
+            "to": "app_backend",
+            "label": "Auto-Restart si Unhealthy",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "point": [
+            928,
+            286.0499999999993
+          ]
+        },
+        {
+          "left": {
+            "from": "ops_kuma",
+            "to": "app_database",
+            "label": "Sonda TCP :5432",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "right": {
+            "from": "app_database",
+            "to": "app_storage",
+            "label": "Persistencia Tablas y WAL",
+            "collectionIndex": 14,
+            "artifactIndex": 15
+          },
+          "point": [
+            1060,
+            592
+          ],
+          "sharedNode": "app_database"
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "from": "app_auth",
+            "to": "app_database",
+            "label": "JDBC HikariCP :5432",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 4,
+          "stretch": 2.127,
+          "directCorridorBlockers": [
+            {
+              "id": "app_backend",
+              "label": "dev-backend (Spring Boot 4)",
+              "box": [
+                940,
+                250,
+                240,
+                56
+              ]
+            }
+          ]
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "ops_traefik → app_auth and ops_traefik → app_backend cross next to ops_traefik: move node app_auth or app_backend so the two reach ops_traefik from different sides (for example one level with it, one directly above or below it).",
+      "ops_traefik → app_backend crosses app_auth → app_database: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "app_auth → app_database crosses ops_autoheal → app_backend: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "ops_kuma → app_database and app_database → app_storage cross next to app_database: move node ops_kuma or app_storage so the two reach app_database from different sides (for example one level with it, one directly above or below it)."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
   }
 }

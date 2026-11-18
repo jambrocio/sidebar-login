@@ -1,0 +1,9 @@
+server:
+  port: 8081
+
+logging:
+  level:
+    root: INFO
+    com.auth.identity: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.jdbc: DEBUG

@@ -5202,7 +5202,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read"
          data-preset-badge-editorial-plate="ARCHIFY / LÁMINA 04">
-      <svg viewBox="0 0 1000 508" role="img" lang="es" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14">
+      <svg viewBox="0 0 940 532" role="img" lang="es" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14">
         <title id="archify-diagram-title">Arquitectura Corporativa y Despliegue en Contenedores</title>
         <desc id="archify-diagram-description">Un diagrama de arquitectura generado por Archify.</desc>
         <!-- Definitions -->
@@ -5249,47 +5249,57 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Boundaries (behind everything) -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="Entorno Orquestado Docker Compose (Red: bevadmin-network)" x="240" y="50" width="720" height="390" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="Entorno Orquestado Docker Compose (Red: bevadmin-network)" x="210" y="50" width="690" height="410" rx="12" class="c-region" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="1" data-composition-frame-label="Seguridad y Aislamiento Multi-Sede" x="490" y="190" width="470" height="110" rx="8" class="c-security-group" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="1" data-composition-frame-label="Servicios Backend y Control de Acceso" x="210" y="200" width="690" height="110" rx="8" class="c-security-group" stroke-width="1"/>
+
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="2" data-composition-frame-label="Persistencia y Almacenamiento de Datos" x="210" y="350" width="690" height="110" rx="8" class="c-security-group" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
         <g data-graph-role="automatic-crossover" style="--step:0">
-          <path data-graph-role="automatic-crossover-underlay" d="M 190 110 L 270 110" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="users" data-edge-to="frontend" data-edge-label="HTTPS :4200" data-edge-key="0" data-edge-id="users-frontend" data-composition-points="190,110;270,110" data-composition-crossover="halo" data-composition-independent="true" d="M 190 110 L 270 110" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 115 140 L 115 156 Q 115 164 123 164 L 306.95 164 Q 314.95 164 314.95 156 L 314.95 140" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="users" data-edge-to="proxy" data-edge-label="HTTPS :443" data-edge-key="0" data-edge-id="users-proxy" data-composition-points="115,140;115,164;314.95,164;314.95,140" data-composition-crossover="halo" data-composition-independent="true" d="M 115 140 L 115 156 Q 115 164 123 164 L 306.95 164 Q 314.95 164 314.95 156 L 314.95 140" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:1">
-          <path data-graph-role="automatic-crossover-underlay" d="M 440 110 L 520 110" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="frontend" data-edge-to="ls" data-edge-label="Cache" data-edge-key="1" data-edge-id="frontend-ls" data-composition-points="440,110;520,110" data-composition-crossover="halo" data-composition-independent="true" d="M 440 110 L 520 110" class="a-dashed" data-animate="edge" style="--step:1" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 420 100.9 L 436 100.9 Q 444 100.9 444 92.9 L 444 64 Q 444 56 452 56 L 552 56 Q 560 56 560 64 L 560 80" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="proxy" data-edge-to="frontend" data-edge-label="Proxy Web (SPA)" data-edge-key="1" data-edge-id="proxy-frontend" data-composition-points="420,100.9;444,100.9;444,56;560,56;560,80" data-composition-crossover="halo" data-composition-independent="true" d="M 420 100.9 L 436 100.9 Q 444 100.9 444 92.9 L 444 64 Q 444 56 452 56 L 552 56 Q 560 56 560 64 L 560 80" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:2">
-          <path data-graph-role="automatic-crossover-underlay" d="M 355 140 L 355 220" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="frontend" data-edge-to="backend" data-edge-label="REST API / Bearer JWT" data-edge-key="2" data-edge-id="frontend-backend" data-composition-points="355,140;355,220" data-composition-crossover="halo" data-composition-independent="true" d="M 355 140 L 355 220" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 650 110 L 666 110 Q 674 110 674 118 L 674 156 Q 674 164 682 164 L 777 164 Q 785 164 785 156 L 785 140" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="frontend" data-edge-to="ls" data-edge-label="Persistir Sesión" data-edge-key="2" data-edge-id="frontend-ls" data-composition-points="650,110;674,110;674,164;785,164;785,140" data-composition-crossover="halo" data-composition-independent="true" d="M 650 110 L 666 110 Q 674 110 674 118 L 674 156 Q 674 164 682 164 L 777 164 Q 785 164 785 156 L 785 140" class="a-dashed" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:3">
-          <path data-graph-role="automatic-crossover-underlay" d="M 440 250 L 520 250" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="backend" data-edge-to="security" data-edge-label="Validar JWT" data-edge-key="3" data-edge-id="backend-sec" data-composition-points="440,250;520,250" data-composition-crossover="halo" data-composition-independent="true" d="M 440 250 L 520 250" class="a-security" data-animate="edge" style="--step:3" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 330 140 L 330 230" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="proxy" data-edge-to="auth" data-edge-label="Rutas /api/v1/auth" data-edge-key="3" data-edge-id="proxy-auth" data-composition-points="330,140;330,230" data-composition-crossover="halo" data-composition-independent="true" d="M 330 140 L 330 230" class="a-security" data-animate="edge" style="--step:3" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:4">
-          <path data-graph-role="automatic-crossover-underlay" d="M 690 250 L 760 250" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="security" data-edge-to="guard" data-edge-label="Scope Sede" data-edge-key="4" data-edge-id="sec-guard" data-composition-points="690,250;760,250" data-composition-crossover="halo" data-composition-independent="true" d="M 690 250 L 760 250" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 420 117 L 437 117 Q 445 117 445 125 L 445 242.9 Q 445 250.9 453 250.9 L 470 250.9" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="proxy" data-edge-to="backend" data-edge-label="Rutas /api/v1" data-edge-key="4" data-edge-id="proxy-backend" data-composition-points="420,117;445,117;445,250.9;470,250.9" data-composition-crossover="halo" data-composition-independent="true" d="M 420 117 L 437 117 Q 445 117 445 125 L 445 242.9 Q 445 250.9 453 250.9 L 470 250.9" class="a-emphasis" data-animate="edge" style="--step:4" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:5">
-          <path data-graph-role="automatic-crossover-underlay" d="M 355 280 L 355 360" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="backend" data-edge-to="postgres" data-edge-label="JDBC Síncrono :5432" data-edge-key="5" data-edge-id="backend-db" data-composition-points="355,280;355,360" data-composition-crossover="halo" data-composition-independent="true" d="M 355 280 L 355 360" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 650 260 L 666 260 Q 674 260 674 268 L 674 306 Q 674 314 682 314 L 777 314 Q 785 314 785 306 L 785 290" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="backend" data-edge-to="guard" data-edge-label="Validar Scope" data-edge-key="5" data-edge-id="backend-guard" data-composition-points="650,260;674,260;674,314;785,314;785,290" data-composition-crossover="halo" data-composition-independent="true" d="M 650 260 L 666 260 Q 674 260 674 268 L 674 306 Q 674 314 682 314 L 777 314 Q 785 314 785 306 L 785 290" class="a-security" data-animate="edge" style="--step:5" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:6">
-          <path data-graph-role="automatic-crossover-underlay" d="M 440 390 L 520 390" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="postgres" data-edge-to="tables" data-edge-label="Esquema Físico" data-edge-key="6" data-edge-id="postgres-tables" data-composition-points="440,390;520,390" data-composition-crossover="halo" data-composition-independent="true" d="M 440 390 L 520 390" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 330 290 L 330 380" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="auth" data-edge-to="postgres" data-edge-label="JDBC Credenciales" data-edge-key="6" data-edge-id="auth-postgres" data-composition-points="330,290;330,380" data-composition-crossover="halo" data-composition-independent="true" d="M 330 290 L 330 380" class="a-security" data-animate="edge" style="--step:6" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:7">
-          <path data-graph-role="automatic-crossover-underlay" d="M 690 390 L 706 390 Q 714 390 714 382 L 714 344 Q 714 336 722 336 L 837 336 Q 845 336 845 344 L 845 360" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="tables" data-edge-to="views" data-edge-label="Vistas y Funciones" data-edge-key="7" data-edge-id="tables-views" data-composition-points="690,390;714,390;714,336;845,336;845,360" data-composition-crossover="halo" data-composition-independent="true" d="M 690 390 L 706 390 Q 714 390 714 382 L 714 344 Q 714 336 722 336 L 837 336 Q 845 336 845 344 L 845 360" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 470 267 L 453 267 Q 445 267 445 275 L 445 395 Q 445 403 437 403 L 420 403" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="backend" data-edge-to="postgres" data-edge-label="JDBC Transaccional" data-edge-key="7" data-edge-id="backend-postgres" data-composition-points="470,267;445,267;445,403;420,403" data-composition-crossover="halo" data-composition-independent="true" d="M 470 267 L 453 267 Q 445 267 445 275 L 445 395 Q 445 403 437 403 L 420 403" class="a-emphasis" data-animate="edge" style="--step:7" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:8">
+          <path data-graph-role="automatic-crossover-underlay" d="M 420 418.05 L 436 418.05 Q 444 418.05 444 426.05 L 444 456 Q 444 464 452 464 L 552 464 Q 560 464 560 456 L 560 440" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="postgres" data-edge-to="schemas" data-edge-label="Tablas Físicas" data-edge-key="8" data-edge-id="postgres-schemas" data-composition-points="420,418.05;444,418.05;444,464;560,464;560,440" data-composition-crossover="halo" data-composition-independent="true" d="M 420 418.05 L 436 418.05 Q 444 418.05 444 426.05 L 444 456 Q 444 464 452 464 L 552 464 Q 560 464 560 456 L 560 440" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:9">
+          <path data-graph-role="automatic-crossover-underlay" d="M 650 410 L 666 410 Q 674 410 674 402 L 674 364 Q 674 356 682 356 L 777 356 Q 785 356 785 364 L 785 380" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="schemas" data-edge-to="views" data-edge-label="Vistas y Funciones" data-edge-key="9" data-edge-id="schemas-views" data-composition-points="650,410;674,410;674,356;785,356;785,380" data-composition-crossover="halo" data-composition-independent="true" d="M 650 410 L 666 410 Q 674 410 674 402 L 674 364 Q 674 356 682 356 L 777 356 Q 785 356 785 364 L 785 380" class="a-default" data-animate="edge" style="--step:9" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
 
         <!-- Components -->
-        <g id="node-users" data-node-id="users" data-node-label="Usuarios del Negocio" tabindex="0" role="button" aria-label="Enfocar Usuarios del Negocio, Navegador / POS Terminal, Componente de arquitectura" aria-pressed="false" data-node-kind="external" data-node-sublabel="Navegador / POS Terminal" data-node-context="Componente de arquitectura">
-          <title>Usuarios del Negocio · Navegador / POS Terminal · Componente de arquitectura</title>
+        <g id="node-users" data-node-id="users" data-node-label="Usuarios del Negocio" tabindex="0" role="button" aria-label="Enfocar Usuarios del Negocio, Navegador Web / POS Terminal, Componente de arquitectura" aria-pressed="false" data-node-kind="external" data-node-sublabel="Navegador Web / POS Terminal" data-node-context="Componente de arquitectura">
+          <title>Usuarios del Negocio · Navegador Web / POS Terminal · Componente de arquitectura</title>
           <rect x="40" y="80" width="150" height="60" rx="8" class="c-mask"/>
           <rect x="40" y="80" width="150" height="60" rx="8" class="c-external" data-animate="node" style="--step:0" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(46 86) scale(0.6875)">
@@ -5297,179 +5307,212 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
             <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="115" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Usuarios del Negocio</text>
-        <text data-detail="context" x="115" y="124" class="t-muted" font-size="9" text-anchor="middle">Navegador / POS Terminal</text>
+        <text data-detail="context" x="115" y="124" class="t-muted" font-size="8.4" text-anchor="middle">Navegador Web / POS Terminal</text>
         </g>
 
-        <g id="node-frontend" data-node-id="frontend" data-node-label="Nginx + Angular 21 SPA" tabindex="0" role="button" aria-label="Enfocar Nginx + Angular 21 SPA, Contenedor dev-frontend :4200, Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Contenedor dev-frontend :4200" data-node-tag="Signals + PWA" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
-          <title>Nginx + Angular 21 SPA · Contenedor dev-frontend :4200 · Entorno Orquestado Docker Compose (Red: bevadmin-network) · Signals + PWA</title>
-          <rect x="270" y="80" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="270" y="80" width="170" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:1" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(276 86) scale(0.6875)">
+        <g id="node-proxy" data-node-id="proxy" data-node-label="Traefik TLS Ingress" tabindex="0" role="button" aria-label="Enfocar Traefik TLS Ingress, Contenedor bevadmin-proxy :443, Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="Contenedor bevadmin-proxy :443" data-node-tag="TLS 1.3 + Ingress" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
+          <title>Traefik TLS Ingress · Contenedor bevadmin-proxy :443 · Entorno Orquestado Docker Compose (Red: bevadmin-network) · TLS 1.3 + Ingress</title>
+          <rect x="240" y="80" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="240" y="80" width="180" height="60" rx="8" class="c-cloud" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(246 86) scale(0.6875)">
+            <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="330" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Traefik TLS Ingress</text>
+        <text data-detail="context" x="330" y="124" class="t-muted" font-size="9" text-anchor="middle">Contenedor bevadmin-proxy :443</text>
+        <text data-detail="fine" x="330" y="132" class="t-cloud" font-size="7" text-anchor="middle">TLS 1.3 + Ingress</text>
+        </g>
+
+        <g id="node-frontend" data-node-id="frontend" data-node-label="Nginx + Angular 21 SPA" tabindex="0" role="button" aria-label="Enfocar Nginx + Angular 21 SPA, Contenedor dev-frontend :80, Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Contenedor dev-frontend :80" data-node-tag="Signals + Multi-Tenant" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
+          <title>Nginx + Angular 21 SPA · Contenedor dev-frontend :80 · Entorno Orquestado Docker Compose (Red: bevadmin-network) · Signals + Multi-Tenant</title>
+          <rect x="470" y="80" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="470" y="80" width="180" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(476 86) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="355" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Nginx + Angular 21 SPA</text>
-        <text data-detail="context" x="355" y="124" class="t-muted" font-size="9" text-anchor="middle">Contenedor dev-frontend :4200</text>
-        <text data-detail="fine" x="355" y="132" class="t-frontend" font-size="7" text-anchor="middle">Signals + PWA</text>
+          <text data-node-label="" data-detail-anchor="" x="560" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Nginx + Angular 21 SPA</text>
+        <text data-detail="context" x="560" y="124" class="t-muted" font-size="9" text-anchor="middle">Contenedor dev-frontend :80</text>
+        <text data-detail="fine" x="560" y="132" class="t-frontend" font-size="7" text-anchor="middle">Signals + Multi-Tenant</text>
         </g>
 
-        <g id="node-ls" data-node-id="ls" data-node-label="Almacenamiento Local" tabindex="0" role="button" aria-label="Enfocar Almacenamiento Local, localStorage / Cache Shell, Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="localStorage / Cache Shell" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
-          <title>Almacenamiento Local · localStorage / Cache Shell · Entorno Orquestado Docker Compose (Red: bevadmin-network)</title>
-          <rect x="520" y="80" width="160" height="60" rx="8" class="c-mask"/>
-          <rect x="520" y="80" width="160" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(526 86) scale(0.6875)">
+        <g id="node-ls" data-node-id="ls" data-node-label="Almacenamiento Local" tabindex="0" role="button" aria-label="Enfocar Almacenamiento Local, sessionStorage / JWT Tokens, Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="sessionStorage / JWT Tokens" data-node-tag="Contexto Sesión" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
+          <title>Almacenamiento Local · sessionStorage / JWT Tokens · Entorno Orquestado Docker Compose (Red: bevadmin-network) · Contexto Sesión</title>
+          <rect x="700" y="80" width="170" height="60" rx="8" class="c-mask"/>
+          <rect x="700" y="80" width="170" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(706 86) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="600" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Almacenamiento Local</text>
-        <text data-detail="context" x="600" y="124" class="t-muted" font-size="9" text-anchor="middle">localStorage / Cache Shell</text>
+          <text data-node-label="" data-detail-anchor="" x="785" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Almacenamiento Local</text>
+        <text data-detail="context" x="785" y="124" class="t-muted" font-size="9" text-anchor="middle">sessionStorage / JWT Tokens</text>
+        <text data-detail="fine" x="785" y="132" class="t-frontend" font-size="7" text-anchor="middle">Contexto Sesión</text>
         </g>
 
-        <g id="node-backend" data-node-id="backend" data-node-label="Spring Boot 4 API" tabindex="0" role="button" aria-label="Enfocar Spring Boot 4 API, Contenedor dev-backend :8080, Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Contenedor dev-backend :8080" data-node-tag="Java 21 LTS" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
-          <title>Spring Boot 4 API · Contenedor dev-backend :8080 · Entorno Orquestado Docker Compose (Red: bevadmin-network) · Java 21 LTS</title>
-          <rect x="270" y="220" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="270" y="220" width="170" height="60" rx="8" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(276 226) scale(0.6875)">
+        <g id="node-auth" data-node-id="auth" data-node-label="Auth Microservice" tabindex="0" role="button" aria-label="Enfocar Auth Microservice, dev-auth-service :8081, Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso" aria-pressed="false" data-node-kind="security" data-node-sublabel="dev-auth-service :8081" data-node-tag="Centralizado + OAuth2" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso">
+          <title>Auth Microservice · dev-auth-service :8081 · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso · Centralizado + OAuth2</title>
+          <rect x="240" y="230" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="240" y="230" width="180" height="60" rx="8" class="c-security" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(246 236) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="330" y="258" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Auth Microservice</text>
+        <text data-detail="context" x="330" y="274" class="t-muted" font-size="9" text-anchor="middle">dev-auth-service :8081</text>
+        <text data-detail="fine" x="330" y="282" class="t-security" font-size="7" text-anchor="middle">Centralizado + OAuth2</text>
+        </g>
+
+        <g id="node-backend" data-node-id="backend" data-node-label="Spring Boot 4 API" tabindex="0" role="button" aria-label="Enfocar Spring Boot 4 API, Contenedor dev-backend :8080, Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Contenedor dev-backend :8080" data-node-tag="Java 21 LTS + RBAC" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso">
+          <title>Spring Boot 4 API · Contenedor dev-backend :8080 · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso · Java 21 LTS + RBAC</title>
+          <rect x="470" y="230" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="470" y="230" width="180" height="60" rx="8" class="c-backend" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(476 236) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="355" y="248" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Spring Boot 4 API</text>
-        <text data-detail="context" x="355" y="264" class="t-muted" font-size="9" text-anchor="middle">Contenedor dev-backend :8080</text>
-        <text data-detail="fine" x="355" y="272" class="t-backend" font-size="7" text-anchor="middle">Java 21 LTS</text>
+          <text data-node-label="" data-detail-anchor="" x="560" y="258" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Spring Boot 4 API</text>
+        <text data-detail="context" x="560" y="274" class="t-muted" font-size="9" text-anchor="middle">Contenedor dev-backend :8080</text>
+        <text data-detail="fine" x="560" y="282" class="t-backend" font-size="7" text-anchor="middle">Java 21 LTS + RBAC</text>
         </g>
 
-        <g id="node-security" data-node-id="security" data-node-label="Spring Security 7 + JWT" tabindex="0" role="button" aria-label="Enfocar Spring Security 7 + JWT, RBAC + Telemetría de Sesión, Entorno Orquestado Docker Compose (Red: bevadmin-network) › Seguridad y Aislamiento Multi-Sede" aria-pressed="false" data-node-kind="security" data-node-sublabel="RBAC + Telemetría de Sesión" data-node-tag="OWASP Mitigado" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Seguridad y Aislamiento Multi-Sede">
-          <title>Spring Security 7 + JWT · RBAC + Telemetría de Sesión · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Seguridad y Aislamiento Multi-Sede · OWASP Mitigado</title>
-          <rect x="520" y="220" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="520" y="220" width="170" height="60" rx="8" class="c-security" data-animate="node" style="--step:4" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(526 226) scale(0.6875)">
+        <g id="node-guard" data-node-id="guard" data-node-label="Filtro RBAC &amp; Tenant" tabindex="0" role="button" aria-label="Enfocar Filtro RBAC &amp; Tenant, TenantContext + Scope Filter, Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso" aria-pressed="false" data-node-kind="security" data-node-sublabel="TenantContext + Scope Filter" data-node-tag="Aislamiento Sede" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso">
+          <title>Filtro RBAC &amp; Tenant · TenantContext + Scope Filter · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Servicios Backend y Control de Acceso · Aislamiento Sede</title>
+          <rect x="700" y="230" width="170" height="60" rx="8" class="c-mask"/>
+          <rect x="700" y="230" width="170" height="60" rx="8" class="c-security" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(706 236) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="605" y="248" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Spring Security 7 + JWT</text>
-        <text data-detail="context" x="605" y="264" class="t-muted" font-size="9" text-anchor="middle">RBAC + Telemetría de Sesión</text>
-        <text data-detail="fine" x="605" y="272" class="t-security" font-size="7" text-anchor="middle">OWASP Mitigado</text>
+          <text data-node-label="" data-detail-anchor="" x="785" y="258" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Filtro RBAC &amp; Tenant</text>
+        <text data-detail="context" x="785" y="274" class="t-muted" font-size="9" text-anchor="middle">TenantContext + Scope Filter</text>
+        <text data-detail="fine" x="785" y="282" class="t-security" font-size="7" text-anchor="middle">Aislamiento Sede</text>
         </g>
 
-        <g id="node-guard" data-node-id="guard" data-node-label="Guardia Sede Asignada" tabindex="0" role="button" aria-label="Enfocar Guardia Sede Asignada, BranchAccessGuard (Multi-Sede), Entorno Orquestado Docker Compose (Red: bevadmin-network) › Seguridad y Aislamiento Multi-Sede" aria-pressed="false" data-node-kind="security" data-node-sublabel="BranchAccessGuard (Multi-Sede)" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Seguridad y Aislamiento Multi-Sede">
-          <title>Guardia Sede Asignada · BranchAccessGuard (Multi-Sede) · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Seguridad y Aislamiento Multi-Sede</title>
-          <rect x="760" y="220" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="760" y="220" width="170" height="60" rx="8" class="c-security" data-animate="node" style="--step:5" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(766 226) scale(0.6875)">
-            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
-            <path d="m5.8 8 1.5 1.5 3-3"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="845" y="248" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Guardia Sede Asignada</text>
-        <text data-detail="context" x="845" y="264" class="t-muted" font-size="9" text-anchor="middle">BranchAccessGuard (Multi-Sede)</text>
-        </g>
-
-        <g id="node-postgres" data-node-id="postgres" data-node-label="PostgreSQL 17" tabindex="0" role="button" aria-label="Enfocar PostgreSQL 17, Contenedor dev-postgres :5432, Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="database" data-node-sublabel="Contenedor dev-postgres :5432" data-node-tag="admin_dashboard_db" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
-          <title>PostgreSQL 17 · Contenedor dev-postgres :5432 · Entorno Orquestado Docker Compose (Red: bevadmin-network) · admin_dashboard_db</title>
-          <rect x="270" y="360" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="270" y="360" width="170" height="60" rx="8" class="c-database" data-animate="node" style="--step:6" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(276 366) scale(0.6875)">
+        <g id="node-postgres" data-node-id="postgres" data-node-label="PostgreSQL 17" tabindex="0" role="button" aria-label="Enfocar PostgreSQL 17, Contenedor dev-postgres :5432, Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos" aria-pressed="false" data-node-kind="database" data-node-sublabel="Contenedor dev-postgres :5432" data-node-tag="admin_dashboard_db" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos">
+          <title>PostgreSQL 17 · Contenedor dev-postgres :5432 · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos · admin_dashboard_db</title>
+          <rect x="240" y="380" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="240" y="380" width="180" height="60" rx="8" class="c-database" data-animate="node" style="--step:7" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(246 386) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="355" y="388" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL 17</text>
-        <text data-detail="context" x="355" y="404" class="t-muted" font-size="9" text-anchor="middle">Contenedor dev-postgres :5432</text>
-        <text data-detail="fine" x="355" y="412" class="t-database" font-size="7" text-anchor="middle">admin_dashboard_db</text>
+          <text data-node-label="" data-detail-anchor="" x="330" y="408" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL 17</text>
+        <text data-detail="context" x="330" y="424" class="t-muted" font-size="9" text-anchor="middle">Contenedor dev-postgres :5432</text>
+        <text data-detail="fine" x="330" y="432" class="t-database" font-size="7" text-anchor="middle">admin_dashboard_db</text>
         </g>
 
-        <g id="node-tables" data-node-id="tables" data-node-label="19 Tablas en Español" tabindex="0" role="button" aria-label="Enfocar 19 Tablas en Español, usuarios, ventas, compras..., Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="database" data-node-sublabel="usuarios, ventas, compras..." data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
-          <title>19 Tablas en Español · usuarios, ventas, compras... · Entorno Orquestado Docker Compose (Red: bevadmin-network)</title>
-          <rect x="520" y="360" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="520" y="360" width="170" height="60" rx="8" class="c-database" data-animate="node" style="--step:7" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(526 366) scale(0.6875)">
+        <g id="node-schemas" data-node-id="schemas" data-node-label="Esquemas Relacionales" tabindex="0" role="button" aria-label="Enfocar Esquemas Relacionales, auth, rbac, core, ventas..., Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos" aria-pressed="false" data-node-kind="database" data-node-sublabel="auth, rbac, core, ventas..." data-node-tag="Multi-Empresa 3FN" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos">
+          <title>Esquemas Relacionales · auth, rbac, core, ventas... · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos · Multi-Empresa 3FN</title>
+          <rect x="470" y="380" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="470" y="380" width="180" height="60" rx="8" class="c-database" data-animate="node" style="--step:9" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(476 386) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="605" y="388" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">19 Tablas en Español</text>
-        <text data-detail="context" x="605" y="404" class="t-muted" font-size="9" text-anchor="middle">usuarios, ventas, compras...</text>
+          <text data-node-label="" data-detail-anchor="" x="560" y="408" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Esquemas Relacionales</text>
+        <text data-detail="context" x="560" y="424" class="t-muted" font-size="9" text-anchor="middle">auth, rbac, core, ventas...</text>
+        <text data-detail="fine" x="560" y="432" class="t-database" font-size="7" text-anchor="middle">Multi-Empresa 3FN</text>
         </g>
 
-        <g id="node-views" data-node-id="views" data-node-label="Vistas y Funciones SQL" tabindex="0" role="button" aria-label="Enfocar Vistas y Funciones SQL, fn_obtener_menu, vw_ventas..., Entorno Orquestado Docker Compose (Red: bevadmin-network)" aria-pressed="false" data-node-kind="database" data-node-sublabel="fn_obtener_menu, vw_ventas..." data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
-          <title>Vistas y Funciones SQL · fn_obtener_menu, vw_ventas... · Entorno Orquestado Docker Compose (Red: bevadmin-network)</title>
-          <rect x="760" y="360" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="760" y="360" width="170" height="60" rx="8" class="c-database" data-animate="node" style="--step:8" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(766 366) scale(0.6875)">
+        <g id="node-views" data-node-id="views" data-node-label="Vistas y Funciones SQL" tabindex="0" role="button" aria-label="Enfocar Vistas y Funciones SQL, fn_obtener_menu, vw_ventas..., Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos" aria-pressed="false" data-node-kind="database" data-node-sublabel="fn_obtener_menu, vw_ventas..." data-node-tag="Auditoría + RBAC" data-node-context="Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos">
+          <title>Vistas y Funciones SQL · fn_obtener_menu, vw_ventas... · Entorno Orquestado Docker Compose (Red: bevadmin-network) › Persistencia y Almacenamiento de Datos · Auditoría + RBAC</title>
+          <rect x="700" y="380" width="170" height="60" rx="8" class="c-mask"/>
+          <rect x="700" y="380" width="170" height="60" rx="8" class="c-database" data-animate="node" style="--step:10" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(706 386) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="845" y="388" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Vistas y Funciones SQL</text>
-        <text data-detail="context" x="845" y="404" class="t-muted" font-size="9" text-anchor="middle">fn_obtener_menu, vw_ventas...</text>
+          <text data-node-label="" data-detail-anchor="" x="785" y="408" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Vistas y Funciones SQL</text>
+        <text data-detail="context" x="785" y="424" class="t-muted" font-size="9" text-anchor="middle">fn_obtener_menu, vw_ventas...</text>
+        <text data-detail="fine" x="785" y="432" class="t-database" font-size="7" text-anchor="middle">Auditoría + RBAC</text>
         </g>
 
         <!-- Connection labels -->
-        <g data-detail="context" data-edge-from="users" data-edge-to="frontend" data-edge-label="HTTPS :4200" data-edge-key="0" data-edge-id="users-frontend">
-          <rect x="198.6" y="90" width="62.8" height="14" rx="3" class="c-mask"/>
-          <text x="230" y="100" class="t-edge-emphasis" font-size="8" text-anchor="middle">HTTPS :4200</text>
+        <g data-detail="context" data-edge-from="users" data-edge-to="proxy" data-edge-label="HTTPS :443" data-edge-key="0" data-edge-id="users-proxy">
+          <rect x="185.975" y="144" width="58" height="14" rx="3" class="c-mask"/>
+          <text x="214.975" y="154" class="t-edge-emphasis" font-size="8" text-anchor="middle">HTTPS :443</text>
         </g>
-        <g data-detail="context" data-edge-from="frontend" data-edge-to="ls" data-edge-label="Cache" data-edge-key="1" data-edge-id="frontend-ls">
-          <rect x="463" y="90" width="34" height="14" rx="3" class="c-mask"/>
-          <text x="480" y="100" class="t-edge-dashed" font-size="8" text-anchor="middle">Cache</text>
+        <g data-detail="context" data-edge-from="proxy" data-edge-to="frontend" data-edge-label="Proxy Web (SPA)" data-edge-key="1" data-edge-id="proxy-frontend">
+          <rect x="403" y="58.45" width="82" height="14" rx="3" class="c-mask"/>
+          <text x="444" y="68.45" class="t-edge-emphasis" font-size="8" text-anchor="middle">Proxy Web (SPA)</text>
         </g>
-        <g data-detail="context" data-edge-from="frontend" data-edge-to="backend" data-edge-label="REST API / Bearer JWT" data-edge-key="2" data-edge-id="frontend-backend">
-          <rect x="238.20000000000002" y="173" width="110.8" height="14" rx="3" class="c-mask"/>
-          <text x="293.6" y="183" class="t-edge-emphasis" font-size="8" text-anchor="middle">REST API / Bearer JWT</text>
+        <g data-detail="context" data-edge-from="frontend" data-edge-to="ls" data-edge-label="Persistir Sesión" data-edge-key="2" data-edge-id="frontend-ls">
+          <rect x="581.2" y="143.5" width="86.8" height="14" rx="3" class="c-mask"/>
+          <text x="624.6" y="153.5" class="t-edge-dashed" font-size="8" text-anchor="middle">Persistir Sesión</text>
         </g>
-        <g data-detail="context" data-edge-from="backend" data-edge-to="security" data-edge-label="Validar JWT" data-edge-key="3" data-edge-id="backend-sec">
-          <rect x="448.6" y="230" width="62.8" height="14" rx="3" class="c-mask"/>
-          <text x="480" y="240" class="t-edge-security" font-size="8" text-anchor="middle">Validar JWT</text>
+        <g data-detail="context" data-edge-from="proxy" data-edge-to="auth" data-edge-label="Rutas /api/v1/auth" data-edge-key="3" data-edge-id="proxy-auth">
+          <rect x="227.60000000000002" y="178" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="275.8" y="188" class="t-edge-security" font-size="8" text-anchor="middle">Rutas /api/v1/auth</text>
         </g>
-        <g data-detail="context" data-edge-from="security" data-edge-to="guard" data-edge-label="Scope Sede" data-edge-key="4" data-edge-id="sec-guard">
-          <rect x="696" y="230" width="58" height="14" rx="3" class="c-mask"/>
-          <text x="725" y="240" class="t-edge-default" font-size="8" text-anchor="middle">Scope Sede</text>
+        <g data-detail="context" data-edge-from="proxy" data-edge-to="backend" data-edge-label="Rutas /api/v1" data-edge-key="4" data-edge-id="proxy-backend">
+          <rect x="408.8" y="163.95" width="72.4" height="14" rx="3" class="c-mask"/>
+          <text x="445" y="173.95" class="t-edge-emphasis" font-size="8" text-anchor="middle">Rutas /api/v1</text>
         </g>
-        <g data-detail="context" data-edge-from="backend" data-edge-to="postgres" data-edge-label="JDBC Síncrono :5432" data-edge-key="5" data-edge-id="backend-db">
-          <rect x="247.79999999999998" y="313" width="101.2" height="14" rx="3" class="c-mask"/>
-          <text x="298.4" y="323" class="t-edge-emphasis" font-size="8" text-anchor="middle">JDBC Síncrono :5432</text>
+        <g data-detail="context" data-edge-from="backend" data-edge-to="guard" data-edge-label="Validar Scope" data-edge-key="5" data-edge-id="backend-guard">
+          <rect x="595.5999999999999" y="293.5" width="72.4" height="14" rx="3" class="c-mask"/>
+          <text x="631.8" y="303.5" class="t-edge-security" font-size="8" text-anchor="middle">Validar Scope</text>
         </g>
-        <g data-detail="context" data-edge-from="postgres" data-edge-to="tables" data-edge-label="Esquema Físico" data-edge-key="6" data-edge-id="postgres-tables">
-          <rect x="441.4" y="370" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="480" y="380" class="t-edge-default" font-size="8" text-anchor="middle">Esquema Físico</text>
+        <g data-detail="context" data-edge-from="auth" data-edge-to="postgres" data-edge-label="JDBC Credenciales" data-edge-key="6" data-edge-id="auth-postgres">
+          <rect x="232.39999999999998" y="328" width="91.6" height="14" rx="3" class="c-mask"/>
+          <text x="278.2" y="338" class="t-edge-security" font-size="8" text-anchor="middle">JDBC Credenciales</text>
         </g>
-        <g data-detail="context" data-edge-from="tables" data-edge-to="views" data-edge-label="Vistas y Funciones" data-edge-key="7" data-edge-id="tables-views">
-          <rect x="665.8" y="343" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
-          <text x="714" y="353" class="t-edge-default" font-size="8" text-anchor="middle">Vistas y Funciones</text>
+        <g data-detail="context" data-edge-from="backend" data-edge-to="postgres" data-edge-label="JDBC Transaccional" data-edge-key="7" data-edge-id="backend-postgres">
+          <rect x="396.8" y="315" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="445" y="325" class="t-edge-emphasis" font-size="8" text-anchor="middle">JDBC Transaccional</text>
+        </g>
+        <g data-detail="context" data-edge-from="postgres" data-edge-to="schemas" data-edge-label="Tablas Físicas" data-edge-key="8" data-edge-id="postgres-schemas">
+          <rect x="360.79999999999995" y="445.5125" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="399.4" y="455.5125" class="t-edge-default" font-size="8" text-anchor="middle">Tablas Físicas</text>
+        </g>
+        <g data-detail="context" data-edge-from="schemas" data-edge-to="views" data-edge-label="Vistas y Funciones" data-edge-key="9" data-edge-id="schemas-views">
+          <rect x="625.8" y="363" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="674" y="373" class="t-edge-default" font-size="8" text-anchor="middle">Vistas y Funciones</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
         <g data-graph-role="structural-frame-label" data-composition-frame-id="0" data-composition-frame-kind="region" data-composition-frame-label="Entorno Orquestado Docker Compose (Red: bevadmin-network)">
-          <rect data-graph-role="structural-frame-label-mask" x="244" y="60" width="317.8" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="248" y="73" class="t-cloud" font-size="9" font-weight="600">Entorno Orquestado Docker Compose (Red: bevadmin-network)</text>
+          <rect data-graph-role="structural-frame-label-mask" x="568" y="60" width="317.8" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="572" y="73" class="t-cloud" font-size="9" font-weight="600">Entorno Orquestado Docker Compose (Red: bevadmin-network)</text>
         </g>
 
-        <g data-graph-role="structural-frame-label" data-composition-frame-id="1" data-composition-frame-kind="security-group" data-composition-frame-label="Seguridad y Aislamiento Multi-Sede">
-          <rect data-graph-role="structural-frame-label-mask" x="494" y="200" width="193.6" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="498" y="213" class="t-security" font-size="9" font-weight="600">Seguridad y Aislamiento Multi-Sede</text>
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="1" data-composition-frame-kind="security-group" data-composition-frame-label="Servicios Backend y Control de Acceso">
+          <rect data-graph-role="structural-frame-label-mask" x="453" y="210" width="209.79999999999998" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="457" y="223" class="t-security" font-size="9" font-weight="600">Servicios Backend y Control de Acceso</text>
+        </g>
+
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="2" data-composition-frame-kind="security-group" data-composition-frame-label="Persistencia y Almacenamiento de Datos">
+          <rect data-graph-role="structural-frame-label-mask" x="214" y="360" width="215.2" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="218" y="373" class="t-security" font-size="9" font-weight="600">Persistencia y Almacenamiento de Datos</text>
         </g>
 
         <!-- Legend -->
         <g data-legend="" data-legend-bridge="">
-          <text x="40" y="472" class="t-primary" font-size="12" font-weight="650">Leyenda</text>
-          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="Frontend" data-legend-x="40" data-legend-baseline="492" data-legend-width="93">
-            <rect x="40" y="483" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
-            <text x="62" y="492" class="t-muted" font-size="10" font-weight="500">Frontend</text>
+          <text x="40" y="496" class="t-primary" font-size="12" font-weight="650">Leyenda</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="Frontend" data-legend-x="40" data-legend-baseline="516" data-legend-width="93">
+            <rect x="40" y="507" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
+            <text x="62" y="516" class="t-muted" font-size="10" font-weight="500">Frontend</text>
           </g>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="155" data-legend-baseline="492" data-legend-width="87">
-            <rect x="155" y="483" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
-            <text x="177" y="492" class="t-muted" font-size="10" font-weight="500">Backend</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="155" data-legend-baseline="516" data-legend-width="87">
+            <rect x="155" y="507" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
+            <text x="177" y="516" class="t-muted" font-size="10" font-weight="500">Backend</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Base de datos" data-legend-x="264" data-legend-baseline="492" data-legend-width="124">
-            <rect x="264" y="483" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
-            <text x="286" y="492" class="t-muted" font-size="10" font-weight="500">Base de datos</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Base de datos" data-legend-x="264" data-legend-baseline="516" data-legend-width="124">
+            <rect x="264" y="507" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
+            <text x="286" y="516" class="t-muted" font-size="10" font-weight="500">Base de datos</text>
           </g>
-          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Seguridad" data-legend-x="410" data-legend-baseline="492" data-legend-width="99">
-            <rect x="410" y="483" width="16" height="10" rx="2.5" class="c-security" stroke-width="1"/>
-            <text x="432" y="492" class="t-muted" font-size="10" font-weight="500">Seguridad</text>
+          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Nube" data-legend-x="410" data-legend-baseline="516" data-legend-width="68">
+            <rect x="410" y="507" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
+            <text x="432" y="516" class="t-muted" font-size="10" font-weight="500">Nube</text>
           </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="Externo" data-legend-x="531" data-legend-baseline="492" data-legend-width="87">
-            <rect x="531" y="483" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
-            <text x="553" y="492" class="t-muted" font-size="10" font-weight="500">Externo</text>
+          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Seguridad" data-legend-x="500" data-legend-baseline="516" data-legend-width="99">
+            <rect x="500" y="507" width="16" height="10" rx="2.5" class="c-security" stroke-width="1"/>
+            <text x="522" y="516" class="t-muted" font-size="10" font-weight="500">Seguridad</text>
+          </g>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="Externo" data-legend-x="621" data-legend-baseline="516" data-legend-width="87">
+            <rect x="621" y="507" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
+            <text x="643" y="516" class="t-muted" font-size="10" font-weight="500">Externo</text>
           </g>
         </g>
       </svg>
@@ -5652,36 +5695,33 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>Capa Cliente (Frontend)</h3>
+          <h3>Ingress Seguro y Microservicios</h3>
         </div>
         <ul>
-          <li>Angular 21 SPA servida por Nginx Alpine ultraligero en puerto 4200</li>
-          <li>18 componentes standalone con reactividad mediante Signals</li>
-          <li>Soporte Offline PWA con Service Worker y App Shell</li>
+          <li>Traefik v3.2 gestiona terminación TLS 1.3 local y enruta tráfico hacia los contenedores</li>
+          <li>dev-auth-service centraliza autenticación, BCrypt, tokens JWT y expiración de credenciales</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot emerald"></div>
-          <h3>Capa de Negocio (Backend)</h3>
+          <h3>Capa Cliente y Frontend Multi-Tenant</h3>
         </div>
         <ul>
-          <li>Spring Boot 4 con Java 21 LTS y JDBC imperativo síncrono</li>
-          <li>Spring Security 7 con tokens Bearer JWT y control de sesiones</li>
-          <li>Guardia de acceso estricto a la Sede Asignada del operador</li>
+          <li>Angular 21 SPA adaptativa con reactividad mediante Signals y soporte Offline PWA</li>
+          <li>Contexto multi-empresa dinámico sincronizado en tiempo real según el tenant del operador</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot violet"></div>
-          <h3>Capa de Persistencia (PostgreSQL 17)</h3>
+          <h3>Persistencia y Aislamiento en PostgreSQL 17</h3>
         </div>
         <ul>
-          <li>19 tablas relacionales en español con auditoría y normalización 3FN</li>
-          <li>Función recursiva fn_obtener_menu_efectivo_usuario para RBAC híbrido</li>
-          <li>Volumen persistente postgres-data y scripts de inicialización /docker-entrypoint-initdb.d</li>
+          <li>Esquemas segmentados (auth, rbac, core, inventario, ventas, compras, tesorería)</li>
+          <li>Control estricto de integridad relacional, reglas ACID y auditoría de eventos</li>
         </ul>
       </div>
     </div>

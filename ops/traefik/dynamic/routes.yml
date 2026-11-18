@@ -40,6 +40,15 @@ http:
       middlewares:
         - "secHeaders@file"
 
+    # 5. Enrutamiento hacia Centralized Identity & Access Management (auth-service)
+    auth-router:
+      rule: "Host(`auth.bevadmin.com`) || PathPrefix(`/.well-known/jwks.json`)"
+      entryPoints:
+        - "websecure"
+      service: "auth-service"
+      middlewares:
+        - "securedChain@file"
+
   services:
     frontend-service:
       loadBalancer:
@@ -50,6 +59,11 @@ http:
       loadBalancer:
         servers:
           - url: "http://dev-backend:8080"
+
+    auth-service:
+      loadBalancer:
+        servers:
+          - url: "http://dev-auth-service:8081"
 
     status-service:
       loadBalancer:

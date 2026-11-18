@@ -12,142 +12,175 @@
       "id": "users",
       "type": "external",
       "label": "Usuarios del Negocio",
-      "sublabel": "Navegador / POS Terminal",
+      "sublabel": "Navegador Web / POS Terminal",
       "pos": [40, 80],
       "size": [150, 60]
+    },
+    {
+      "id": "proxy",
+      "type": "cloud",
+      "label": "Traefik TLS Ingress",
+      "sublabel": "Contenedor bevadmin-proxy :443",
+      "pos": [240, 80],
+      "size": [180, 60],
+      "tag": "TLS 1.3 + Ingress"
     },
     {
       "id": "frontend",
       "type": "frontend",
       "label": "Nginx + Angular 21 SPA",
-      "sublabel": "Contenedor dev-frontend :4200",
-      "pos": [270, 80],
-      "size": [170, 60],
-      "tag": "Signals + PWA"
+      "sublabel": "Contenedor dev-frontend :80",
+      "pos": [470, 80],
+      "size": [180, 60],
+      "tag": "Signals + Multi-Tenant"
     },
     {
       "id": "ls",
       "type": "frontend",
       "label": "Almacenamiento Local",
-      "sublabel": "localStorage / Cache Shell",
-      "pos": [520, 80],
-      "size": [160, 60]
+      "sublabel": "sessionStorage / JWT Tokens",
+      "pos": [700, 80],
+      "size": [170, 60],
+      "tag": "Contexto Sesión"
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Auth Microservice",
+      "sublabel": "dev-auth-service :8081",
+      "pos": [240, 230],
+      "size": [180, 60],
+      "tag": "Centralizado + OAuth2"
     },
     {
       "id": "backend",
       "type": "backend",
       "label": "Spring Boot 4 API",
       "sublabel": "Contenedor dev-backend :8080",
-      "pos": [270, 220],
-      "size": [170, 60],
-      "tag": "Java 21 LTS"
-    },
-    {
-      "id": "security",
-      "type": "security",
-      "label": "Spring Security 7 + JWT",
-      "sublabel": "RBAC + Telemetría de Sesión",
-      "pos": [520, 220],
-      "size": [170, 60],
-      "tag": "OWASP Mitigado"
+      "pos": [470, 230],
+      "size": [180, 60],
+      "tag": "Java 21 LTS + RBAC"
     },
     {
       "id": "guard",
       "type": "security",
-      "label": "Guardia Sede Asignada",
-      "sublabel": "BranchAccessGuard (Multi-Sede)",
-      "pos": [760, 220],
-      "size": [170, 60]
+      "label": "Filtro RBAC & Tenant",
+      "sublabel": "TenantContext + Scope Filter",
+      "pos": [700, 230],
+      "size": [170, 60],
+      "tag": "Aislamiento Sede"
     },
     {
       "id": "postgres",
       "type": "database",
       "label": "PostgreSQL 17",
       "sublabel": "Contenedor dev-postgres :5432",
-      "pos": [270, 360],
-      "size": [170, 60],
+      "pos": [240, 380],
+      "size": [180, 60],
       "tag": "admin_dashboard_db"
     },
     {
-      "id": "tables",
+      "id": "schemas",
       "type": "database",
-      "label": "19 Tablas en Español",
-      "sublabel": "usuarios, ventas, compras...",
-      "pos": [520, 360],
-      "size": [170, 60]
+      "label": "Esquemas Relacionales",
+      "sublabel": "auth, rbac, core, ventas...",
+      "pos": [470, 380],
+      "size": [180, 60],
+      "tag": "Multi-Empresa 3FN"
     },
     {
       "id": "views",
       "type": "database",
       "label": "Vistas y Funciones SQL",
       "sublabel": "fn_obtener_menu, vw_ventas...",
-      "pos": [760, 360],
-      "size": [170, 60]
+      "pos": [700, 380],
+      "size": [170, 60],
+      "tag": "Auditoría + RBAC"
     }
   ],
   "boundaries": [
     {
       "kind": "region",
       "label": "Entorno Orquestado Docker Compose (Red: bevadmin-network)",
-      "wraps": ["frontend", "ls", "backend", "security", "guard", "postgres", "tables", "views"]
+      "wraps": ["proxy", "frontend", "ls", "auth", "backend", "guard", "postgres", "schemas", "views"]
     },
     {
       "kind": "security-group",
-      "label": "Seguridad y Aislamiento Multi-Sede",
-      "wraps": ["security", "guard"]
+      "label": "Servicios Backend y Control de Acceso",
+      "wraps": ["auth", "backend", "guard"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Persistencia y Almacenamiento de Datos",
+      "wraps": ["postgres", "schemas", "views"]
     }
   ],
   "connections": [
     {
-      "id": "users-frontend",
+      "id": "users-proxy",
       "from": "users",
+      "to": "proxy",
+      "label": "HTTPS :443",
+      "variant": "emphasis"
+    },
+    {
+      "id": "proxy-frontend",
+      "from": "proxy",
       "to": "frontend",
-      "label": "HTTPS :4200",
+      "label": "Proxy Web (SPA)",
       "variant": "emphasis"
     },
     {
       "id": "frontend-ls",
       "from": "frontend",
       "to": "ls",
-      "label": "Cache",
+      "label": "Persistir Sesión",
       "variant": "dashed"
     },
     {
-      "id": "frontend-backend",
-      "from": "frontend",
-      "to": "backend",
-      "label": "REST API / Bearer JWT",
-      "variant": "emphasis"
-    },
-    {
-      "id": "backend-sec",
-      "from": "backend",
-      "to": "security",
-      "label": "Validar JWT",
+      "id": "proxy-auth",
+      "from": "proxy",
+      "to": "auth",
+      "label": "Rutas /api/v1/auth",
       "variant": "security"
     },
     {
-      "id": "sec-guard",
-      "from": "security",
-      "to": "guard",
-      "label": "Scope Sede"
-    },
-    {
-      "id": "backend-db",
-      "from": "backend",
-      "to": "postgres",
-      "label": "JDBC Síncrono :5432",
+      "id": "proxy-backend",
+      "from": "proxy",
+      "to": "backend",
+      "label": "Rutas /api/v1",
       "variant": "emphasis"
     },
     {
-      "id": "postgres-tables",
-      "from": "postgres",
-      "to": "tables",
-      "label": "Esquema Físico"
+      "id": "backend-guard",
+      "from": "backend",
+      "to": "guard",
+      "label": "Validar Scope",
+      "variant": "security"
     },
     {
-      "id": "tables-views",
-      "from": "tables",
+      "id": "auth-postgres",
+      "from": "auth",
+      "to": "postgres",
+      "label": "JDBC Credenciales",
+      "variant": "security"
+    },
+    {
+      "id": "backend-postgres",
+      "from": "backend",
+      "to": "postgres",
+      "label": "JDBC Transaccional",
+      "variant": "emphasis"
+    },
+    {
+      "id": "postgres-schemas",
+      "from": "postgres",
+      "to": "schemas",
+      "label": "Tablas Físicas"
+    },
+    {
+      "id": "schemas-views",
+      "from": "schemas",
       "to": "views",
       "label": "Vistas y Funciones"
     }
@@ -155,29 +188,26 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Capa Cliente (Frontend)",
+      "title": "Ingress Seguro y Microservicios",
       "items": [
-        "Angular 21 SPA servida por Nginx Alpine ultraligero en puerto 4200",
-        "18 componentes standalone con reactividad mediante Signals",
-        "Soporte Offline PWA con Service Worker y App Shell"
+        "Traefik v3.2 gestiona terminación TLS 1.3 local y enruta tráfico hacia los contenedores",
+        "dev-auth-service centraliza autenticación, BCrypt, tokens JWT y expiración de credenciales"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Capa de Negocio (Backend)",
+      "title": "Capa Cliente y Frontend Multi-Tenant",
       "items": [
-        "Spring Boot 4 con Java 21 LTS y JDBC imperativo síncrono",
-        "Spring Security 7 con tokens Bearer JWT y control de sesiones",
-        "Guardia de acceso estricto a la Sede Asignada del operador"
+        "Angular 21 SPA adaptativa con reactividad mediante Signals y soporte Offline PWA",
+        "Contexto multi-empresa dinámico sincronizado en tiempo real según el tenant del operador"
       ]
     },
     {
       "dot": "violet",
-      "title": "Capa de Persistencia (PostgreSQL 17)",
+      "title": "Persistencia y Aislamiento en PostgreSQL 17",
       "items": [
-        "19 tablas relacionales en español con auditoría y normalización 3FN",
-        "Función recursiva fn_obtener_menu_efectivo_usuario para RBAC híbrido",
-        "Volumen persistente postgres-data y scripts de inicialización /docker-entrypoint-initdb.d"
+        "Esquemas segmentados (auth, rbac, core, inventario, ventas, compras, tesorería)",
+        "Control estricto de integridad relacional, reglas ACID y auditoría de eventos"
       ]
     }
   ]

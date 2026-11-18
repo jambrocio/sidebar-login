@@ -1,5 +1,6 @@
 package com.elroble.bevadmin.modules.organization.service;
 
+import com.elroble.bevadmin.modules.organization.dto.CreateBranchRequest;
 import com.elroble.bevadmin.modules.organization.dto.CreateBusinessRequest;
 import com.elroble.bevadmin.modules.organization.repository.OrganizationRepository;
 import org.springframework.stereotype.Service;
@@ -52,5 +53,15 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listBranches(String businessCode) {
         return organizationRepository.findBranchesByBusinessCode(businessCode);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public Map<String, Object> createBranch(CreateBranchRequest request) {
+        organizationRepository.insertBranch(request);
+        return Map.of("id", request.code().toUpperCase(), "status", "Creado");
     }
 }

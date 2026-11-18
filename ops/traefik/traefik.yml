@@ -41,12 +41,7 @@ entryPoints:
   websecure:
     address: ":443"
     http:
-      tls:
-        certResolver: letsencrypt
-        domains:
-          - main: "${DOMAIN_NAME:-bevadmin.com}"
-            sans:
-              - "*.${DOMAIN_NAME:-bevadmin.com}"
+      tls: {}
 
 # Proveedores de Configuración
 providers:

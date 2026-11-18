@@ -9,6 +9,18 @@ Repositorio monorepo estructurado en **módulos limpios** (`frontend/`, `backend
 ```text
 sidebar-login/
 ├── PLAN_MAESTRO_DESARROLLO_IA.md # 🌟 Blueprint y Estándar Maestro para Modelos de IA
+├── auth-service/               # 🛡️ Centralized Identity Provider (IdP / IAM) en Spring Boot 3.4 (Java 21 LTS + RS256 / JWKS)
+│   ├── src/main/java/com/auth/identity/
+│   │   ├── core/               # Configuración de Seguridad, JWT Asimétrico (RS256/JWKS) y Errores RFC 7807
+│   │   ├── domain/model/       # Entidades de identidad, roles y sesiones
+│   │   ├── repository/         # Acceso a esquemas auth, rbac y core vía JdbcClient
+│   │   ├── service/            # Lógica transaccional de autenticación, rotación y Kill Session
+│   │   └── web/                # Endpoints /login, /refresh, /introspect (RFC 7662), /.well-known/jwks.json (RFC 7517)
+│   ├── src/main/resources/application.yml
+│   ├── Dockerfile              # Multi-stage build con Eclipse Temurin 21 JRE Alpine
+│   ├── pom.xml
+│   └── README.md               # Guía técnica de integración para aplicaciones satélites
+│
 ├── frontend/                   # Aplicación Web & PWA en Angular 21 (Standalone + Signals)
 │   ├── .agents/                # Reglas de actualización automática y Skills de arquitectura
 │   ├── json/                   # 11 Archivos JSON con datos dummy desacoplados
@@ -118,9 +130,10 @@ El proyecto está diseñado bajo una arquitectura modular donde la **Aplicación
 │            MODO 1: SOLO APLICACIÓN                     │     │         MODO 2: CONJUNTO CON OPERACIONES (VPS)         │
 │             (docker-compose.yml)                       │     │        (docker-compose.yml + docker-compose.ops.yml)   │
 ├────────────────────────────────────────────────────────┤     ├────────────────────────────────────────────────────────┤
-│  • dev-postgres  (Red Data :5432)                      │     │  • dev-postgres  (Aislado en Red Data :5432)           │
-│  • dev-backend   (Redes App & Data :8080)              │     │  • dev-backend   (Redes App & Data / Host Inactivo)    │
-│  • dev-frontend  (Red App :4200 HTTP)                  │     │  • dev-frontend  (Red App / :4200 Host Inactivo)       │
+│  • dev-postgres    (Red Data :5432)                    │     │  • dev-postgres    (Aislado en Red Data :5432)         │
+│  • dev-auth-service (IdP Centralizado :8081)           │     │  • dev-auth-service (IdP Aislado / Traefik Ingress)    │
+│  • dev-backend     (Redes App & Data :8080)            │     │  • dev-backend     (Redes App & Data / Host Inactivo)  │
+│  • dev-frontend    (Red App :4200 HTTP)                │     │  • dev-frontend    (Red App / :4200 Host Inactivo)     │
 │                                                        │     │  • bevadmin-proxy (Traefik TLS 1.3 Ingress :443)       │
 │                                                        │     │  • bevadmin-crowdsec (WAF/IPS Anti-Bot / Anti-OWASP)   │
 │                                                        │     │  • bevadmin-uptime-kuma (Alert-on-Down Monitor :3001)  │
@@ -159,12 +172,24 @@ docker compose ps
   docker exec dev-postgres pg_isready -U postgres -d admin_dashboard_db
   # Respuesta esperada: /var/run/postgresql:5432 - accepting connections
   ```
-* **Healthcheck del Backend REST API:**
+* **Healthcheck de Centralized Auth Service (IdP):**
+  ```powershell
+  Invoke-RestMethod -Uri "http://localhost:8081/api/v1/auth/health"
+  # Respuesta esperada: {"status":"UP","service":"centralized-auth-service"}
+  ```
+* **Discovery JWKS Público (Tokens Asimétricos RS256):**
+  ```powershell
+  Invoke-RestMethod -Uri "http://localhost:8081/.well-known/jwks.json"
+  # Retorna el Key Set público con el Key ID activo
+  ```
+* **Healthcheck del Backend de Negocio:**
   ```powershell
   Invoke-RestMethod -Uri "http://localhost:8080/api/v1/auth/health"
   # Respuesta esperada: {"status":"UP","service":"bevadmin-backend"}
   ```
-* **Documentación OpenAPI / Swagger:** Abrir en el navegador [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
+* **Documentación OpenAPI / Swagger:**
+  - Centralized Auth Service: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+  - Backend Comercial y Ventas: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 * **Frontend Angular SPA:** Abrir en el navegador [http://localhost:4200](http://localhost:4200) (debe cargar la pantalla de login).
 * **Prueba de Autenticación:**
   ```powershell

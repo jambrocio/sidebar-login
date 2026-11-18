@@ -40,31 +40,83 @@ public class UsersRepository {
     }
 
     /**
-     * Busca el UUID de una Empresa Matriz por su código único.
+     * Busca el UUID de una Empresa Matriz por su código único o identificador UUID.
      *
      * @param businessCode código de la empresa (ej. {@code BIZ-001})
      * @return {@link Optional} con el UUID de la empresa
      */
     public Optional<UUID> findBusinessIdByCode(String businessCode) {
-        return jdbcClient.sql("SELECT id FROM empresas WHERE codigo = :code")
+        return jdbcClient.sql("SELECT id FROM empresas WHERE UPPER(codigo) = UPPER(:code) OR CAST(id AS text) = :code")
                 .param("code", businessCode)
                 .query(UUID.class)
                 .optional();
     }
 
     /**
-     * Busca el UUID de una Sede por su nombre dentro de una Empresa Matriz.
+     * Busca el UUID de una Sede por su nombre o código dentro de una Empresa Matriz.
      *
      * @param businessId identificador UUID de la empresa
-     * @param branchName nombre de la sede/sucursal
+     * @param branchName nombre o código de la sede/sucursal
      * @return {@link Optional} con el UUID de la sede
      */
     public Optional<UUID> findBranchIdByBusinessAndName(UUID businessId, String branchName) {
-        return jdbcClient.sql("SELECT id FROM sedes WHERE empresa_id = :businessId AND nombre = :name")
+        return jdbcClient.sql("""
+                SELECT id FROM sedes
+                WHERE empresa_id = :businessId
+                  AND (LOWER(TRIM(nombre)) = LOWER(TRIM(:name)) OR UPPER(codigo) = UPPER(:name))
+                LIMIT 1
+                """)
                 .param("businessId", businessId)
                 .param("name", branchName)
                 .query(UUID.class)
                 .optional();
+    }
+
+    /**
+     * Obtiene el identificador de la primera sede registrada para un negocio matriz.
+     *
+     * @param businessId identificador UUID de la empresa
+     * @return {@link Optional} con el UUID de la sede
+     */
+    public Optional<UUID> findFirstBranchIdByBusiness(UUID businessId) {
+        return jdbcClient.sql("SELECT id FROM sedes WHERE empresa_id = :businessId ORDER BY codigo ASC LIMIT 1")
+                .param("businessId", businessId)
+                .query(UUID.class)
+                .optional();
+    }
+
+    /**
+     * Verifica si ya existe un usuario registrado con el código especificado.
+     *
+     * @param userCode código único legible (ej. {@code USR-006})
+     * @return {@code true} si ya existe, {@code false} en caso contrario
+     */
+    public boolean existsByUserCode(String userCode) {
+        Integer count = jdbcClient.sql("SELECT COUNT(*) FROM usuarios WHERE UPPER(codigo_usuario) = UPPER(:code)")
+                .param("code", userCode)
+                .query(Integer.class)
+                .single();
+        return count != null && count > 0;
+    }
+
+    /**
+     * Calcula correlativamente el siguiente código libre para un nuevo usuario (ej. {@code USR-007}).
+     *
+     * @return código generado de usuario
+     */
+    public String findNextAvailableUserCode() {
+        List<String> codes = jdbcClient.sql("SELECT codigo_usuario FROM usuarios WHERE codigo_usuario ~ '^USR-[0-9]+$'")
+                .query(String.class)
+                .list();
+        int max = 0;
+        for (String c : codes) {
+            try {
+                int val = Integer.parseInt(c.replace("USR-", ""));
+                if (val > max) max = val;
+            } catch (NumberFormatException ignored) {}
+        }
+        int next = max + 1;
+        return String.format("USR-%03d", next);
     }
 
     /**

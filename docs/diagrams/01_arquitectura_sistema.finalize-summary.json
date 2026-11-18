@@ -6,14 +6,14 @@
   "type": "architecture",
   "quality": "showcase",
   "specification": {
-    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
-    "sha256": "f8b8acde1a041867177dbe0a2a19ea6972d2ea21e8a729f59dd0a31fcab70fdb",
-    "bytes": 4713
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\01_arquitectura_sistema.architecture.json",
+    "sha256": "9bb36b818d2df28e4aca76c3c0c2a94616ef3a6c80fb8401772776fc35d5225d",
+    "bytes": 5505
   },
   "artifact": {
-    "path": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
-    "sha256": "6df899b225b92495820b02833e00798084ec6614cc4f339480594ff3ed4541b6",
-    "bytes": 831251
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.html",
+    "sha256": "61b6f42590af8105d2b40fd50866ff96042304721835a296d9fb9bf03e8caae6",
+    "bytes": 838620
   },
   "gates": {
     "validate": "pass",
@@ -28,22 +28,22 @@
     "truncated": false
   },
   "evidence": {
-    "receipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize.json",
-    "summaryReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize-summary.json",
-    "browserCheckReceipt": "D:\\tools\\Proyectos\\mio\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.browser-check.json"
+    "receipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\01_arquitectura_sistema.browser-check.json"
   },
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-10-23T15:37:03.513Z",
+    "checkedAt": "2026-11-18T02:01:17.186Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 6750,
+  "durationMs": 3848,
   "browserCheck": {
     "requested": true,
     "ran": true
@@ -51,7 +51,7 @@
   "visualReviewRecommendation": {
     "action": "inspect-route-readability",
     "signals": {
-      "routesOverSuggestedBends": 1
+      "routesOverSuggestedBends": 5
     },
     "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
     "affectedRoutes": {
@@ -59,21 +59,73 @@
       "detours": [
         {
           "relationship": {
-            "id": "tables-views",
-            "from": "tables",
-            "to": "views",
-            "label": "Vistas y Funciones",
-            "collectionIndex": 7,
-            "artifactIndex": 8
+            "id": "proxy-frontend",
+            "from": "proxy",
+            "to": "frontend",
+            "label": "Proxy Web (SPA)",
+            "collectionIndex": 1,
+            "artifactIndex": 2
           },
           "bends": 3,
-          "stretch": 1.259
+          "stretch": 1.298
+        },
+        {
+          "relationship": {
+            "id": "frontend-ls",
+            "from": "frontend",
+            "to": "ls",
+            "label": "Persistir Sesión",
+            "collectionIndex": 2,
+            "artifactIndex": 3
+          },
+          "bends": 3,
+          "stretch": 1.291
+        },
+        {
+          "relationship": {
+            "id": "backend-guard",
+            "from": "backend",
+            "to": "guard",
+            "label": "Validar Scope",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 3,
+          "stretch": 1.291
+        },
+        {
+          "relationship": {
+            "id": "postgres-schemas",
+            "from": "postgres",
+            "to": "schemas",
+            "label": "Tablas Físicas",
+            "collectionIndex": 8,
+            "artifactIndex": 9
+          },
+          "bends": 3,
+          "stretch": 1.296
+        },
+        {
+          "relationship": {
+            "id": "schemas-views",
+            "from": "schemas",
+            "to": "views",
+            "label": "Vistas y Funciones",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "bends": 3,
+          "stretch": 1.291
         }
       ],
       "truncated": false
     },
     "hints": [
-      "tables → views needs 3 bends: move node tables or views so they share a row or column with matching centers, or sit diagonally with a clear corner."
+      "proxy → frontend needs 3 bends: move node proxy or frontend so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "frontend → ls needs 3 bends: move node frontend or ls so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "backend → guard needs 3 bends: move node backend or guard so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "postgres → schemas needs 3 bends: move node postgres or schemas so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "schemas → views needs 3 bends: move node schemas or views so they share a row or column with matching centers, or sit diagonally with a clear corner."
     ],
     "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
   }

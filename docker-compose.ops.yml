@@ -25,8 +25,12 @@ services:
   dev-backend:
     ports: !reset []
 
-  dev-postgres:
+  dev-auth-service:
     ports: !reset []
+
+  dev-postgres:
+    ports: !override
+      - "127.0.0.1:5432:5432"
 
   # ----------------------------------------------------------------------------
   # 1. Reverse Proxy WAF con SSL Automático Let's Encrypt (Traefik v3.2)

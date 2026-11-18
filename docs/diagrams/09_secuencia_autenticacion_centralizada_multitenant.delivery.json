@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "18a307b8-cc51-4fdc-a63e-efc51dedf8b4",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\candidates\\09_secuencia_autenticacion_centralizada_multitenant.sequence.json",
+  "output": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\09_secuencia_autenticacion_centralizada_multitenant.html",
+  "specification": {
+    "sha256": "40066c6e79b7da28280a3119d5787495321b836fcaa0a5cd06e81a9e9ce9286a",
+    "bytes": 4066
+  },
+  "artifact": {
+    "sha256": "85a22d3147cb3f9fcc361e4d0516f5ace469143cd6025133c2b8c3a1697ba63f",
+    "bytes": 822558
+  }
+}

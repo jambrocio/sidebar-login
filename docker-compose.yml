@@ -24,6 +24,34 @@ services:
     networks:
       - bevadmin-data-network
 
+  # Centralized Identity & Access Management (IAM / IdP) Service (Spring Boot 3.4 + Java 21)
+  dev-auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    image: dev-auth-service
+    container_name: dev-auth-service
+    restart: unless-stopped
+    ports:
+      - "${AUTH_SERVICE_PORT_MAPPING:-8081:8081}"
+    environment:
+      - DB_URL=jdbc:postgresql://dev-postgres:5432/${DB_NAME:-admin_dashboard_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    depends_on:
+      dev-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/api/v1/auth/health || exit 1"]
+      interval: 4s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    networks:
+      - bevadmin-app-network
+      - bevadmin-data-network
+
   # Backend REST API Spring Boot 4 + Java 21 (Imperativo / Síncrono)
   dev-backend:
     build:
@@ -69,6 +97,8 @@ services:
       - "${FRONTEND_PORT_MAPPING:-4200:80}"
     depends_on:
       dev-postgres:
+        condition: service_healthy
+      dev-auth-service:
         condition: service_healthy
       dev-backend:
         condition: service_healthy

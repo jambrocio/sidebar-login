@@ -144,12 +144,34 @@ if ($Mode -eq 'db-only') {
 
 # 4. Despliegue de Backend y Frontend según el Modo
 if ($Mode -eq 'docker') {
-    Write-Color "`n[3/4] Compilando y levantando contenedores de Backend y Frontend..." "Yellow"
+    Write-Color "`n[3/4] Compilando y levantando contenedores de Auth Service, Backend y Frontend..." "Yellow"
     Write-Color "  Construyendo imágenes con perfiles [$Environment / $NgConfig]..." "DarkGray"
 
-    docker compose up -d --build dev-backend dev-frontend
+    docker compose up -d --build dev-auth-service dev-backend dev-frontend
 
     Write-Color "`n[4/4] Verificando salud de los servicios HTTP..." "Yellow"
+
+    # Esperar que el auth-service responda en el puerto 8081
+    Write-Color "  Esperando respuesta de Centralized Auth Service (http://localhost:8081)..." "DarkGray"
+    $authReady = $false
+    for ($i = 0; $i -lt 30; $i++) {
+        Start-Sleep -Seconds 2
+        try {
+            $authResp = Invoke-RestMethod -Uri "http://localhost:8081/api/v1/auth/health" -Method Get -TimeoutSec 3 -ErrorAction SilentlyContinue
+            if ($authResp -and $authResp.status -eq 'UP') {
+                $authReady = $true
+                break
+            }
+        } catch {}
+        Write-Host -NoNewline "."
+    }
+    Write-Host ""
+
+    if ($authReady) {
+        Write-Color "  ✓ Centralized Auth Service (IdP / IAM) ONLINE en http://localhost:8081." "Green"
+    } else {
+        Write-Color "  ! Auth Service todavía inicializando. Verifique con: docker logs -f dev-auth-service" "Yellow"
+    }
     
     # Esperar que el backend responda en el puerto 8080
     Write-Color "  Esperando respuesta del servicio Backend (http://localhost:8080)..." "DarkGray"
@@ -185,10 +207,12 @@ if ($Mode -eq 'docker') {
 
 } else {
     # Modo Local
-    Write-Color "`n[3/4] Modo Local: Inicie el Backend y Frontend en terminales dedicadas:" "Yellow"
-    Write-Host "  Terminal 1 (Backend Spring Boot):"
+    Write-Color "`n[3/4] Modo Local: Inicie los servicios en terminales dedicadas:" "Yellow"
+    Write-Host "  Terminal 1 (Centralized Auth IdP):"
+    Write-Color "    cd auth-service; mvn spring-boot:run -Dspring-boot.run.profiles=$Environment" "Cyan"
+    Write-Host "  Terminal 2 (Backend de Negocio):"
     Write-Color "    cd backend; mvn spring-boot:run -Dspring-boot.run.profiles=$Environment" "Cyan"
-    Write-Host "  Terminal 2 (Frontend Angular 21):"
+    Write-Host "  Terminal 3 (Frontend Angular 21):"
     Write-Color "    cd frontend; npm run start:$Environment" "Cyan"
 }
 
@@ -199,10 +223,12 @@ Write-Color "                  DESPLIEGUE FINALIZADO EXITOSAMENTE               
 Write-Color "================================================================================" "Green"
 Write-Host ""
 Write-Host "  Ambiente Activo:        " -NoNewline; Write-Color "$EnvName" "Yellow"
+Write-Host "  Centralized Auth (IdP): " -NoNewline; Write-Color "http://localhost:8081/api/v1/auth" "Cyan"
+Write-Host "  Auth JWKS Discovery:    " -NoNewline; Write-Color "http://localhost:8081/.well-known/jwks.json" "Cyan"
+Write-Host "  Auth Swagger UI:        " -NoNewline; Write-Color "http://localhost:8081/swagger-ui.html" "Cyan"
 Write-Host "  Frontend Angular:       " -NoNewline; Write-Color "http://localhost:4200" "Cyan"
 Write-Host "  Backend REST API:       " -NoNewline; Write-Color "http://localhost:8080/api/v1" "Cyan"
-Write-Host "  Swagger UI OpenAPI:     " -NoNewline; Write-Color "http://localhost:8080/swagger-ui.html" "Cyan"
-Write-Host "  Actuator Health Check:  " -NoNewline; Write-Color "http://localhost:8080/actuator/health" "Cyan"
+Write-Host "  Backend Swagger UI:     " -NoNewline; Write-Color "http://localhost:8080/swagger-ui.html" "Cyan"
 Write-Host "  Base de Datos (DB):     " -NoNewline; Write-Color "localhost:5432/admin_dashboard_db (PostgreSQL 17)" "Cyan"
 Write-Host ""
 Write-Color "  Cuentas de Acceso Disponibles:" "White"

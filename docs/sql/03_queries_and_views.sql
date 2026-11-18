@@ -5,6 +5,8 @@
 --              e Historial de Ventas Emitidas con detalle de Comprobante.
 -- =============================================================================
 
+SET search_path TO auth, rbac, core, inventario, ventas, compras, tesoreria, notificaciones, public;
+
 -- =============================================================================
 -- 1. FUNCIÓN: fn_obtener_menu_efectivo_usuario(p_usuario_id UUID)
 --    Retorna el catálogo de opciones de menú permitidas para un usuario,
@@ -242,6 +244,7 @@ SELECT
     sed.serie_facturacion AS invoice_series,
     v.nombre_cliente AS client_name,
     v.modalidad,
+    v.modalidad AS modality,
     v.metodo_pago AS payment_method,
     v.resumen_items AS items_summary,
     v.cantidad_total_items AS total_items_count,
