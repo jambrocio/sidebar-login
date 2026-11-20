@@ -1,71 +1,137 @@
 <section class="page-wrapper">
   <header class="page-header">
     <div>
-      <h1>Registrar Nueva Bebida o Licor</h1>
+      <h1>Registrar Nuevo Producto en Catálogo</h1>
       <p class="subtitle">
         Negocio: <strong>{{ businessInfo().legalName }}</strong>
         — Usuario: <strong>{{ currentSessionUser() }}</strong>
+        <span *ngIf="isGeneralAdmin()" class="role-badge" style="background-color: rgba(234, 179, 8, 0.15); color: #b45309; margin-left: 0.5rem; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600">
+          <i class="bi bi-shield-check"></i> Administrador General (Multi-Negocio)
+        </span>
       </p>
     </div>
 
     <div class="header-actions">
       <a routerLink="/dashboard/products/list" class="btn-secondary">
         <i class="bi bi-list-ul"></i>
-        <span>Ver Inventario Maestro</span>
+        <span>Ver Catálogo Maestro</span>
       </a>
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
   <div class="card form-card">
-    <h2 class="section-title">Ficha Técnica de Nueva Bebida en Catálogo</h2>
+    <h2 class="section-title">
+      <i class="bi bi-box-seam-fill" style="margin-right: 0.4rem; color: var(--primary, #0284c7)"></i>
+      Ficha Técnica de Nuevo Producto
+    </h2>
+
+    <div style="background: rgba(14, 165, 233, 0.08); border-left: 4px solid #0284c7; padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1.25rem; font-size: 0.88rem; color: var(--text-color, #1e293b)" *ngIf="isGeneralAdmin()">
+      <i class="bi bi-info-circle-fill" style="color: #0284c7; margin-right: 0.35rem"></i>
+      <strong>Opción de Administrador General:</strong> Puedes seleccionar el Negocio Matriz propietario al que se incorporará este producto en inventario.
+    </div>
+
+    <div style="background: rgba(14, 165, 233, 0.08); border-left: 4px solid #0284c7; padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1.25rem; font-size: 0.88rem; color: var(--text-color, #1e293b)" *ngIf="!isGeneralAdmin()">
+      <i class="bi bi-shield-lock-fill" style="color: #0284c7; margin-right: 0.35rem"></i>
+      <strong>Asignación por Defecto:</strong> El producto se registrará automáticamente en tu negocio asignado:
+      <strong>{{ businessInfo().legalName }} ({{ currentUserProfile().assignedBusinessId }})</strong>.
+    </div>
+
     <form (ngSubmit)="saveProduct()" class="grid-form">
+      <!-- 1. Negocio Matriz Destino -->
       <div class="form-group">
-        <label>Nombre de la Bebida / Licor</label>
+        <label>
+          1. Negocio Matriz Propietario <span class="required-indicator">*</span>
+          <span *ngIf="!isGeneralAdmin()" style="font-size: 0.75rem; color: #0284c7">(Por default)</span>
+        </label>
+        <select
+          name="prodBusiness"
+          [(ngModel)]="newProduct.businessCode"
+          [disabled]="!isGeneralAdmin()"
+          [style.backgroundColor]="!isGeneralAdmin() ? 'var(--bg-hover, #f1f5f9)' : ''"
+          required
+          class="required-input"
+        >
+          <option *ngFor="let b of availableBusinesses()" [value]="b.id">
+            {{ b.id }} — {{ b.commercialName || b.legalName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 2. Código SKU -->
+      <div class="form-group">
+        <label>2. Código SKU Único <span class="required-indicator">*</span></label>
+        <input type="text" name="prodSku" [(ngModel)]="newProduct.sku" placeholder="Ej. PRD-101" required class="required-input" />
+      </div>
+
+      <!-- 3. Nombre Comercial del Producto -->
+      <div class="form-group full-width">
+        <label>3. Nombre Comercial y Descripción del Producto <span class="required-indicator">*</span></label>
         <input
           type="text"
           name="prodName"
           [(ngModel)]="newProduct.name"
-          placeholder="Ej. Pisco Queirolo Acholado 750ml"
+          placeholder="Ej. Cerveza Cusqueña Trigo 620ml o Whisky Johnnie Walker Black Label 750ml"
+          required
+          class="required-input"
         />
       </div>
+
+      <!-- 4. Categoría Comercial -->
       <div class="form-group">
-        <label>Código SKU</label>
-        <input type="text" name="prodSku" [(ngModel)]="newProduct.sku" />
-      </div>
-      <div class="form-group">
-        <label>Línea de Bebida</label>
-        <select name="prodCat" [(ngModel)]="newProduct.category">
+        <label>4. Categoría del Producto <span class="required-indicator">*</span></label>
+        <select name="prodCat" [(ngModel)]="newProduct.category" required class="required-input">
           <option value="Licores">Licores y Destilados</option>
           <option value="Cervezas">Cervezas</option>
           <option value="Gaseosas">Gaseosas y Aguas</option>
-          <option value="Otros">Energizantes y Otros</option>
+          <option value="Otros">Snacks, Accesorios y Otros</option>
         </select>
       </div>
+
+      <!-- 5. Presentación Mayorista -->
       <div class="form-group">
-        <label>Formato Mayorista</label>
-        <input type="text" name="prodPres" [(ngModel)]="newProduct.presentation" />
+        <label>5. Formato / Presentación Mayorista</label>
+        <input type="text" name="prodPres" [(ngModel)]="newProduct.presentation" placeholder="Ej. Caja x 12 Unidades" />
       </div>
+
+      <!-- 6. Precios -->
       <div class="form-group">
-        <label>Precio por Menor — Unidad ($)</label>
-        <input type="number" name="prodRetail" [(ngModel)]="newProduct.retailPrice" step="0.1" />
+        <label>6. Precio por Menor — Unidad ($) <span class="required-indicator">*</span></label>
+        <input type="number" name="prodRetail" [(ngModel)]="newProduct.retailPrice" step="0.10" min="0" required class="required-input" />
       </div>
+
       <div class="form-group">
-        <label>Precio por Mayor — Caja ($)</label>
-        <input type="number" name="prodWholesale" [(ngModel)]="newProduct.wholesalePrice" step="0.5" />
+        <label>7. Precio por Mayor — Caja / Pack ($) <span class="required-indicator">*</span></label>
+        <input type="number" name="prodWholesale" [(ngModel)]="newProduct.wholesalePrice" step="0.50" min="0" required class="required-input" />
       </div>
+
+      <!-- 7. Stock Inicial -->
       <div class="form-group">
-        <label>Stock Inicial (Cajas)</label>
+        <label>8. Stock Inicial (Cajas)</label>
         <input type="number" name="prodBoxes" [(ngModel)]="newProduct.stockBoxes" min="0" />
       </div>
+
       <div class="form-actions full-width">
         <button type="submit" class="btn-primary">
           <i class="bi bi-check2-circle"></i>
-          <span>Crear Ficha en Catálogo</span>
+          <span>Registrar Producto en Catálogo</span>
         </button>
       </div>
     </form>

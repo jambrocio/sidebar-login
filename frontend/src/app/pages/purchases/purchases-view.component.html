@@ -1,7 +1,7 @@
 <section class="page-wrapper">
   <header class="page-header">
     <div>
-      <h1>Compras y Abastecimiento de Bebidas</h1>
+      <h1>Compras y Abastecimiento de Productos</h1>
       <p class="subtitle">
         Negocio: <strong>{{ businessInfo().legalName }}</strong>
         — Local Asignado: <strong>{{ assignedBranch() }}</strong>
@@ -10,9 +10,22 @@
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
   <div class="card">
@@ -25,16 +38,16 @@
         <input type="text" [value]="assignedBranch()" readonly />
       </div>
       <div class="form-group">
-        <label>Proveedor Oficial</label>
-        <select name="purSupplier" [(ngModel)]="newPurchase.supplier">
+        <label>Proveedor Oficial <span class="required-indicator">*</span></label>
+        <select name="purSupplier" [(ngModel)]="newPurchase.supplier" required class="required-input">
           <option value="Unión de Cervecerías Backus y Johnston">Unión de Cervecerías Backus y Johnston</option>
           <option value="Diageo / Importadora Premium Licores">Diageo / Importadora Premium Licores</option>
           <option value="Arca Continental Lindley (Coca-Cola / Inca Kola)">Arca Continental Lindley (Coca-Cola / Inca Kola)</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Línea de Bebida</label>
-        <select name="purCat" [(ngModel)]="newPurchase.category">
+        <label>Categoría de Producto <span class="required-indicator">*</span></label>
+        <select name="purCat" [(ngModel)]="newPurchase.category" required class="required-input">
           <option value="Cervezas">Cervezas</option>
           <option value="Licores">Licores y Destilados</option>
           <option value="Gaseosas">Gaseosas y Aguas</option>
@@ -42,8 +55,8 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Producto Existente a Reabastecer</label>
-        <input type="text" name="purProd" [(ngModel)]="newPurchase.productDetail" />
+        <label>Producto Existente a Reabastecer <span class="required-indicator">*</span></label>
+        <input type="text" name="purProd" [(ngModel)]="newPurchase.productDetail" required class="required-input" />
       </div>
       <div class="form-group">
         <label>Cantidad de Cajas Compradas</label>

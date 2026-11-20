@@ -2,10 +2,16 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
-import { DiscountCoupon } from '../../core/models/domain.models';
+import { DiscountCoupon, FeedbackNotification } from '../../core/models/domain.models';
 
 /**
- * Componente dedicado a la Gestión de Cupones de Descuento (`/dashboard/coupons`).
+ * Componente Smart/Container dedicado a la Gestión y Auditoría de Cupones de Descuento (`/dashboard/coupons`).
+ *
+ * @description Permite a los supervisores comerciales generar códigos promocionales con descuentos
+ * porcentuales o montos fijos, restricciones por modalidad (Mayorista/Minorista), compra mínima y límites de uso.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-coupons-view',
@@ -20,7 +26,7 @@ export class CouponsViewComponent {
   readonly businessInfo = this.dummyData.businessInfo;
   readonly currentSessionUser = this.dummyData.currentSessionUser;
   readonly couponsList = this.dummyData.couponsList;
-  readonly feedbackMessage = signal<string | null>(null);
+  readonly feedbackMessage = signal<FeedbackNotification | null>(null);
 
   newCoupon = {
     code: 'VIPBEBIDAS25',
@@ -44,7 +50,10 @@ export class CouponsViewComponent {
   saveDiscountCoupon(): void {
     const cleanCode = this.newCoupon.code.trim().toUpperCase();
     if (!cleanCode) {
-      this.feedbackMessage.set('Ingresa un código válido para el cupón de descuento.');
+      this.feedbackMessage.set({
+        text: 'Por favor, ingresa un código válido para el cupón de descuento.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -65,9 +74,10 @@ export class CouponsViewComponent {
 
     this.dummyData.addCoupon(couponData);
 
-    this.feedbackMessage.set(
-      `Cupón "${cleanCode}" registrado en la base de datos por ${this.currentSessionUser()} para ${this.newCoupon.assignedClient}.`
-    );
+    this.feedbackMessage.set({
+      text: `Cupón "${cleanCode}" registrado exitosamente en la base de datos por ${this.currentSessionUser()} para ${this.newCoupon.assignedClient}.`,
+      type: 'success',
+    });
     this.generateRandomCouponCode();
   }
 

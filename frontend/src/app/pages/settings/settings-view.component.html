@@ -10,9 +10,22 @@
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
   <!-- 1. Configuración del Negocio Matriz y Local Asignado -->
@@ -102,30 +115,36 @@
         />
       </div>
       <div class="form-group">
-        <label>Contraseña Actual</label>
+        <label>Contraseña Actual <span class="required-indicator">*</span></label>
         <input
           type="password"
           name="secCurrPass"
           [(ngModel)]="passwordForm.currentPassword"
           placeholder="Ingresa tu contraseña actual"
+          required
+          class="required-input"
         />
       </div>
       <div class="form-group">
-        <label>Nueva Contraseña (Vigencia 90 días)</label>
+        <label>Nueva Contraseña (Vigencia 90 días) <span class="required-indicator">*</span></label>
         <input
           type="password"
           name="secNewPass"
           [(ngModel)]="passwordForm.newPassword"
           placeholder="Mínimo 8 caracteres, mayúscula, número y símbolo"
+          required
+          class="required-input"
         />
       </div>
       <div class="form-group">
-        <label>Confirmar Nueva Contraseña</label>
+        <label>Confirmar Nueva Contraseña <span class="required-indicator">*</span></label>
         <input
           type="password"
           name="secConfPass"
           [(ngModel)]="passwordForm.confirmPassword"
           placeholder="Repite la nueva contraseña"
+          required
+          class="required-input"
         />
       </div>
       <div class="form-actions full-width">

@@ -1,6 +1,8 @@
-import { Component, EventEmitter, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AuthApiService } from '../../core/services/auth-api.service';
 
@@ -27,9 +29,13 @@ export interface NavItem {
 const SIDEBAR_STORAGE_KEY = 'sidebarCollapsed';
 
 /**
- * Componente de barra lateral de navegación (Layout Shell).
- * Carga su árbol de opciones de menú desde el archivo exclusivo `json/sidebar-menu.json`
- * y muestra los datos del Negocio Matriz (`json/business-and-branches.json`).
+ * Componente estructural de barra lateral de navegación (Layout Shell / Sidebar).
+ *
+ * @description Renderiza el árbol dinámico de navegación multinivel respetando los permisos RBAC
+ * y la estructura organizacional del Negocio Matriz y sus locales.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-sidebar',
@@ -38,9 +44,21 @@ const SIDEBAR_STORAGE_KEY = 'sidebarCollapsed';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   private readonly dummyData = inject(DummyDataService);
   private readonly authApi = inject(AuthApiService);
+  private readonly router = inject(Router);
+  private routerSub?: Subscription;
+
+  constructor() {
+    // Si cambian los navItems, auto-expandir los padres de la ruta activa
+    effect(() => {
+      const items = this.navItems();
+      if (items && items.length > 0) {
+        this.expandActiveParents(this.router.url);
+      }
+    });
+  }
 
   /**
    * Cierra completamente la sesión y redirige al login.
@@ -64,6 +82,93 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit(): void {
     this.collapsed.emit(this.isCollapsed());
+    this.expandActiveParents(this.router.url);
+
+    this.routerSub = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.expandActiveParents(event.urlAfterRedirects || event.url);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
+
+  /**
+   * Determina si un enlace terminal coincide con la ruta activa,
+   * garantizando que /dashboard o /dashboard/inicio activen el ítem 'Inicio'.
+   */
+  isItemActive(item: NavItem): boolean {
+    if (!item.routerLink) return false;
+    const url = (this.router.url || '').split('?')[0];
+    if (item.routerLink === '/dashboard/inicio') {
+      return url === '/dashboard' || url === '/dashboard/' || url === '/dashboard/inicio';
+    }
+    return url === item.routerLink;
+  }
+
+  /**
+   * Determina si algún hijo o descendiente de este nodo de menú coincide con la ruta actual.
+   */
+  isParentActive(item: NavItem): boolean {
+    if (!item.children || item.children.length === 0) return false;
+    const url = (this.router.url || '').split('?')[0];
+
+    const checkRecursive = (nodes: NavItem[]): boolean => {
+      return nodes.some(n => {
+        if (n.routerLink) {
+          if (n.routerLink === '/dashboard/inicio') {
+            if (url === '/dashboard' || url === '/dashboard/' || url === '/dashboard/inicio') return true;
+          } else if (url === n.routerLink || url.startsWith(n.routerLink + '/')) {
+            return true;
+          }
+        }
+        return n.children ? checkRecursive(n.children) : false;
+      });
+    };
+
+    return checkRecursive(item.children);
+  }
+
+  /**
+   * Expande automáticamente las ramas de menú que contienen la ruta activa actual.
+   */
+  private expandActiveParents(currentUrl: string): void {
+    const url = (currentUrl || '').split('?')[0];
+    if (!url) return;
+
+    const expandRecursive = (items: NavItem[]): boolean => {
+      let anyChildMatch = false;
+      for (const item of items) {
+        let isDirectMatch = false;
+        if (item.routerLink) {
+          if (item.routerLink === '/dashboard/inicio') {
+            isDirectMatch = url === '/dashboard' || url === '/dashboard/' || url === '/dashboard/inicio';
+          } else {
+            isDirectMatch = url === item.routerLink || url.startsWith(item.routerLink + '/');
+          }
+        }
+
+        let childrenMatch = false;
+        if (item.children && item.children.length > 0) {
+          childrenMatch = expandRecursive(item.children);
+          if (childrenMatch) {
+            item.expanded = true;
+          }
+        }
+
+        if (isDirectMatch || childrenMatch) {
+          anyChildMatch = true;
+        }
+      }
+      return anyChildMatch;
+    };
+
+    const currentItems = this.navItems();
+    if (currentItems && currentItems.length > 0) {
+      expandRecursive(currentItems);
+    }
   }
 
   /**

@@ -13,21 +13,30 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 /**
- * OpenAPI 3.1 & Swagger interactive documentation configuration.
+ * Configuración de documentación interactiva OpenAPI 3.1 y Swagger UI.
+ * <p>
+ * Define la especificación formal del contrato REST del Proveedor de Identidad (IdP),
+ * detallando el esquema de seguridad {@code BearerAuth} (tokens JWT asimétricos RS256),
+ * información de contacto del equipo de arquitectura y versiones de API.
  */
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Construye el modelo de especificación OpenAPI para la documentación interactiva Swagger.
+     *
+     * @return instancia de {@link OpenAPI} con información institucional y esquemas de autenticación
+     */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Centralized Identity & Access Management API")
-                        .description("Centralized Identity Provider (IdP / IAM) REST API for single sign-on (SSO), asymmetric RS256 token issuance, RBAC governance, and user sessions.")
+                        .title("API del Servicio Centralizado de Identidad y Accesos (IAM / IdP)")
+                        .description("Servicio REST de Proveedor de Identidad (IdP / IAM) para inicio de sesión unificado (SSO), emisión de tokens asimétricos RS256, descubrimiento de claves JWKS y control de sesiones.")
                         .version("1.0.0")
-                        .contact(new Contact().name("Security Architecture Team").email("security@enterprise.internal")))
+                        .contact(new Contact().name("Equipo de Arquitectura de Seguridad").email("seguridad@enterprise.internal")))
                 .servers(List.of(
-                        new Server().url("/").description("Current Server Instance")
+                        new Server().url("/").description("Instancia del Servidor Activo")
                 ))
                 .components(new Components()
                         .addSecuritySchemes("BearerAuth", new SecurityScheme()
@@ -35,7 +44,7 @@ public class OpenApiConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
-                                .description("Asymmetric RS256 JWT Access Token")))
+                                .description("Token de Acceso JWT Asimétrico firmado con algoritmo RS256")))
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"));
     }
 }

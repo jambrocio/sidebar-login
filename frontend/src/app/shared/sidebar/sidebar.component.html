@@ -17,6 +17,8 @@
       <ng-template #menuItemTemplate let-item="item">
         <li
           [class.expanded]="hasSubMenu(item) && item.expanded"
+          [class.active]="!hasSubMenu(item) && isItemActive(item)"
+          [class.parent-active]="hasSubMenu(item) && isParentActive(item)"
           [routerLinkActive]="hasSubMenu(item) ? 'parent-active' : 'active'"
           [routerLinkActiveOptions]="{ exact: !hasSubMenu(item) }"
         >

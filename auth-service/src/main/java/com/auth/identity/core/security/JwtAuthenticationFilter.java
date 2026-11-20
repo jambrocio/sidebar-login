@@ -17,20 +17,39 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
- * Validates the RS256 JWT in the Authorization header and populates the Spring Security Context.
+ * Filtro de autenticación por solicitud que intercepta los encabezados HTTP {@code Authorization: Bearer <token>}.
+ *
+ * <p>Valida la firma asimétrica RS256 contra la clave pública del servicio y, en caso de éxito,
+ * puebla el {@link SecurityContextHolder} de Spring Security con los roles y el identificador del usuario.</p>
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenService jwtTokenService;
 
+    /**
+     * Constructor con inyección del servicio de validación de tokens JWT.
+     *
+     * @param jwtTokenService Servicio criptográfico de validación de tokens.
+     */
     public JwtAuthenticationFilter(JwtTokenService jwtTokenService) {
         this.jwtTokenService = jwtTokenService;
     }
 
+    /**
+     * Procesa cada petición HTTP extrayendo y validando el token Bearer en el encabezado de autorización.
+     *
+     * @param request     Solicitud HTTP entrante.
+     * @param response    Respuesta HTTP saliente.
+     * @param filterChain Cadena de filtros de Spring Security.
+     * @throws ServletException En caso de anomalía en el ciclo de filtros.
+     * @throws IOException      En caso de error de lectura/escritura de E/S.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

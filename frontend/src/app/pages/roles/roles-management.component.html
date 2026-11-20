@@ -9,9 +9,22 @@
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
   <!-- 1. Formulario de Registro / Edición de Rol -->
@@ -33,31 +46,36 @@
 
     <form (ngSubmit)="saveRole()" class="grid-form">
       <div class="form-group">
-        <label>Código Único del Rol</label>
+        <label>Código Único del Rol <span class="required-indicator">*</span></label>
         <input
           type="text"
           name="rlCode"
           [(ngModel)]="roleForm.code"
           [readonly]="isEditingRole()"
           placeholder="Ej. JEFE_ALMACEN"
+          required
+          class="required-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Nombre del Rol</label>
+        <label>Nombre del Rol <span class="required-indicator">*</span></label>
         <input
           type="text"
           name="rlName"
           [(ngModel)]="roleForm.name"
           placeholder="Ej. Jefe de Almacén y Despacho"
+          required
+          class="required-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Alcance Organizacional (Negocio vs Local)</label>
-        <select name="rlScope" [(ngModel)]="roleForm.scope">
-          <option value="Nivel Local Asignado">Nivel Local Asignado (Opera un solo local)</option>
+        <label>Alcance Organizacional <span class="required-indicator">*</span></label>
+        <select name="rlScope" [(ngModel)]="roleForm.scope" required class="required-input">
+          <option *ngIf="isGeneralAdmin()" value="Nivel Plataforma (Superusuario)">Nivel Plataforma (Superusuario / Multi-Negocio)</option>
           <option value="Nivel Negocio (Multi-Local)">Nivel Negocio (Multi-Local / Supervisión)</option>
+          <option value="Nivel Local Asignado">Nivel Local Asignado (Opera un solo local)</option>
         </select>
       </div>
 

@@ -21,9 +21,24 @@
       title="Negocio Matriz y Local asignado a tu usuario"
     >
       <i class="bi bi-buildings-fill"></i>
-      <span>
+      <!-- Para usuario de negocio: vista fija y no editable de su negocio asignado -->
+      <span *ngIf="!isGeneralAdmin()">
         <strong>{{ businessInfo().commercialName }}</strong> · Local:
         {{ activeBranch() }}
+      </span>
+      <!-- Para Administrador General: selector global con disposición de todos los negocios -->
+      <span *ngIf="isGeneralAdmin()" style="display: flex; align-items: center; gap: 0.5rem">
+        <strong style="color: #0284c7; font-size: 0.85rem">Vista Global:</strong>
+        <select
+          [ngModel]="businessInfo().id"
+          (ngModelChange)="onSwitchBusiness($event)"
+          style="padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.85rem; background: var(--bg-surface, #ffffff); color: var(--text-color, #0f172a); font-weight: 600; cursor: pointer;"
+        >
+          <option *ngFor="let b of businesses()" [value]="b.id">
+            🏢 {{ b.id }} — {{ b.commercialName || b.legalName }}
+          </option>
+        </select>
+        <span style="font-size: 0.82rem; color: var(--text-muted, #64748b)">· {{ activeBranch() }}</span>
       </span>
     </div>
 
@@ -218,9 +233,9 @@
 
         <div class="dropdown-divider"></div>
 
-        <!-- Opciones de cuenta y administración -->
+        <!-- Opciones de configuración y sistema -->
         <ul class="dropdown-list">
-          <li class="menu-section-label">Negocio y Cuenta</li>
+          <li class="menu-section-label">Configuración del Sistema</li>
           <li>
             <a
               routerLink="/dashboard/settings"
@@ -232,22 +247,7 @@
               </span>
               <div class="menu-text">
                 <span class="title">Configuración</span>
-                <span class="desc">Negocio, local asignado y seguridad</span>
-              </div>
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/dashboard/branches"
-              routerLinkActive="active"
-              (click)="closeDropdown()"
-            >
-              <span class="menu-icon">
-                <i class="bi bi-buildings-fill"></i>
-              </span>
-              <div class="menu-text">
-                <span class="title">Negocio y Locales</span>
-                <span class="desc">Sucursales asociadas al negocio</span>
+                <span class="desc">Parámetros del negocio y seguridad</span>
               </div>
             </a>
           </li>

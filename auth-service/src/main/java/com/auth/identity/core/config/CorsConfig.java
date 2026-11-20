@@ -10,14 +10,24 @@ import org.springframework.web.filter.CorsFilter;
 import java.util.List;
 
 /**
- * Cross-Origin Resource Sharing (CORS) configuration for client applications.
+ * Configuración de Intercambio de Recursos de Origen Cruzado (CORS) para aplicaciones cliente.
+ * <p>
+ * Habilita la comunicación segura entre el Frontend SPA (Angular 21) y este servicio IdP,
+ * definiendo orígenes autorizados, cabeceras expuestas y métodos HTTP permitidos para mitigar
+ * riesgos de ataques Cross-Origin no deseados.
  */
 @Configuration
 public class CorsConfig {
 
+    /** Lista de orígenes autorizados inyectada desde la configuración de ambiente. */
     @Value("${auth.security.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200}")
     private List<String> allowedOrigins;
 
+    /**
+     * Construye y registra el filtro CORS para interceptar todas las peticiones entrantes.
+     *
+     * @return bean del filtro de configuración CORS
+     */
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();

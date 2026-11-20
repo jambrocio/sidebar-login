@@ -313,7 +313,8 @@ export class Login implements OnInit, OnDestroy {
         this.successMessage.set(
           `¡Bienvenido(a) ${response.user.fullName}! Conectado al local ${response.user.assignedBranchName}.`
         );
-        const targetUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+        const rawReturn = this.route.snapshot.queryParams['returnUrl'];
+        const targetUrl = (rawReturn && rawReturn !== '/dashboard') ? rawReturn : '/dashboard/inicio';
         setTimeout(() => {
           this.router.navigateByUrl(targetUrl);
         }, 200);
@@ -387,7 +388,7 @@ export class Login implements OnInit, OnDestroy {
     const user = this.expiringSoonUser();
     if (!user) return;
     this.dummyData.setActiveSessionUser(user);
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/dashboard/inicio']);
   }
 
   /**
@@ -473,7 +474,7 @@ export class Login implements OnInit, OnDestroy {
    * Ingresa directamente al Dashboard tras haber renovado exitosamente la contraseña.
    */
   enterDashboardAfterPasswordChange(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/dashboard/inicio']);
   }
 
   private clearMessages(): void {

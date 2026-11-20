@@ -3,6 +3,12 @@
  * bajo la arquitectura jerárquica: Negocio (Empresa) -> Locales (Sucursales) -> Usuarios y Roles.
  */
 
+/** Notificación o banner de retroalimentación en formularios y vistas */
+export interface FeedbackNotification {
+  text: string;
+  type: 'success' | 'warning' | 'error' | 'info';
+}
+
 /** Representa un Negocio / Empresa registrada en la plataforma */
 export interface BusinessProfile {
   /** Identificador único del negocio (ej. 'BIZ-001') */
@@ -124,8 +130,8 @@ export interface SystemRole {
   name: string;
   /** Descripción funcional de las responsabilidades del rol */
   description: string;
-  /** Alcance de operación: Todo el Negocio (Multi-Local) o solo Local Asignado */
-  scope: 'Nivel Negocio (Multi-Local)' | 'Nivel Local Asignado';
+  /** Alcance de operación: Plataforma Global, Todo el Negocio (Multi-Local) o solo Local Asignado */
+  scope: 'Nivel Plataforma (Superusuario)' | 'Nivel Negocio (Multi-Local)' | 'Nivel Local Asignado';
   /** Cantidad de usuarios asignados actualmente */
   usersCount: number;
   /** Estado de vigencia del rol */
@@ -146,6 +152,26 @@ export interface RoleMenuMatrixRow {
   canExport: boolean;
 }
 
+/** Cliente comercial independiente único por Negocio Matriz */
+export interface CommercialCustomer {
+  id: string;
+  customerCode: string;
+  documentType: 'RUC' | 'DNI' | 'CE' | 'PASAPORTE';
+  documentNumber: string;
+  legalName: string;
+  commercialName?: string;
+  customerType: 'Mayorista VIP' | 'Minorista Frecuente' | 'Distribuidor' | 'Corporativo';
+  email?: string;
+  phone?: string;
+  address?: string;
+  creditLine?: number;
+  active: boolean;
+  businessCode: string;
+  businessName?: string;
+  registeredBy?: string;
+  createdAt?: string;
+}
+
 /** Producto de bebida con precios diferenciados por Mayor y por Menor */
 export interface BeverageProduct {
   sku: string;
@@ -158,6 +184,9 @@ export interface BeverageProduct {
   stockUnits: number;
   status: 'En Stock' | 'Stock Bajo' | 'Agotado';
   registeredByUser: string;
+  registeredBy?: string;
+  businessId?: string;
+  businessCode?: string;
 }
 
 /** Ítem individual agregado al carrito de una venta */
@@ -175,6 +204,7 @@ export interface SaleCartItem {
 export interface BeverageSale {
   id: string;
   documentType: 'FACTURA ELECTRÓNICA' | 'BOLETA DE VENTA ELECTRÓNICA';
+  branch?: string;
   branchName: string;
   clientName: string;
   modality: string;
@@ -194,6 +224,7 @@ export interface BeverageSale {
 /** Registro de orden de compra con Local asignado y Usuario comprador */
 export interface BeveragePurchase {
   id: string;
+  branch?: string;
   branchName: string;
   supplier: string;
   category: string;
@@ -225,6 +256,7 @@ export interface DiscountCoupon {
 /** Registro de Arqueo y Cierre de Caja al final del turno laboral */
 export interface CashRegisterAudit {
   id: string;
+  branch?: string;
   branchName: string;
   shift: string;
   openingBalance: number;
@@ -241,12 +273,15 @@ export interface CashRegisterAudit {
 
 /** Categoría o línea comercial de bebidas */
 export interface BeverageCategory {
+  id?: string;
   code: string;
   name: string;
   slug: string;
-  totalProducts: number;
+  totalProducts?: number;
+  products?: number;
   wholesaleMargin: string;
-  active: boolean;
+  active?: boolean;
+  status?: string;
 }
 
 /** Alias de compatibilidad hacia BeverageCategory */

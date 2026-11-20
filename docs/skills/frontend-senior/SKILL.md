@@ -96,34 +96,59 @@ src/app/
   ```
 - Crear interfaces bien documentadas para cada contrato de API (request y response).
 
-### 3.2. Documentación de Código (TSDoc / JSDoc)
+### 3.2. Estándar Maestro de Documentación de Código en Español (TSDoc / JSDoc) [MANDATORIO]
 
-Todo servicio, guard, función pública, modelo y componente debe contar con documentación contextual:
+Todo archivo fuente TypeScript, componente, servicio, guard, interceptor, directiva, pipe, interfaz, modelo de dominio y función debe contar con documentación exhaustiva y estructurada **100% en idioma Español**. Este estándar es vinculante para cualquier desarrollo, refactorización o mantenimiento futuro.
+
+#### 3.2.1. Reglas Estrictas de Documentación
+1. **Encabezado de Archivo**: Cada archivo debe iniciar con una descripción clara de su responsabilidad arquitectónica, contexto de negocio y relación con otros módulos.
+2. **Clases y Componentes**:
+   - Propósito funcional y de negocio.
+   - Patrón arquitectónico aplicado (Smart Container vs. Presentational Dumb).
+   - Componentes hijos o servicios consumidos.
+   - `@author` y `@version`.
+3. **Propiedades, Signals y Computed**:
+   - Propósito funcional de cada señal reactiva (`signal`, `computed`, `model`).
+   - Dependencias y detonadores de reactividad.
+4. **Métodos y Funciones**:
+   - `@description`: Qué hace el método y por qué.
+   - `@param`: Descripción detallada de cada parámetro de entrada y su formato esperado.
+   - `@returns`: Tipo y significado del valor devuelto (especialmente en `Observable`, `Promise` o tipos compuestos).
+   - `@throws`: Condiciones bajo las cuales lanza excepciones o emite estados de error.
+   - `@example`: Ejemplo conciso de invocación y uso.
+5. **Tipado Estricto de Retorno**: Todo método debe declarar explícitamente su tipo de retorno (`: void`, `: Observable<T>`, `: Promise<R>`, `: Signal<D>`).
 
 ```typescript
 /**
- * Servicio centralizado para la administración de sesiones activas y auditoría de conexiones NOC.
- * 
- * Permite monitorear el estado semaforizado de los usuarios (Online, Idle, Disconnected),
- * geolocalizar nodos sospechosos y ejecutar revocación forzada de tokens JWT en tiempo real.
- * 
- * @example
- * ```ts
- * const activeCount = this.sessionService.onlineCount();
- * this.sessionService.revokeSession('session-uuid', 'Violación de políticas de seguridad');
- * ```
+ * Componente Smart/Container encargado de la administración y ciclo de vida de usuarios
+ * del sistema, asignación de Negocio Matriz, locales autorizados y control RBAC.
+ *
+ * @description Permite listar, registrar, editar, desactivar y forzar expiración de contraseñas
+ * de cuentas de acceso vinculadas a una empresa comercial en PostgreSQL.
+ *
+ * @author Equipo de Arquitectura Frontend
+ * @version 2.0
  */
-@Injectable({ providedIn: 'root' })
-export class SessionAuditService {
+@Component({
+  selector: 'app-users-management',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './users-management.component.html',
+  styleUrl: './users-management.component.scss',
+})
+export class UsersManagementComponent implements OnInit {
+
+  /** Señal reactiva que almacena el listado de usuarios cargados desde el backend. */
+  readonly users = signal<SystemUser[]>([]);
+
   /**
-   * Termina remotamente una sesión activa notificando al backend para su invalidación inmediata.
-   * 
-   * @param sessionId Identificador UUID de la sesión a revocar.
-   * @param reason Motivo administrativo de la terminación para el registro de auditoría.
-   * @returns Observable con el resultado de la operación de revocación.
+   * Carga los usuarios registrados en el sistema aplicando el filtro del negocio activo.
+   *
+   * @param businessCode Código único del negocio matriz para filtrar o 'ALL' para superusuarios.
+   * @returns void - Actualiza de forma asíncrona la señal reactiva {@link users}.
    */
-  revokeSession(sessionId: string, reason: string): Observable<AuditOperationResult> {
-    // Implementación limpia y desacoplada
+  loadUsers(businessCode: string): void {
+    // Implementación desacoplada
   }
 }
 ```
@@ -188,13 +213,73 @@ Un Frontend Senior diseña cada interacción asumiendo que el cliente es un ento
 
 ---
 
-## 5. Checklist de Verificación de Calidad Frontend Senior
+## 5. Estándar SonarQube Clean as You Code (CAYC) y Cobertura de Código > 80% [MANDATORIO]
+
+Para asegurar la máxima mantenibilidad, robustez y transferibilidad del código fuente, todo desarrollo y refactorización debe superar de forma obligatoria el **Quality Gate** de SonarQube / SonarCloud con una política estricta de **Clean as You Code (CAYC)**:
+
+### 5.1. Umbrales Mandatorios del Quality Gate
+1. **Cobertura de Código (Code Coverage) > 80%**:
+   - Todo componente, servicio, guard, pipe y clase utilitaria nueva o modificada debe contar con tests unitarios automatizados que alcancen como mínimo el **80% de cobertura de líneas y de ramas (branch coverage)**.
+   - Prohibido hacer merge o pasar a producción código con cobertura inferior al 80%.
+2. **Confiabilidad (Reliability) - Calificación A**:
+   - `0` Bugs detectados.
+   - No desreferenciar variables potencialmente nulas o indefinidas sin verificación previa (`optional chaining ?.`, *nullish coalescing ??* o *type guards*).
+3. **Seguridad (Security) - Calificación A**:
+   - `0` Vulnerabilidades.
+   - `0` Hotspots de seguridad sin auditar.
+4. **Mantenibilidad (Maintainability) - Calificación A**:
+   - Tasa de Deuda Técnica (*Technical Debt Ratio*) menor al `5%`.
+   - `0` Code Smells bloqueantes, críticos o mayores.
+5. **Duplicidad de Código**:
+   - Líneas duplicadas inferiores al `3%` en el código analizado. Aplicar el principio **DRY (Don't Repeat Yourself)** mediante funciones utilitarias puras y componentes presentacionales compartidos.
+
+### 5.2. Reglas de Mantenibilidad y Complejidad Cognitiva
+- **Complejidad Cognitiva Máxima de 15 por Función**:
+   - Ninguna función, método o getter/computed debe exceder una complejidad cognitiva de `15`.
+   - Descomponer lógicas anidadas (`if` dentro de `for`, ternarios múltiples) en funciones puras auxiliares con responsabilidades unitarias.
+- **Prohibición Absoluta del Tipo `any`**:
+   - Todo dato debe modelarse mediante `interface`, `type` o `Record<string, T>`.
+   - Cuando la estructura sea dinámica o incierta, emplear `unknown` junto con validación en tiempo de ejecución (*Zod*, *type guards* o *narrowing*).
+- **Tipado Explícito de Métodos y Propiedades**:
+   - Todas las firmas de métodos y funciones públicas o privadas deben declarar su tipo de retorno explícito.
+- **Inmutabilidad y Prevención de Efectos Secundarios**:
+   - Nunca mutar arreglos o estructuras de estado directamente (`push`, `splice`, `sort` sobre arreglos originales). Utilizar métodos inmutables (`toSorted`, `filter`, `map`, propagación `[...arr]`).
+- **Limpieza de Suscripciones Reactivas**:
+   - En componentes basados en RxJS, desuscribir obligatoriamente en la destrucción mediante `takeUntilDestroyed(this.destroyRef)` o pipe `take(1)`. En componentes Angular modernos, preferir `Signal` y `computed` sobre `Observable`.
+
+### 5.3. Estrategia de Testing Unitario para Superar el 80% de Cobertura
+Las suites de prueba unitaria (Jasmine/Karma, Jest o Vitest) deben estructurarse cubriendo:
+1. **Pruebas de Componentes (Smart & Dumb)**:
+   - Inicialización correcta del componente y carga de estado por defecto.
+   - Verificación de renderizado de elementos clave y bindings reactivos en el DOM.
+   - Pruebas de interacción de usuario: simulación de clicks en botones, envío de formularios, eventos de teclado y cambios en inputs.
+   - Verificación de emisión de eventos `@Output()` y mutación correcta de `Signals`.
+2. **Pruebas de Servicios HTTP y Capa de Datos**:
+   - Mockeo completo de dependencias HTTP mediante `HttpTestingController` o mocks de servicios.
+   - Prueba del flujo exitoso (*Happy Path*): verificación de transformación de datos y emisión del resultado.
+   - Prueba de flujos de error (*Unhappy Path*): simulación de códigos HTTP 400, 401, 403, 404, 500 y validación de la emisión del error RFC 7807 (`ProblemDetail`).
+3. **Pruebas de Guards e Interceptores**:
+   - Validación de redirección y bloqueo cuando el usuario no cuenta con sesión o permisos requeridos.
+   - Validación de pase libre cuando el usuario cumple con las condiciones RBAC.
+   - Interceptores: verificación de inyección de encabezados `Authorization: Bearer <token>` y captura centralizada de errores.
+4. **Pruebas de Casos Límite (Edge Cases)**:
+   - Colecciones vacías (`[]`), cadenas en blanco, valores límite de paginación, caracteres especiales, y reconexión tras fallo de red.
+
+---
+
+## 6. Checklist de Verificación de Calidad Frontend Senior
 
 Antes de entregar cualquier requerimiento, el código debe cumplir con este checklist:
 
 - [ ] **Compilación Limpia**: `0` errores y `0` advertencias en el build de producción (`ng build --configuration=production` o equivalente).
+- [ ] **Documentación Completa en Español**: Comentarios TSDoc exhaustivos en el 100% de clases, componentes, métodos, propiedades y contratos de modelo en idioma español.
+- [ ] **Calidad SonarQube (Quality Gate)**:
+  - [ ] Cobertura de código unitario > `80%`.
+  - [ ] `0` Bugs y `0` Vulnerabilidades (Calificación A).
+  - [ ] Complejidad cognitiva <= `15` en todas las funciones.
+  - [ ] Duplicidad de código < `3%`.
+  - [ ] `0` usos del tipo `any` en todo el módulo.
 - [ ] **Sin Datos Dummy**: Los datos provienen exclusivamente de servicios HTTP sincronizados con contratos de backend o de mocks explícitos en tests unitarios.
 - [ ] **Resiliencia ante Fallos**: Todos los endpoints HTTP cuentan con gestión de errores (alertas de usuario legibles, no bloqueos de pantalla).
 - [ ] **Accesibilidad (A11y)**: Etiquetas `aria-label`, contraste de colores conforme a WCAG AA, navegación completa por teclado.
 - [ ] **Rendimiento**: Carga diferida (*lazy loading*) de rutas, imágenes optimizadas, sin reflows ni repaints innecesarios.
-- [ ] **Documentación Completa**: Comentarios TSDoc en todas las clases, métodos y modelos públicos para facilitar la mantenibilidad.

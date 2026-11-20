@@ -1,6 +1,7 @@
 package com.elroble.bevadmin.modules.users.repository;
 
 import com.elroble.bevadmin.modules.users.dto.CreateUserWithBranchesRequest;
+import com.elroble.bevadmin.modules.users.dto.UpdateUserWithBranchesRequest;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -29,14 +30,25 @@ public class UsersRepository {
     }
 
     /**
-     * Consulta la vista consolidada {@code vw_usuarios_empresas_sedes}.
+     * Consulta la vista consolidada {@code vw_usuarios_empresas_sedes}, permitiendo filtrar opcionalmente por Negocio Matriz.
      *
+     * @param businessCode código opcional del negocio matriz
      * @return lista de usuarios con su Empresa Matriz, Sede Principal y arreglo de Sedes Autorizadas
      */
-    public List<Map<String, Object>> findAllUsersWithBusinessAndBranches() {
+    public List<Map<String, Object>> findAllUsersWithBusinessAndBranches(String businessCode) {
+        if (businessCode != null && !businessCode.isBlank() && !"ALL".equalsIgnoreCase(businessCode)) {
+            return jdbcClient.sql("SELECT * FROM vw_usuarios_empresas_sedes WHERE UPPER(business_id) = UPPER(:businessCode) ORDER BY id ASC")
+                    .param("businessCode", businessCode)
+                    .query()
+                    .listOfRows();
+        }
         return jdbcClient.sql("SELECT * FROM vw_usuarios_empresas_sedes ORDER BY id ASC")
                 .query()
                 .listOfRows();
+    }
+
+    public List<Map<String, Object>> findAllUsersWithBusinessAndBranches() {
+        return findAllUsersWithBusinessAndBranches(null);
     }
 
     /**
@@ -182,10 +194,139 @@ public class UsersRepository {
     public void insertUserRoleAssignment(UUID userId, String roleCode) {
         jdbcClient.sql("""
                 INSERT INTO usuario_roles (usuario_id, rol_id)
-                SELECT :userId, id FROM roles WHERE codigo = :roleCode
+                SELECT :userId, id FROM roles
+                WHERE UPPER(TRIM(codigo)) = UPPER(TRIM(:roleCode))
+                   OR UPPER(TRIM(nombre)) = UPPER(TRIM(:roleCode))
+                LIMIT 1
                 """)
                 .param("userId", userId)
                 .param("roleCode", roleCode)
+                .update();
+    }
+
+    /**
+     * Busca el UUID del usuario por su UUID, código de usuario (ej. USR-431) o nombre de usuario (ej. rambrocio).
+     *
+     * @param identifier UUID, código o username
+     * @return Optional con el UUID del usuario
+     */
+    public Optional<UUID> findUserIdByIdentifier(String identifier) {
+        return jdbcClient.sql("""
+                SELECT id FROM usuarios
+                WHERE id::text = :identifier OR codigo_usuario = :identifier OR nombre_usuario = :identifier
+                LIMIT 1
+                """)
+                .param("identifier", identifier)
+                .query(UUID.class)
+                .optional();
+    }
+
+    /**
+     * Obtiene el UUID del negocio al que pertenece el usuario.
+     *
+     * @param userId UUID del usuario
+     * @return UUID de la empresa
+     */
+    public UUID findBusinessIdByUserId(UUID userId) {
+        return jdbcClient.sql("SELECT empresa_id FROM usuarios WHERE id = :userId")
+                .param("userId", userId)
+                .query(UUID.class)
+                .single();
+    }
+
+    /**
+     * Obtiene el UUID de la sede principal asignada al usuario.
+     *
+     * @param userId UUID del usuario
+     * @return UUID de la sede principal
+     */
+    public UUID findPrimaryBranchIdByUserId(UUID userId) {
+        return jdbcClient.sql("SELECT sede_asignada_id FROM usuarios WHERE id = :userId")
+                .param("userId", userId)
+                .query(UUID.class)
+                .single();
+    }
+
+    /**
+     * Actualiza los datos principales del usuario en la tabla {@code usuarios}.
+     */
+    public void updateUser(UUID userId, UpdateUserWithBranchesRequest req, String encodedPassword, UUID businessId, UUID primaryBranchId) {
+        if (encodedPassword != null && !encodedPassword.isBlank()) {
+            jdbcClient.sql("""
+                    UPDATE usuarios
+                    SET nombre_completo = :fullName,
+                        nombre_usuario = :username,
+                        correo_electronico = :email,
+                        hash_contrasena = :passwordHash,
+                        empresa_id = :businessId,
+                        sede_asignada_id = :primaryBranchId,
+                        tipo_cliente = COALESCE(:clientType, tipo_cliente),
+                        estado = COALESCE(:status, estado),
+                        fecha_actualizacion = now()
+                    WHERE id = :userId
+                    """)
+                    .param("userId", userId)
+                    .param("fullName", req.fullName())
+                    .param("username", req.username())
+                    .param("email", req.email())
+                    .param("passwordHash", encodedPassword)
+                    .param("businessId", businessId)
+                    .param("primaryBranchId", primaryBranchId)
+                    .param("clientType", req.clientType() != null && !req.clientType().isBlank() ? req.clientType() : null)
+                    .param("status", req.status() != null && !req.status().isBlank() ? req.status() : null)
+                    .update();
+        } else {
+            jdbcClient.sql("""
+                    UPDATE usuarios
+                    SET nombre_completo = :fullName,
+                        nombre_usuario = :username,
+                        correo_electronico = :email,
+                        empresa_id = :businessId,
+                        sede_asignada_id = :primaryBranchId,
+                        tipo_cliente = COALESCE(:clientType, tipo_cliente),
+                        estado = COALESCE(:status, estado),
+                        fecha_actualizacion = now()
+                    WHERE id = :userId
+                    """)
+                    .param("userId", userId)
+                    .param("fullName", req.fullName())
+                    .param("username", req.username())
+                    .param("email", req.email())
+                    .param("businessId", businessId)
+                    .param("primaryBranchId", primaryBranchId)
+                    .param("clientType", req.clientType() != null && !req.clientType().isBlank() ? req.clientType() : null)
+                    .param("status", req.status() != null && !req.status().isBlank() ? req.status() : null)
+                    .update();
+        }
+    }
+
+    /**
+     * Reasigna el rol del usuario en la tabla {@code usuario_roles}.
+     * Admite búsqueda tanto por código técnico (ej. ANALYST) como por nombre visible (ej. Cajero / Vendedor (Mayor/Menor)).
+     */
+    public void updateUserRoleAssignment(UUID userId, String roleCode) {
+        jdbcClient.sql("DELETE FROM usuario_roles WHERE usuario_id = :userId")
+                .param("userId", userId)
+                .update();
+
+        jdbcClient.sql("""
+                INSERT INTO usuario_roles (usuario_id, rol_id)
+                SELECT :userId, id FROM roles
+                WHERE UPPER(TRIM(codigo)) = UPPER(TRIM(:roleCode))
+                   OR UPPER(TRIM(nombre)) = UPPER(TRIM(:roleCode))
+                LIMIT 1
+                """)
+                .param("userId", userId)
+                .param("roleCode", roleCode)
+                .update();
+    }
+
+    /**
+     * Elimina las asignaciones de sedes de un usuario para su actualización.
+     */
+    public void deleteUserBranchAssignments(UUID userId) {
+        jdbcClient.sql("DELETE FROM usuario_sedes WHERE usuario_id = :userId")
+                .param("userId", userId)
                 .update();
     }
 }

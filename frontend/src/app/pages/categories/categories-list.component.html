@@ -1,7 +1,7 @@
 <section class="page-wrapper">
   <header class="page-header">
     <div>
-      <h1>Líneas de Bebidas y Licores</h1>
+      <h1>Líneas y Categorías de Productos</h1>
       <p class="subtitle">
         Negocio: <strong>{{ businessInfo().legalName }}</strong>
       </p>
@@ -21,7 +21,7 @@
         <thead>
           <tr>
             <th>Código</th>
-            <th>Línea de Bebidas</th>
+            <th>Línea de Productos</th>
             <th>Slug</th>
             <th>Productos</th>
             <th>Rentabilidad Mayorista</th>
@@ -33,7 +33,7 @@
             <td><code>{{ cat.code }}</code></td>
             <td><strong>{{ cat.name }}</strong></td>
             <td><code>/{{ cat.slug }}</code></td>
-            <td>{{ cat.totalProducts }} bebidas</td>
+            <td>{{ cat.totalProducts }} productos</td>
             <td>{{ cat.wholesaleMargin }}</td>
             <td><span class="badge badge-success">Activa</span></td>
           </tr>

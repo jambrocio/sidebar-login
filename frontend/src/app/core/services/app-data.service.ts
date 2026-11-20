@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { NavItem } from '../../shared/sidebar/sidebar.component';
-import { NotificationItem } from '../../shared/navbar/notifications-sidebar.component';
+import { NotificationItem, NotificationType } from '../../shared/navbar/notifications-sidebar.component';
 import { AdminApiService } from './admin-api.service';
 import { AuthApiService } from './auth-api.service';
 import {
@@ -11,6 +11,7 @@ import {
   BusinessBranch,
   BusinessProfile,
   CashRegisterAudit,
+  CommercialCustomer,
   DiscountCoupon,
   DummyCategory,
   DummyReport,
@@ -108,6 +109,49 @@ export class AppDataService {
   /** Identificador de sesión del usuario activo para auditoría */
   readonly currentSessionUser = computed(() => this.currentUserProfile().sessionLabel);
 
+  /** Determina si el usuario en sesión es Administrador General (Superusuario / Multi-Negocio) */
+  readonly isGeneralAdmin = computed<boolean>(() => {
+    const roleName = (this.currentUserProfile()?.role || '').trim();
+    if (roleName.includes('Negocio') || roleName === 'ADMIN_NEGOCIO') {
+      return false;
+    }
+    return roleName === 'ADMIN' || roleName.includes('Administrador General') || roleName.includes('Superusuario');
+  });
+
+  /** Determina si el usuario en sesión es Administrador de Negocio */
+  readonly isBusinessAdmin = computed<boolean>(() => {
+    const roleName = (this.currentUserProfile()?.role || '').trim();
+    return roleName === 'ADMIN_NEGOCIO' || roleName.includes('Administrador de Negocio');
+  });
+
+  /**
+   * Negocios disponibles para el usuario en sesión:
+   * - Si es Administrador General: tiene a su disposición todos los negocios.
+   * - Si es usuario de negocio: únicamente su negocio asignado.
+   */
+  readonly availableBusinesses = computed<BusinessProfile[]>(() => {
+    if (this.isGeneralAdmin()) {
+      return this.businesses();
+    }
+    const myBiz = (this.currentUserProfile()?.assignedBusinessId || '').toUpperCase();
+    return this.businesses().filter(b => b.id?.toUpperCase() === myBiz);
+  });
+
+  /**
+   * Permite al Administrador General alternar rápidamente el Negocio de trabajo activo en sesión.
+   */
+  switchWorkingBusiness(businessId: string): void {
+    if (!this.isGeneralAdmin()) return;
+    const match = this.businesses().find(b => b.id?.toUpperCase() === businessId?.toUpperCase());
+    if (match) {
+      this.businessInfo.set(match);
+      const branches = this.getBranchesByBusiness(match.id);
+      if (branches && branches.length > 0) {
+        this.assignedBranch.set(branches[0].name);
+      }
+    }
+  }
+
   /** Local / Tienda asignado al usuario actual dentro del Negocio */
   readonly assignedBranch = signal<string>('Sede Central (Mayorista)');
 
@@ -128,7 +172,74 @@ export class AppDataService {
   }));
 
   /** Árbol de opciones de menú del Sidebar cargado desde la API */
-  readonly sidebarNavigation = signal<NavItem[]>([]);
+  readonly sidebarNavigation = signal<NavItem[]>([
+    {
+      code: 'DASH_HOME',
+      label: 'Inicio',
+      icon: 'bi bi-house-door-fill',
+      routerLink: '/dashboard/inicio',
+    },
+    {
+      code: 'MOD_COMMERCIAL',
+      label: 'Comercial y Ventas',
+      icon: 'bi bi-cart4',
+      expanded: false,
+      children: [
+        { code: 'SALES_WHOLESALE_RETAIL', label: 'Ventas Mayor / Menor', icon: 'bi bi-receipt-cutoff', routerLink: '/dashboard/sales' },
+        { code: 'SALES_HISTORY', label: 'Historial de Ventas Emitidas', icon: 'bi bi-clock-history', routerLink: '/dashboard/sales-history' },
+        { code: 'PURCHASES_SUPPLIERS', label: 'Compras y Abastecimiento', icon: 'bi bi-truck', routerLink: '/dashboard/purchases' },
+        { code: 'DISCOUNT_COUPONS', label: 'Cupones de Descuento', icon: 'bi bi-ticket-perforated-fill', routerLink: '/dashboard/coupons' },
+        { code: 'CASH_REGISTER_AUDIT', label: 'Arqueo de Caja (Turnos)', icon: 'bi bi-cash-coin', routerLink: '/dashboard/cash-register' },
+      ],
+    },
+    {
+      code: 'MOD_CATALOG',
+      label: 'Catálogo de Productos',
+      icon: 'bi bi-cup-straw',
+      expanded: false,
+      children: [
+        {
+          code: 'SUB_PRODUCTS_PRICES',
+          label: 'Productos y Precios',
+          icon: 'bi bi-box-seam-fill',
+          expanded: false,
+          children: [
+            { code: 'PROD_LIST', label: 'Inventario de Productos', icon: 'bi bi-list-ul', routerLink: '/dashboard/products/list' },
+            { code: 'PROD_ADD', label: 'Registrar Producto', icon: 'bi bi-plus-square-fill', routerLink: '/dashboard/products/add' },
+          ],
+        },
+        {
+          code: 'SUB_CATEGORIES',
+          label: 'Categorías de Productos',
+          icon: 'bi bi-tags-fill',
+          expanded: false,
+          children: [
+            { code: 'CAT_LIST', label: 'Listar Categorías', icon: 'bi bi-card-list', routerLink: '/dashboard/categories' },
+            { code: 'CAT_ADD', label: 'Nueva Categoría', icon: 'bi bi-plus-circle-fill', routerLink: '/dashboard/categories/new' },
+          ],
+        },
+      ],
+    },
+    {
+      code: 'MOD_ADMIN',
+      label: 'Administración',
+      icon: 'bi bi-gear-wide-connected',
+      expanded: false,
+      children: [
+        { code: 'MGMT_BUSINESS_BRANCHES', label: 'Negocio y Locales', icon: 'bi bi-buildings-fill', routerLink: '/dashboard/branches' },
+        { code: 'MGMT_USERS', label: 'Usuarios', icon: 'bi bi-people-fill', routerLink: '/dashboard/users' },
+        { code: 'MGMT_CUSTOMERS', label: 'Clientes', icon: 'bi bi-person-badge-fill', routerLink: '/dashboard/customers' },
+        { code: 'MGMT_ROLES', label: 'Roles y Permisos', icon: 'bi bi-shield-lock-fill', routerLink: '/dashboard/roles' },
+        { code: 'MGMT_SESSIONS', label: 'Sesiones y Auditoría', icon: 'bi bi-shield-shaded', routerLink: '/dashboard/sessions' },
+      ],
+    },
+    {
+      code: 'MOD_REPORTS',
+      label: 'Reportes Comerciales',
+      icon: 'bi bi-file-earmark-bar-graph-fill',
+      routerLink: '/dashboard/reports',
+    },
+  ]);
 
   /** Notificaciones operativas del sistema */
   readonly notifications = signal<NotificationItem[]>([]);
@@ -165,8 +276,107 @@ export class AppDataService {
   /** Directorio de usuarios */
   readonly users = signal<SystemUser[]>([]);
 
+  /** Directorio independiente de Clientes Comerciales (aislados por negocio) */
+  readonly customers = signal<CommercialCustomer[]>([
+    {
+      id: '44444444-4444-4444-8444-444444444101',
+      customerCode: 'CLI-001',
+      documentType: 'RUC',
+      documentNumber: '20601234567',
+      legalName: 'Licorería El Brindis S.A.C.',
+      commercialName: 'El Brindis Mayorista',
+      customerType: 'Mayorista VIP',
+      email: 'compras@elbrindis.pe',
+      phone: '+51 987 654 321',
+      address: 'Av. Los Conquistadores 450, San Isidro, Lima',
+      creditLine: 25000.0,
+      active: true,
+      businessCode: 'BIZ-001',
+      businessName: 'Distribuidora de Licores y Bebidas El Roble S.A.C.',
+      registeredBy: 'Ana García López (agarcia)',
+      createdAt: '2026-10-22',
+    },
+    {
+      id: '44444444-4444-4444-8444-444444444102',
+      customerCode: 'CLI-002',
+      documentType: 'DNI',
+      documentNumber: '45892147',
+      legalName: 'Juan Carlos Pérez Rodríguez',
+      commercialName: 'Bodega Don Juan',
+      customerType: 'Minorista Frecuente',
+      email: 'juan.perez@gmail.com',
+      phone: '+51 912 345 678',
+      address: 'Jr. Las Begonias 220, Lince, Lima',
+      creditLine: 5000.0,
+      active: true,
+      businessCode: 'BIZ-001',
+      businessName: 'Distribuidora de Licores y Bebidas El Roble S.A.C.',
+      registeredBy: 'Ana García López (agarcia)',
+      createdAt: '2026-10-22',
+    },
+    {
+      id: '44444444-4444-4444-8444-444444444103',
+      customerCode: 'CLI-001',
+      documentType: 'RUC',
+      documentNumber: '20548963214',
+      legalName: 'Restobar Los Andes E.I.R.L.',
+      commercialName: 'Los Andes Resto',
+      customerType: 'Mayorista VIP',
+      email: 'contacto@losandesrestobar.pe',
+      phone: '+51 954 123 789',
+      address: 'Calle Mercaderes 110, Arequipa',
+      creditLine: 18000.0,
+      active: true,
+      businessCode: 'BIZ-002',
+      businessName: 'Corporación Licorera Andina del Sur S.A.C.',
+      registeredBy: 'Marco Paredes Salas (mparedes)',
+      createdAt: '2026-10-22',
+    },
+  ]);
+
   /** Roles del sistema */
-  readonly systemRoles = signal<SystemRole[]>([]);
+  readonly systemRoles = signal<SystemRole[]>([
+    {
+      code: 'ADMIN',
+      name: 'Administrador General (Superusuario)',
+      description: 'Superusuario con control total sobre todos los negocios matriz, locales, usuarios y configuración global de la plataforma.',
+      scope: 'Nivel Plataforma (Superusuario)',
+      usersCount: 1,
+      active: true,
+    },
+    {
+      code: 'ADMIN_NEGOCIO',
+      name: 'Administrador de Negocio',
+      description: 'Control y administración completa de todas las opciones operativas dentro de su Negocio Matriz asignado.',
+      scope: 'Nivel Negocio (Multi-Local)',
+      usersCount: 1,
+      active: true,
+    },
+    {
+      code: 'SUPERVISOR',
+      name: 'Jefe de Tienda y Compras',
+      description: 'Supervisa compras, abastecimiento, cupones y arqueos de los locales asignados.',
+      scope: 'Nivel Negocio (Multi-Local)',
+      usersCount: 1,
+      active: true,
+    },
+    {
+      code: 'ANALYST',
+      name: 'Cajero / Vendedor (Mayor/Menor)',
+      description: 'Emite ventas por mayor y menor y ejecuta el arqueo de caja en su local asignado.',
+      scope: 'Nivel Local Asignado',
+      usersCount: 1,
+      active: true,
+    },
+    {
+      code: 'AUDITOR',
+      name: 'Auditor de Caja e Inventario',
+      description: 'Revisión de solo lectura de comprobantes, arqueos de caja y kardex de bebidas.',
+      scope: 'Nivel Negocio (Multi-Local)',
+      usersCount: 1,
+      active: true,
+    },
+  ]);
 
   /** Matriz RBAC de permisos por opción de menú */
   readonly roleMenuMatrix = signal<RoleMenuMatrixRow[]>([
@@ -177,16 +387,17 @@ export class AppDataService {
     { code: 'PURCHASES_SUPPLIERS', label: '↳ Compras y Abastecimiento', level: 2, routerLink: '/dashboard/purchases', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'DISCOUNT_COUPONS', label: '↳ Cupones de Descuento', level: 2, routerLink: '/dashboard/coupons', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'CASH_REGISTER_AUDIT', label: '↳ Arqueo de Caja (Turnos)', level: 2, routerLink: '/dashboard/cash-register', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
-    { code: 'MOD_CATALOG', label: 'Catálogo de Bebidas', level: 1, routerLink: '— (Módulo / Grupo)', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'MOD_CATALOG', label: 'Catálogo de Productos', level: 1, routerLink: '— (Módulo / Grupo)', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'SUB_PRODUCTS_PRICES', label: '↳ Productos y Precios', level: 2, routerLink: '— (Módulo / Grupo)', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
-    { code: 'PROD_LIST', label: '  ↳ Inventario Mayor / Menor', level: 3, routerLink: '/dashboard/products/list', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
-    { code: 'PROD_ADD', label: '  ↳ Registrar Bebida', level: 3, routerLink: '/dashboard/products/add', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
-    { code: 'SUB_CATEGORIES', label: '↳ Líneas y Categorías', level: 2, routerLink: '— (Módulo / Grupo)', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'PROD_LIST', label: '  ↳ Inventario de Productos', level: 3, routerLink: '/dashboard/products/list', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'PROD_ADD', label: '  ↳ Registrar Producto', level: 3, routerLink: '/dashboard/products/add', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'SUB_CATEGORIES', label: '↳ Categorías de Productos', level: 2, routerLink: '— (Módulo / Grupo)', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'CAT_LIST', label: '  ↳ Listar Categorías', level: 3, routerLink: '/dashboard/categories', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'CAT_ADD', label: '  ↳ Nueva Categoría', level: 3, routerLink: '/dashboard/categories/new', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MOD_ADMIN', label: 'Administración', level: 1, routerLink: '— (Módulo / Grupo)', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MGMT_BUSINESS_BRANCHES', label: '↳ Negocio y Locales', level: 2, routerLink: '/dashboard/branches', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
-    { code: 'MGMT_USERS', label: '↳ Clientes y Usuarios', level: 2, routerLink: '/dashboard/users', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'MGMT_USERS', label: '↳ Usuarios', level: 2, routerLink: '/dashboard/users', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'MGMT_CUSTOMERS', label: '↳ Clientes', level: 2, routerLink: '/dashboard/customers', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MGMT_ROLES', label: '↳ Roles y Permisos', level: 2, routerLink: '/dashboard/roles', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MGMT_SESSIONS', label: '↳ Sesiones y Auditoría', level: 2, routerLink: '/dashboard/sessions', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MOD_REPORTS', label: 'Reportes Comerciales', level: 1, routerLink: '/dashboard/reports', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
@@ -205,7 +416,7 @@ export class AppDataService {
     },
     {
       id: 'REP-002',
-      title: 'Kardex Valorizado de Entradas y Salidas de Bebidas',
+      title: 'Kardex Valorizado de Entradas y Salidas de Productos',
       module: 'Inventario',
       date: '2026-10-22',
       format: 'XLSX',
@@ -257,7 +468,7 @@ export class AppDataService {
         icon: 'bi-currency-dollar',
       },
       {
-        label: 'Stock Total de Bebidas (Cajas)',
+        label: 'Stock Total de Productos (Cajas)',
         value: `${totalStockBoxes.toLocaleString('es-PE')} Cajas`,
         trend: 'Inventario abastecido',
         positive: true,
@@ -468,12 +679,12 @@ export class AppDataService {
       next: (catList) => {
         if (catList) {
           const mapped: DummyCategory[] = catList.map(c => ({
-            code: c.id,
+            code: c.code || c.id || '',
             name: c.name,
             slug: c.slug,
-            totalProducts: Number(c.products || 0),
+            totalProducts: Number(c.totalProducts || c.products || 0),
             wholesaleMargin: c.wholesaleMargin || '15% - 20%',
-            active: c.status === 'Activo',
+            active: c.active !== undefined ? c.active : (c.status === 'Activo'),
           }));
           this.categories.set(mapped);
         }
@@ -511,7 +722,7 @@ export class AppDataService {
         if (purchaseList) {
           const mapped: BeveragePurchase[] = purchaseList.map(p => ({
             id: p.id,
-            branchName: p.branch,
+            branchName: p.branchName || p.branch || '',
             supplier: p.supplier,
             category: p.category,
             productDetail: p.productDetail,
@@ -535,7 +746,7 @@ export class AppDataService {
           const mapped: BeverageSale[] = sales.map(s => ({
             id: s.id,
             documentType: s.documentType,
-            branchName: s.branch,
+            branchName: s.branchName || s.branch || '',
             clientName: s.clientName,
             modality: s.modality,
             paymentMethod: s.paymentMethod,
@@ -561,7 +772,7 @@ export class AppDataService {
               const mapped: BeverageSale[] = sales.map(s => ({
                 id: s.id,
                 documentType: s.documentType,
-                branchName: s.branch,
+                branchName: s.branchName || s.branch || '',
                 clientName: s.clientName,
                 modality: s.modality,
                 paymentMethod: s.paymentMethod,
@@ -589,7 +800,7 @@ export class AppDataService {
         if (audits) {
           const mapped: CashRegisterAudit[] = audits.map(a => ({
             id: a.id,
-            branchName: a.branch,
+            branchName: a.branchName || a.branch || '',
             shift: a.shift,
             openingBalance: Number(a.openingBalance),
             cashSales: Number(a.cashSales),
@@ -638,6 +849,16 @@ export class AppDataService {
       error: () => {},
     });
 
+    // 9B. Directorio de Clientes Comerciales (ventas.clientes)
+    this.adminApi.getCustomers().subscribe({
+      next: (customersList) => {
+        if (customersList && customersList.length > 0) {
+          this.customers.set(customersList);
+        }
+      },
+      error: () => {},
+    });
+
     // 10. Roles del Sistema (roles)
     this.adminApi.getRoles().subscribe({
       next: (rolesList) => {
@@ -676,7 +897,7 @@ export class AppDataService {
             description: n.description,
             time: n.time || 'Reciente',
             icon: n.icon || 'bi-bell',
-            type: n.type || 'info',
+            type: (n.type === 'error' ? 'danger' : (n.type || 'info')) as NotificationType,
             category: n.category || 'Sistema',
             unread: n.unread !== false,
           }));
@@ -691,17 +912,27 @@ export class AppDataService {
    * Transforma la lista plana de opciones de menú de PostgreSQL en un árbol jerárquico NavItem[].
    */
   private buildNavigationTree(flatItems: any[]): void {
+    const currentExpandedCodes = new Set<string>();
+    const collectExpanded = (nodes: NavItem[]) => {
+      nodes.forEach(n => {
+        if (n.expanded && n.code) currentExpandedCodes.add(n.code);
+        if (n.children) collectExpanded(n.children);
+      });
+    };
+    collectExpanded(this.sidebarNavigation());
+
     const itemMap = new Map<string, NavItem>();
     const rootItems: NavItem[] = [];
 
     // Primer paso: Instanciar todos los nodos sin forzar children vacíos
     flatItems.forEach(item => {
+      const isExpanded = item.code ? currentExpandedCodes.has(item.code) : false;
       const navItem: NavItem = {
         code: item.code,
         label: item.label,
         icon: item.icon,
         routerLink: item.routerLink,
-        expanded: false,
+        expanded: isExpanded,
       };
       itemMap.set(item.menu_id || item.code, navItem);
     });
@@ -746,7 +977,7 @@ export class AppDataService {
   // =========================================================================
 
   /**
-   * Registra una nueva bebida en el catálogo enviando el POST al Backend.
+   * Registra un nuevo producto en el catálogo enviando el POST al Backend.
    */
   addProduct(prod: BeverageProduct): void {
     const req = {
@@ -758,6 +989,7 @@ export class AppDataService {
       wholesalePrice: prod.wholesalePrice,
       stockBoxes: prod.stockBoxes,
       stockUnits: prod.stockUnits,
+      businessCode: prod.businessCode || prod.businessId,
     };
     this.adminApi.createProduct(req).subscribe({
       next: () => {
@@ -765,6 +997,35 @@ export class AppDataService {
       },
       error: () => {
         this.products.update(list => [prod, ...list]);
+      },
+    });
+  }
+
+  /**
+   * Registra un nuevo cliente comercial en PostgreSQL.
+   */
+  addCustomer(customer: CommercialCustomer): void {
+    const payload = {
+      customerCode: customer.customerCode,
+      documentType: customer.documentType,
+      documentNumber: customer.documentNumber,
+      legalName: customer.legalName,
+      commercialName: customer.commercialName,
+      customerType: customer.customerType,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      creditLine: customer.creditLine,
+      businessCode: customer.businessCode,
+    };
+    this.adminApi.createCustomer(payload).subscribe({
+      next: (resp) => {
+        const assignedCode = resp?.customerCode || customer.customerCode;
+        const updated = { ...customer, customerCode: assignedCode };
+        this.customers.update(list => [updated, ...list]);
+      },
+      error: () => {
+        this.customers.update(list => [customer, ...list]);
       },
     });
   }
@@ -862,7 +1123,7 @@ export class AppDataService {
       documentType: sale.documentType,
       modality: sale.modality,
       paymentMethod: sale.paymentMethod,
-      couponCode: sale.couponCode || null,
+      couponCode: sale.couponCode || undefined,
       cartItems: (sale.items || []).map(item => ({
         sku: item.sku,
         productName: item.productName,
@@ -905,8 +1166,12 @@ export class AppDataService {
       next: (res) => {
         if (res && res.auditCode) {
           audit.id = res.auditCode;
-          audit.status = res.status;
-          audit.difference = res.difference;
+          if (res.status === 'Cuadre Exacto' || res.status === 'Sobrante' || res.status === 'Faltante') {
+            audit.status = res.status;
+          }
+          if (typeof res.difference === 'number') {
+            audit.difference = res.difference;
+          }
         }
         this.cashAuditsList.update(list => [audit, ...list]);
       },
@@ -976,10 +1241,22 @@ export class AppDataService {
     this.loadAllFromBackend();
   }
 
+  /**
+   * Obtiene la lista de locales y sucursales asociados a un negocio específico.
+   *
+   * @param businessId Código identificador del negocio matriz (ej. BIZ-001).
+   * @returns Arreglo de locales {@link BusinessBranch} pertenecientes al negocio.
+   */
   getBranchesByBusiness(businessId: string): BusinessBranch[] {
     return this.branches().filter(b => b.businessId === businessId);
   }
 
+  /**
+   * Actualiza en el estado reactivo la configuración de identidad y sede del negocio matriz.
+   *
+   * @param config Objeto con razón social, marca comercial, RUC, correo y local asignado.
+   * @returns void
+   */
   updateBusinessAndBranchConfig(config: {
     companyName: string;
     commercialName: string;
@@ -1000,6 +1277,11 @@ export class AppDataService {
     }
   }
 
+  /**
+   * Sincroniza y recarga las notificaciones del sistema desde los endpoints del Backend.
+   *
+   * @returns void
+   */
   resetNotificationsFromJson(): void {
     this.adminApi.getNotifications().subscribe(notifs => {
       if (notifs) {
@@ -1010,7 +1292,7 @@ export class AppDataService {
             description: n.description,
             time: n.time || 'Reciente',
             icon: n.icon || 'bi-bell',
-            type: n.type || 'info',
+            type: (n.type === 'error' ? 'danger' : (n.type || 'info')) as 'success' | 'info' | 'warning' | 'danger',
             category: n.category || 'Sistema',
             unread: n.unread !== false,
           }))
@@ -1019,6 +1301,14 @@ export class AppDataService {
     });
   }
 
+  /**
+   * Ejecuta el cambio de contraseña del usuario sincronizándolo con el servicio de autenticación.
+   *
+   * @param loginIdentifier Nombre de usuario o correo corporativo.
+   * @param currentPassword Contraseña actual.
+   * @param newPassword Nueva contraseña con requisitos de complejidad.
+   * @returns Objeto {@link PasswordChangeResult} con el estado de la operación.
+   */
   changeUserPassword(
     loginIdentifier: string,
     currentPassword: string,
@@ -1040,6 +1330,12 @@ export class AppDataService {
     };
   }
 
+  /**
+   * Marca de forma forzada la contraseña de un usuario como expirada para pruebas de login.
+   *
+   * @param userId Identificador único del usuario (ej. USR-001).
+   * @returns void
+   */
   forceUserPasswordExpiration(userId: string): void {
     this.users.update(list =>
       list.map(u =>

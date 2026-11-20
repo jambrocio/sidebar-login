@@ -10,6 +10,15 @@ import { AdminApiService } from '../../core/services/admin-api.service';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 
 /**
+ * @fileoverview Shell y Contenedor Principal del Panel de Control Administrativo (Dashboard Layout).
+ * Administra el estado colapsado del menú lateral (Sidebar), sincroniza títulos dinámicos,
+ * carga inicial de datos desde PostgreSQL y mantiene el monitor de latido (Heartbeat) de sesión.
+ *
+ * @author Equipo de Arquitectura Frontend
+ * @version 1.0.0
+ */
+
+/**
  * Shell principal del panel administrativo (Dashboard Layout Shell).
  * Hospeda el Navbar, Sidebar multinivel colapsable y el área de contenido (RouterOutlet).
  * Adicionalmente, ejecuta el monitor de latido (Heartbeat) de actividad en tiempo real
@@ -23,19 +32,20 @@ import { DummyDataService } from '../../core/services/dummy-data.service';
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  // Inicia colapsado para un comportamiento predecible en escritorio y móvil.
-  sidebarCollapsed = signal(true);
-  private routerSubscription!: Subscription;
-  private heartbeatTimer: any;
+  /** Estado de colapso del menú lateral; inicia colapsado para un comportamiento predecible */
+  readonly sidebarCollapsed = signal<boolean>(true);
+
+  private routerSubscription?: Subscription;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private readonly adminApi = inject(AdminApiService);
   private readonly dummyData = inject(DummyDataService);
 
   @ViewChild(SidebarComponent) sidebar!: SidebarComponent;
 
   constructor(
-    private router: Router,
-    private activatedRoute: ActivatedRoute,
-    private titleService: Title
+    private readonly router: Router,
+    private readonly activatedRoute: ActivatedRoute,
+    private readonly titleService: Title
   ) {}
 
   ngOnInit(): void {
@@ -43,8 +53,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       filter(event => event instanceof NavigationEnd),
       map(() => this.activatedRoute),
       map(route => {
-        while (route.firstChild) route = route.firstChild;
-        return route;
+        let current = route;
+        while (current.firstChild) {
+          current = current.firstChild;
+        }
+        return current;
       }),
       filter(route => route.outlet === 'primary'),
       mergeMap(route => route.data)
@@ -65,10 +78,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * Monitor de latido que emite peticiones a /api/v1/auth/heartbeat
    */
   private startHeartbeatMonitor(): void {
-    const checkSession = () => {
+    const checkSession = (): void => {
       this.adminApi.sendHeartbeat().subscribe({
         next: (res) => {
-          if (res && res.revoked) {
+          if (res && res['revoked']) {
             this.handleRemotelyKilledSession();
           }
         },
@@ -94,6 +107,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private handleBackendServiceDown(): void {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
     }
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem('accessToken');
@@ -111,6 +125,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private handleRemotelyKilledSession(): void {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
     }
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem('accessToken');
@@ -122,11 +137,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login'], { queryParams: { revoked: 'true' } });
   }
 
-  onSidebarCollapsed(collapsed: boolean) {
+  /**
+   * Manejador invocado cuando el Sidebar notifica un cambio en su estado de colapso.
+   * @param collapsed `true` si el menú está colapsado, `false` si está expandido.
+   */
+  onSidebarCollapsed(collapsed: boolean): void {
     this.sidebarCollapsed.set(collapsed);
   }
 
-  toggleMainSidebar() {
+  /**
+   * Alterna programáticamente la visibilidad del menú lateral principal.
+   */
+  toggleMainSidebar(): void {
     this.sidebar.toggleCollapse();
   }
 
@@ -136,6 +158,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
     }
   }
 }

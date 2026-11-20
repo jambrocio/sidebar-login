@@ -3,9 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DummyDataService } from '../../core/services/dummy-data.service';
+import { FeedbackNotification } from '../../core/models/domain.models';
 
 /**
- * Componente dedicado al Registro de Nueva Línea / Categoría de Bebidas (`/dashboard/categories/new`).
+ * Componente Smart/Container para el Registro de Nueva Línea o Categoría (`/dashboard/categories/new`).
+ *
+ * @description Permite dar de alta familias comerciales de bebidas, definiendo el slug amigable
+ * y los márgenes de descuento mayorista vinculados a la empresa matriz.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-category-add',
@@ -18,18 +25,26 @@ export class CategoryAddComponent {
   private readonly dummyData = inject(DummyDataService);
 
   readonly businessInfo = this.dummyData.businessInfo;
+  readonly businesses = this.dummyData.businesses;
+  readonly availableBusinesses = this.dummyData.availableBusinesses;
+  readonly isGeneralAdmin = this.dummyData.isGeneralAdmin;
+  readonly currentUserProfile = this.dummyData.currentUserProfile;
   readonly categories = this.dummyData.categories;
-  readonly feedbackMessage = signal<string | null>(null);
+  readonly feedbackMessage = signal<FeedbackNotification | null>(null);
 
   newCategory = {
     name: '',
     slug: '',
     wholesaleMargin: '20% margen mayorista',
+    businessCode: this.currentUserProfile().assignedBusinessId || 'BIZ-001',
   };
 
   saveCategory(): void {
     if (!this.newCategory.name.trim()) {
-      this.feedbackMessage.set('Ingresa el nombre de la línea o categoría de bebidas.');
+      this.feedbackMessage.set({
+        text: 'Por favor, ingresa el nombre de la categoría de productos.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -47,8 +62,10 @@ export class CategoryAddComponent {
     };
 
     this.dummyData.addCategory(catData);
-
-    this.feedbackMessage.set(`Categoría "${this.newCategory.name}" guardada en la base de datos.`);
+    this.feedbackMessage.set({
+      text: `Línea comercial "${catData.name}" (${catData.code}) registrada exitosamente.`,
+      type: 'success',
+    });
     this.newCategory.name = '';
     this.newCategory.slug = '';
   }

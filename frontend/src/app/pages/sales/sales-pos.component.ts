@@ -3,16 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DummyDataService } from '../../core/services/dummy-data.service';
-import { BeverageSale } from '../../core/models/domain.models';
+import { BeverageSale, FeedbackNotification } from '../../core/models/domain.models';
 import { SaleReceiptViewComponent } from '../../shared/components/sale-receipt-view/sale-receipt-view.component';
 
 /**
- * Componente dedicado al Punto de Venta por Mayor y por Menor (`/dashboard/sales`).
+ * Componente Smart/Container dedicado al Punto de Venta por Mayor y por Menor (POS - `/dashboard/sales`).
  *
- * Responsabilidades:
- * - Restringir el registro de la venta al Local Asignado al usuario (`assignedBranch`).
- * - Gestionar el carrito multiproducto (`saleCart`) con cálculo de subtotal, descuento por cupón y total neto.
- * - Emitir el comprobante electrónico y abrir su vista de visualización (`SaleReceiptViewComponent`).
+ * @description Administra el carrito de compra multiproducto, el cálculo automático de IGV (18%),
+ * la aplicación y validación de cupones de descuento, la emisión de comprobantes electrónicos
+ * (Boletas y Facturas) y el descuento de inventario en tiempo real en PostgreSQL.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-sales-pos',
@@ -33,7 +35,7 @@ export class SalesPosComponent {
   readonly couponsList = this.dummyData.couponsList;
 
   readonly selectedReceipt = signal<BeverageSale | null>(null);
-  readonly feedbackMessage = signal<string | null>(null);
+  readonly feedbackMessage = signal<FeedbackNotification | null>(null);
 
   readonly cartTotalItemsCount = computed(() =>
     this.saleCart().reduce((acc, item) => acc + item.quantity, 0)
@@ -77,8 +79,8 @@ export class SalesPosComponent {
     this.saleCart.update(items => [
       ...items,
       {
-        sku: prod?.sku || 'BEV-01',
-        productName: prod?.name || 'Bebida Seleccionada',
+        sku: prod?.sku || 'PRD-01',
+        productName: prod?.name || 'Producto Seleccionado',
         modality: this.newSale.modality,
         unitLabel,
         quantity: qty,
@@ -109,7 +111,10 @@ export class SalesPosComponent {
 
   registerBeverageSale(): void {
     if (this.saleCart().length === 0) {
-      this.feedbackMessage.set('Agrega al menos una bebida a la lista antes de emitir el comprobante.');
+      this.feedbackMessage.set({
+        text: 'Por favor, agrega al menos un producto a la lista antes de emitir el comprobante.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -147,8 +152,9 @@ export class SalesPosComponent {
 
     this.dummyData.recordSale(newReceipt);
     this.selectedReceipt.set(newReceipt);
-    this.feedbackMessage.set(
-      `Comprobante registrado en el backend para ${this.assignedBranch()} (${this.businessInfo().commercialName}) por $${total.toFixed(2)}.`
-    );
+    this.feedbackMessage.set({
+      text: `Comprobante ${newReceipt.id} registrado exitosamente para ${this.assignedBranch()} por $${total.toFixed(2)}.`,
+      type: 'success',
+    });
   }
 }

@@ -4,12 +4,15 @@ import com.elroble.bevadmin.audit.Auditable;
 import com.elroble.bevadmin.modules.organization.dto.CreateBranchRequest;
 import com.elroble.bevadmin.modules.organization.dto.CreateBusinessRequest;
 import com.elroble.bevadmin.modules.organization.service.OrganizationService;
+import com.elroble.bevadmin.security.AuthenticatedUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,11 +58,18 @@ public class OrganizationController {
      */
     @GetMapping("/businesses")
     @Operation(
-            summary = "Listar todos los Negocios Matriz",
-            description = "Consulta la tabla 'businesses' a través de la capa de servicio y devuelve todas las empresas matriz registradas."
+            summary = "Listar Negocios Matriz (todos para Administrador General o exclusivo del negocio asignado)",
+            description = "Consulta la tabla 'businesses'. Si el usuario es Administrador General devuelve todos los negocios; si es usuario de negocio, lista exclusivamente el suyo."
     )
     @ApiResponse(responseCode = "200", description = "Listado de negocios obtenido correctamente.")
-    public List<Map<String, Object>> listBusinesses() {
+    public List<Map<String, Object>> listBusinesses(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
+            if (!user.isSuperAdmin()) {
+                return organizationService.listBusinesses().stream()
+                        .filter(b -> user.businessCode() != null && user.businessCode().equalsIgnoreCase((String) b.get("code")))
+                        .toList();
+            }
+        }
         return organizationService.listBusinesses();
     }
 
@@ -74,10 +84,17 @@ public class OrganizationController {
     @Auditable(module = "Seguridad", eventType = "BUSINESS_CREATED")
     @Operation(
             summary = "Registrar un nuevo Negocio Matriz",
-            description = "Inserta una nueva empresa matriz en la tabla 'businesses' validando que el RUC tenga 11 dígitos."
+            description = "Inserta una nueva empresa matriz en la tabla 'businesses'. Requiere perfil de Administrador General (Superusuario)."
     )
     @ApiResponse(responseCode = "200", description = "Negocio matriz registrado exitosamente.")
-    public Map<String, Object> createBusiness(@Valid @RequestBody CreateBusinessRequest req) {
+    public Map<String, Object> createBusiness(
+            Authentication authentication,
+            @Valid @RequestBody CreateBusinessRequest req) {
+        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
+            if (!user.isSuperAdmin()) {
+                throw new AccessDeniedException("Solo el Administrador General (Superusuario) tiene autorización para registrar nuevos Negocios Matriz.");
+            }
+        }
         return organizationService.createBusiness(req);
     }
 
@@ -94,9 +111,16 @@ public class OrganizationController {
     )
     @ApiResponse(responseCode = "200", description = "Listado de locales devuelto correctamente.")
     public List<Map<String, Object>> listBranches(
+            Authentication authentication,
             @Parameter(description = "Código opcional del Negocio Matriz para filtrar sus locales", example = "BIZ-001")
             @RequestParam(required = false) String businessCode) {
-        return organizationService.listBranches(businessCode);
+        String effectiveBusinessCode = businessCode;
+        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
+            if (!user.isSuperAdmin()) {
+                effectiveBusinessCode = user.businessCode();
+            }
+        }
+        return organizationService.listBranches(effectiveBusinessCode);
     }
 
     /**
@@ -113,7 +137,26 @@ public class OrganizationController {
             description = "Inserta un nuevo local en la tabla 'sedes' vinculado al Negocio Matriz especificado."
     )
     @ApiResponse(responseCode = "200", description = "Local o sucursal registrado exitosamente.")
-    public Map<String, Object> createBranch(@Valid @RequestBody CreateBranchRequest req) {
-        return organizationService.createBranch(req);
+    public Map<String, Object> createBranch(
+            Authentication authentication,
+            @Valid @RequestBody CreateBranchRequest req) {
+        CreateBranchRequest resolved = req;
+        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
+            String targetBusinessCode = user.isSuperAdmin() && req.businessCode() != null && !req.businessCode().isBlank()
+                    ? req.businessCode()
+                    : user.businessCode();
+            resolved = new CreateBranchRequest(
+                    targetBusinessCode,
+                    req.code(),
+                    req.name(),
+                    req.type(),
+                    req.address(),
+                    req.phone(),
+                    req.invoiceSeries(),
+                    req.manager(),
+                    req.posTerminals()
+            );
+        }
+        return organizationService.createBranch(resolved);
     }
 }

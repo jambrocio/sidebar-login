@@ -170,6 +170,15 @@ public class GlobalExceptionHandler {
      * @param ex excepción de regla de negocio
      * @return detalle del problema HTTP 422
      */
+    @ExceptionHandler(BusinessRuleException.class)
+    public ProblemDetail handleBusinessRuleException(BusinessRuleException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problem.setTitle("Incumplimiento de Regla de Negocio");
+        problem.setType(URI.create("https://elroble.com/errors/business-rule"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
     /**
      * Captura violaciones de integridad de base de datos (claves duplicadas, RUC o código ya existente).
      *
@@ -194,6 +203,10 @@ public class GlobalExceptionHandler {
             detailMessage = "El nombre de usuario (username) ya se encuentra registrado en el sistema.";
         } else if (msg.contains("usuarios_correo_electronico_key")) {
             detailMessage = "El correo electrónico institucional ya se encuentra registrado para otro usuario.";
+        } else if (msg.contains("uq_cliente_empresa_documento")) {
+            detailMessage = "El cliente con este documento ya se encuentra registrado para este negocio matriz.";
+        } else if (msg.contains("uq_cliente_empresa_codigo")) {
+            detailMessage = "El código de cliente ya se encuentra registrado para este negocio matriz.";
         }
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, detailMessage);

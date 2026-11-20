@@ -5,13 +5,20 @@ import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import {
   BusinessBranch,
+  FeedbackNotification,
   PasswordExpirationStatus,
   SystemUser,
 } from '../../core/models/domain.models';
 
 /**
- * Componente dedicado al Registro y Administración de Usuarios (`/dashboard/users`)
- * con asignación de Negocio Matriz, Locales autorizados y control de Expiración de Contraseña.
+ * Componente Smart/Container para el Registro y Administración de Usuarios (`/dashboard/users`).
+ *
+ * @description Gestiona el ciclo de vida de usuarios del sistema, la asignación a su Negocio Matriz,
+ * la habilitación de sedes y locales autorizados, la asignación de roles RBAC y el control de vigencia
+ * y expiración de contraseñas contra PostgreSQL.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-users-management',
@@ -26,43 +33,104 @@ export class UsersManagementComponent implements OnInit {
 
   readonly businessInfo = this.dummyData.businessInfo;
   readonly businesses = this.dummyData.businesses;
+  readonly availableBusinesses = this.dummyData.availableBusinesses;
   readonly branches = this.dummyData.branches;
   readonly users = this.dummyData.users;
   readonly systemRoles = this.dummyData.systemRoles;
   readonly currentSessionUser = this.dummyData.currentSessionUser;
+  readonly currentUserProfile = this.dummyData.currentUserProfile;
+
+  /** Determina si el usuario en sesión es Administrador General (Superusuario) */
+  readonly isGeneralAdmin = computed<boolean>(() => {
+    const roleName = (this.currentUserProfile()?.role || '').trim();
+    if (roleName.includes('Negocio') || roleName === 'ADMIN_NEGOCIO') {
+      return false;
+    }
+    return roleName === 'ADMIN' || roleName.includes('Administrador General') || roleName.includes('Superusuario');
+  });
+
+  /** Determina si el usuario en sesión es Administrador de Negocio */
+  readonly isBusinessAdmin = computed<boolean>(() => {
+    const roleName = (this.currentUserProfile()?.role || '').trim();
+    return roleName === 'ADMIN_NEGOCIO' || roleName.includes('Administrador de Negocio');
+  });
+
+  /** Roles asignables: Si es Administrador de Negocio, se excluye el rol Superusuario (ADMIN) */
+  readonly assignableRoles = computed(() => {
+    const all = this.systemRoles();
+    if (this.isGeneralAdmin()) {
+      return all;
+    }
+    return all.filter(r => r.code !== 'ADMIN' && !r.name.includes('Superusuario'));
+  });
 
   readonly searchQuery = signal<string>('');
-  readonly feedbackMessage = signal<string | null>(null);
+  readonly filterBusinessCode = signal<string>('ALL');
+  readonly feedbackMessage = signal<FeedbackNotification | null>(null);
   readonly editingUserId = signal<string | null>(null);
 
   /** Negocio seleccionado actualmente en el formulario de usuario */
   readonly selectedFormBusinessId = signal<string>('BIZ-001');
 
   ngOnInit(): void {
+    const defaultBiz = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
+    this.selectedFormBusinessId.set(defaultBiz);
+    this.userForm.businessId = defaultBiz;
+    this.onBusinessChange(defaultBiz);
     this.loadUsersFromBackend();
+  }
+
+  /**
+   * Normaliza cualquier identificador o código de rol (ej. ADMIN_NEGOCIO)
+   * a su nombre visible en los selectores (ej. Administrador de Negocio).
+   */
+  findMatchingRoleName(roleIdentifier: string | undefined): string {
+    if (!roleIdentifier) return 'Cajero / Vendedor (Mayor/Menor)';
+    const clean = roleIdentifier.trim();
+    const allRoles = this.systemRoles();
+    const matched = allRoles.find(
+      r =>
+        r.name.toLowerCase() === clean.toLowerCase() ||
+        r.code.toLowerCase() === clean.toLowerCase()
+    );
+    if (matched) return matched.name;
+    const directCodeMap: Record<string, string> = {
+      ADMIN: 'Administrador General (Superusuario)',
+      ADMIN_NEGOCIO: 'Administrador de Negocio',
+      SUPERVISOR: 'Jefe de Tienda y Compras',
+      ANALYST: 'Cajero / Vendedor (Mayor/Menor)',
+      AUDITOR: 'Auditor de Caja e Inventario',
+    };
+    return directCodeMap[clean.toUpperCase()] || clean;
   }
 
   /**
    * Carga los usuarios reales desde PostgreSQL / Spring Boot 4 a través de UsersController.
    */
   loadUsersFromBackend(): void {
-    this.adminApi.getUsers().subscribe({
+    const filter = this.isGeneralAdmin()
+      ? this.filterBusinessCode()
+      : (this.currentUserProfile().assignedBusinessId || 'BIZ-001');
+
+    this.adminApi.getUsers(filter).subscribe({
       next: backendUsers => {
         if (backendUsers && backendUsers.length > 0) {
           const mappedUsers: SystemUser[] = backendUsers.map(u => {
             // Parsear assignedBranches si viene como string JSON o estructura de PostgreSQL jsonb
             let branchesList: string[] = [];
-            if (Array.isArray(u.assigned_branches)) {
-              branchesList = u.assigned_branches;
-            } else if (u.assigned_branches?.value) {
+            const rawBranches = u.assigned_branches as unknown;
+            if (Array.isArray(rawBranches)) {
+              branchesList = rawBranches as string[];
+            } else if (typeof rawBranches === 'object' && rawBranches !== null && 'value' in rawBranches) {
               try {
-                branchesList = JSON.parse(u.assigned_branches.value);
+                const branchObj = rawBranches as { value?: string };
+                branchesList = branchObj.value ? JSON.parse(branchObj.value) : [u.assigned_branch];
               } catch {
                 branchesList = [u.assigned_branch];
               }
-            } else if (typeof u.assigned_branches === 'string') {
+            } else if (typeof rawBranches === 'string') {
               try {
-                branchesList = JSON.parse(u.assigned_branches);
+                branchesList = JSON.parse(rawBranches);
               } catch {
                 branchesList = [u.assigned_branch];
               }
@@ -94,7 +162,7 @@ export class UsersManagementComponent implements OnInit {
               username: u.username,
               email: u.email,
               password: 'Admin123*',
-              role: u.role || 'Cajero / Vendedor (Mayor/Menor)',
+              role: this.findMatchingRoleName(u.role),
               businessId: u.business_id,
               businessName: u.business_name,
               assignedBranch: u.assigned_branch,
@@ -141,10 +209,25 @@ export class UsersManagementComponent implements OnInit {
     status: 'Activo' as 'Activo' | 'Inactivo' | 'Pendiente',
   };
 
+  onFilterBusinessChange(businessCode: string): void {
+    this.filterBusinessCode.set(businessCode);
+    this.loadUsersFromBackend();
+  }
+
   readonly filteredUsers = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return this.users();
-    return this.users().filter(
+    const filterBiz = this.filterBusinessCode();
+    let list = this.users();
+
+    if (!this.isGeneralAdmin()) {
+      const userBiz = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
+      list = list.filter(u => u.businessId?.toUpperCase() === userBiz.toUpperCase());
+    } else if (filterBiz && filterBiz !== 'ALL') {
+      list = list.filter(u => u.businessId?.toUpperCase() === filterBiz.toUpperCase());
+    }
+
+    if (!q) return list;
+    return list.filter(
       u =>
         u.name.toLowerCase().includes(q) ||
         u.username.toLowerCase().includes(q) ||
@@ -194,10 +277,15 @@ export class UsersManagementComponent implements OnInit {
   }
 
   saveUserWithBusinessAndBranches(): void {
-    if (!this.userForm.name.trim() || !this.userForm.email.trim()) {
-      this.feedbackMessage.set(
-        'Por favor, completa el nombre completo y el correo electrónico del usuario.'
-      );
+    if (
+      !this.userForm.name.trim() ||
+      !this.userForm.username.trim() ||
+      !this.userForm.email.trim()
+    ) {
+      this.feedbackMessage.set({
+        text: 'Por favor, completa el nombre completo, el usuario de acceso (login) y el correo electrónico del usuario.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -212,16 +300,45 @@ export class UsersManagementComponent implements OnInit {
       authorized.unshift(this.userForm.assignedBranch);
     }
 
-    const cleanUsername =
-      this.userForm.username.trim().toLowerCase() ||
-      this.userForm.name.trim().toLowerCase().split(' ').slice(0, 2).join('.');
+    const cleanUsername = this.userForm.username.trim().toLowerCase();
 
     const expirationMeta = this.resolveExpirationMetadata(
       this.userForm.passwordStatus
     );
 
+    const roleCodeMap: Record<string, string> = {
+      'Administrador General': 'ADMIN',
+      'Administrador General (Superusuario)': 'ADMIN',
+      'Administrador de Negocio': 'ADMIN_NEGOCIO',
+      'Auditor de Caja e Inventario': 'AUDITOR',
+      'Auditor de Operaciones': 'AUDITOR',
+      'Jefe de Tienda y Compras': 'SUPERVISOR',
+      'Cajero / Vendedor (Mayor/Menor)': 'ANALYST',
+      ADMIN: 'ADMIN',
+      ADMIN_NEGOCIO: 'ADMIN_NEGOCIO',
+      AUDITOR: 'AUDITOR',
+      SUPERVISOR: 'SUPERVISOR',
+      ANALYST: 'ANALYST',
+    };
+    const roleCode = roleCodeMap[this.userForm.role] || this.userForm.role || 'ANALYST';
+
     if (this.editingUserId()) {
       const targetId = this.editingUserId()!;
+      const updatePayload = {
+        fullName: this.userForm.name.trim(),
+        username: cleanUsername,
+        email: this.userForm.email.trim(),
+        password: this.userForm.password?.trim() || null,
+        roleCode,
+        businessCode: this.userForm.businessId,
+        primaryBranchName: this.userForm.assignedBranch,
+        authorizedBranchNames: authorized,
+        clientType: 'Personal Interno',
+        status: this.userForm.status === 'Inactivo' ? 'INACTIVE' : 'ACTIVE',
+      };
+
+      // Actualización optimista inmediata en la UI para reflejar de inmediato el rol seleccionado
+      const targetRoleName = this.findMatchingRoleName(this.userForm.role);
       this.users.update(list =>
         list.map(u =>
           u.id === targetId
@@ -230,24 +347,39 @@ export class UsersManagementComponent implements OnInit {
                 name: this.userForm.name.trim(),
                 username: cleanUsername,
                 email: this.userForm.email.trim(),
-                password: this.userForm.password.trim() || u.password || 'Temporal2026*',
-                role: this.userForm.role,
+                role: targetRoleName,
                 businessId: this.userForm.businessId,
                 businessName,
                 assignedBranch: this.userForm.assignedBranch,
                 assignedBranches: authorized,
-                passwordStatus: this.userForm.passwordStatus,
-                passwordExpiresAt: expirationMeta.expiresAt,
-                daysUntilExpiration: expirationMeta.days,
-                mustChangePassword: expirationMeta.mustChange,
+                status: this.userForm.status,
               }
             : u
         )
       );
-      this.feedbackMessage.set(
-        `Usuario ${this.userForm.name} (${targetId}) actualizado con estado de clave "${this.userForm.passwordStatus}".`
-      );
-      this.resetUserForm();
+
+      this.feedbackMessage.set({
+        text: `Actualizando usuario "${this.userForm.name}" (${targetId}) en el servidor...`,
+        type: 'info',
+      });
+
+      this.adminApi.updateUser(targetId, updatePayload).subscribe({
+        next: () => {
+          this.feedbackMessage.set({
+            text: `Rol y datos de "${this.userForm.name}" actualizados exitosamente a "${targetRoleName}".`,
+            type: 'success',
+          });
+          this.loadUsersFromBackend();
+          this.resetUserForm();
+        },
+        error: (err: any) => {
+          const detail = err?.error?.detail || err?.error?.title || err?.message || 'Error en el servidor';
+          this.feedbackMessage.set({
+            text: `Error al actualizar usuario en PostgreSQL: ${detail}`,
+            type: 'error',
+          });
+        },
+      });
       return;
     }
 
@@ -276,23 +408,10 @@ export class UsersManagementComponent implements OnInit {
 
     // Actualización optimista en el estado de la UI
     this.users.update(list => [createdUser, ...list]);
-    this.feedbackMessage.set(
-      `Usuario "${createdUser.name}" (${newId}) registrado. Sincronizando con PostgreSQL...`
-    );
-
-    // Mapeo del código de rol para PostgreSQL (roles: ADMIN, SUPERVISOR, ANALYST, AUDITOR)
-    const roleCodeMap: Record<string, string> = {
-      'Administrador General': 'ADMIN',
-      'Auditor de Caja e Inventario': 'AUDITOR',
-      'Auditor de Operaciones': 'AUDITOR',
-      'Jefe de Tienda y Compras': 'SUPERVISOR',
-      'Cajero / Vendedor (Mayor/Menor)': 'ANALYST',
-      ADMIN: 'ADMIN',
-      AUDITOR: 'AUDITOR',
-      SUPERVISOR: 'SUPERVISOR',
-      ANALYST: 'ANALYST',
-    };
-    const roleCode = roleCodeMap[this.userForm.role] || 'ANALYST';
+    this.feedbackMessage.set({
+      text: `Usuario "${createdUser.name}" (${newId}) registrado. Sincronizando con PostgreSQL...`,
+      type: 'info',
+    });
 
     this.adminApi
       .createUser({
@@ -310,17 +429,19 @@ export class UsersManagementComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           const assignedCode = resp?.userCode || newId;
-          this.feedbackMessage.set(
-            `Usuario "${createdUser.name}" (${assignedCode}) registrado exitosamente en PostgreSQL con rol ${roleCode}.`
-          );
+          this.feedbackMessage.set({
+            text: `Usuario "${createdUser.name}" (${assignedCode}) registrado exitosamente en PostgreSQL con rol ${roleCode}.`,
+            type: 'success',
+          });
           this.loadUsersFromBackend();
         },
         error: err => {
           console.warn('Usuario persistido localmente (backend devolvió):', err?.status);
           const errorDetail = err?.error?.detail || err?.error?.title || 'sesión offline o token faltante';
-          this.feedbackMessage.set(
-            `Usuario "${createdUser.name}" (${newId}) registrado localmente. (Nota: ${errorDetail}).`
-          );
+          this.feedbackMessage.set({
+            text: `Usuario "${createdUser.name}" (${newId}) registrado localmente. (Nota: ${errorDetail}).`,
+            type: 'warning',
+          });
         },
       });
 
@@ -335,7 +456,7 @@ export class UsersManagementComponent implements OnInit {
       username: user.username,
       email: user.email,
       password: user.password || 'Admin123*',
-      role: user.role,
+      role: this.findMatchingRoleName(user.role),
       businessId: user.businessId,
       assignedBranch: user.assignedBranch,
       passwordStatus: user.passwordStatus,
@@ -346,9 +467,10 @@ export class UsersManagementComponent implements OnInit {
 
   expireUserPasswordNow(user: SystemUser): void {
     this.dummyData.forceUserPasswordExpiration(user.id);
-    this.feedbackMessage.set(
-      `La contraseña de ${user.name} (${user.email}) fue marcada como EXPIRADA. Ve a "Cerrar Sesión" (/login) para validar el cambio obligatorio.`
-    );
+    this.feedbackMessage.set({
+      text: `La contraseña de ${user.name} (${user.email}) fue marcada como EXPIRADA. Ve a "Cerrar Sesión" (/login) para validar el cambio obligatorio.`,
+      type: 'warning',
+    });
   }
 
   toggleUserStatus(user: SystemUser): void {

@@ -1,0 +1,305 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Directorio de Clientes Comerciales</h1>
+      <p class="subtitle">
+        Negocio Activo: <strong>{{ businessInfo().legalName }}</strong>
+        — Usuario: <strong>{{ currentSessionUser() }}</strong>
+        <span *ngIf="isGeneralAdmin()" class="role-badge badge-vip" style="margin-left: 0.5rem">
+          <i class="bi bi-shield-check" style="margin-right: 0.25rem"></i> Administrador General (Multi-Negocio)
+        </span>
+      </p>
+    </div>
+
+    <!-- Filtro de Negocio para el Administrador General -->
+    <div class="header-actions" *ngIf="isGeneralAdmin()">
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted, #64748b)">Filtrar Negocio:</label>
+        <select
+          [ngModel]="filterBusinessCode()"
+          (ngModelChange)="onFilterBusinessChange($event)"
+          style="padding: 0.45rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1)"
+        >
+          <option value="ALL">🏢 Todos los Negocios</option>
+          <option *ngFor="let b of businesses()" [value]="b.id">
+            {{ b.id }} — {{ b.commercialName || b.legalName }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mensajes de Feedback y Validación -->
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-banner" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Formulario de Registro de Cliente -->
+  <div class="card" style="margin-bottom: 2rem">
+    <div class="toolbar">
+      <h2 class="section-title" style="margin: 0">
+        <i class="bi bi-person-plus-fill" style="margin-right: 0.4rem; color: var(--primary, #0284c7)"></i>
+        Registrar Nuevo Cliente Comercial
+      </h2>
+    </div>
+
+    <div class="admin-callout" *ngIf="isGeneralAdmin()">
+      <i class="bi bi-info-circle-fill"></i>
+      <strong>Privilegio de Administrador General:</strong> Puedes seleccionar el Negocio Matriz al cual vincular este cliente. El documento debe ser único dentro del negocio seleccionado.
+    </div>
+
+    <div class="admin-callout" *ngIf="!isGeneralAdmin()">
+      <i class="bi bi-shield-lock-fill"></i>
+      <strong>Aislamiento Multi-Tenant:</strong> El cliente será asignado por default a tu negocio asignado:
+      <strong>{{ businessInfo().legalName }} ({{ currentUserProfile().assignedBusinessId }})</strong>.
+    </div>
+
+    <form (ngSubmit)="saveCustomer()" class="grid-form">
+      <!-- 1. Selección de Negocio Matriz (Condicionado por Rol) -->
+      <div class="form-group">
+        <label>
+          1. Negocio Matriz Asignado <span class="required-indicator">*</span>
+          <span *ngIf="!isGeneralAdmin()" style="font-size: 0.75rem; color: #0284c7">(Por default)</span>
+        </label>
+        <select
+          name="custBusiness"
+          [(ngModel)]="customerForm.businessCode"
+          [disabled]="!isGeneralAdmin()"
+          [class.business-selector-locked]="!isGeneralAdmin()"
+          required
+          class="required-input"
+        >
+          <option *ngFor="let b of availableBusinesses()" [value]="b.id">
+            {{ b.id }} — {{ b.commercialName || b.legalName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 2. Tipo de Documento -->
+      <div class="form-group">
+        <label>2. Tipo de Documento <span class="required-indicator">*</span></label>
+        <select name="custDocType" [(ngModel)]="customerForm.documentType" required class="required-input">
+          <option value="RUC">RUC (Registro Único de Contribuyente)</option>
+          <option value="DNI">DNI (Documento Nacional de Identidad)</option>
+          <option value="CE">Carné de Extranjería (CE)</option>
+          <option value="PASAPORTE">Pasaporte</option>
+        </select>
+      </div>
+
+      <!-- 3. Número de Documento (Único por Negocio) -->
+      <div class="form-group">
+        <label>3. Número de Documento (Único por Negocio) <span class="required-indicator">*</span></label>
+        <input
+          type="text"
+          name="custDocNum"
+          [(ngModel)]="customerForm.documentNumber"
+          placeholder="Ej. 20601234567 o 45892147"
+          required
+          class="required-input"
+        />
+      </div>
+
+      <!-- 4. Razón Social / Nombre Completo -->
+      <div class="form-group">
+        <label>4. Razón Social o Nombres Completos <span class="required-indicator">*</span></label>
+        <input
+          type="text"
+          name="custLegalName"
+          [(ngModel)]="customerForm.legalName"
+          placeholder="Ej. Inversiones Gastronómicas San Martín S.A.C."
+          required
+          class="required-input"
+        />
+      </div>
+
+      <!-- 5. Nombre Comercial -->
+      <div class="form-group">
+        <label>5. Nombre Comercial</label>
+        <input
+          type="text"
+          name="custCommName"
+          [(ngModel)]="customerForm.commercialName"
+          placeholder="Ej. San Martín Restobar"
+        />
+      </div>
+
+      <!-- 6. Clasificación de Cliente -->
+      <div class="form-group">
+        <label>6. Clasificación Comercial</label>
+        <select name="custType" [(ngModel)]="customerForm.customerType">
+          <option value="Mayorista VIP">Mayorista VIP (Precios x Mayor Preferentes)</option>
+          <option value="Minorista Frecuente">Minorista Frecuente (Precios x Menor)</option>
+          <option value="Distribuidor">Distribuidor Zonal</option>
+          <option value="Corporativo">Cliente Corporativo / Cuentas Clave</option>
+        </select>
+      </div>
+
+      <!-- 7. Correo Electrónico -->
+      <div class="form-group">
+        <label>7. Correo Electrónico</label>
+        <input
+          type="email"
+          name="custEmail"
+          [(ngModel)]="customerForm.email"
+          placeholder="compras@cliente.com"
+        />
+      </div>
+
+      <!-- 8. Teléfono / Contacto -->
+      <div class="form-group">
+        <label>8. Teléfono / Celular</label>
+        <input
+          type="tel"
+          name="custPhone"
+          [(ngModel)]="customerForm.phone"
+          placeholder="+51 987 654 321"
+        />
+      </div>
+
+      <!-- 9. Dirección Comercial -->
+      <div class="form-group">
+        <label>9. Dirección Fiscal o de Entrega</label>
+        <input
+          type="text"
+          name="custAddress"
+          [(ngModel)]="customerForm.address"
+          placeholder="Av. Principal 123, Distrito, Ciudad"
+        />
+      </div>
+
+      <!-- 10. Línea de Crédito -->
+      <div class="form-group">
+        <label>10. Línea de Crédito Autorizada ($)</label>
+        <input
+          type="number"
+          name="custCredit"
+          [(ngModel)]="customerForm.creditLine"
+          min="0"
+          step="500"
+        />
+      </div>
+
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-check2-circle"></i>
+          <span>Registrar Cliente en Negocio</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Cartera de Clientes Registrados -->
+  <div class="card">
+    <div class="toolbar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem">
+      <h2 class="section-title" style="margin: 0">
+        <i class="bi bi-people-fill" style="margin-right: 0.4rem; color: #2563eb"></i>
+        Cartera de Clientes Registrados ({{ filteredCustomers().length }})
+      </h2>
+      <div style="min-width: 280px">
+        <input
+          type="search"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Buscar por RUC/DNI, razón social o negocio..."
+          style="width: 100%; padding: 0.5rem 0.85rem; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1)"
+        />
+      </div>
+    </div>
+
+    <div class="table-responsive" style="margin-top: 1rem">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Documento</th>
+            <th>Cliente / Razón Social</th>
+            <th>Negocio Matriz</th>
+            <th>Clasificación</th>
+            <th>Contacto</th>
+            <th>Línea Crédito</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of filteredCustomers()">
+            <td>
+              <span style="font-family: monospace; font-weight: 700; color: #0284c7">
+                {{ c.customerCode }}
+              </span>
+            </td>
+            <td>
+              <div class="cell-doc">
+                <span class="doc-type">{{ c.documentType }}</span>
+                <span class="doc-num">{{ c.documentNumber }}</span>
+              </div>
+            </td>
+            <td>
+              <div style="font-weight: 600">{{ c.legalName }}</div>
+              <div *ngIf="c.commercialName && c.commercialName !== c.legalName" style="font-size: 0.85rem; color: var(--text-muted, #64748b)">
+                {{ c.commercialName }}
+              </div>
+            </td>
+            <td>
+              <span class="role-badge badge-biz">
+                {{ c.businessCode }} — {{ getBusinessName(c.businessCode) }}
+              </span>
+            </td>
+            <td>
+              <span
+                class="role-badge"
+                [ngClass]="{
+                  'badge-vip': c.customerType === 'Mayorista VIP' || c.customerType === 'Corporativo',
+                  'badge-frecuente': c.customerType === 'Minorista Frecuente' || c.customerType === 'Distribuidor'
+                }"
+              >
+                {{ c.customerType }}
+              </span>
+            </td>
+            <td>
+              <div class="cell-contact">
+                <span *ngIf="c.email"><i class="bi bi-envelope"></i> {{ c.email }}</span>
+                <span *ngIf="c.phone"><i class="bi bi-telephone"></i> {{ c.phone }}</span>
+              </div>
+            </td>
+            <td>
+              <span style="font-weight: 600">
+                ${{ (c.creditLine || 0) | number : '1.2-2' }}
+              </span>
+            </td>
+            <td>
+              <span class="role-badge badge-status">
+                <i class="bi bi-check-circle-fill" style="margin-right: 0.25rem; font-size: 0.75rem"></i>
+                Activo
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="filteredCustomers().length === 0">
+            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted, #64748b)">
+              <i class="bi bi-search" style="font-size: 2rem; display: block; margin-bottom: 0.5rem"></i>
+              No se encontraron clientes que coincidan con los criterios de búsqueda.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

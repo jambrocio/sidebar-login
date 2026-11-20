@@ -2,10 +2,17 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
-import { CashRegisterAudit } from '../../core/models/domain.models';
+import { CashRegisterAudit, FeedbackNotification } from '../../core/models/domain.models';
 
 /**
- * Componente dedicado al Arqueo y Cierre de Caja por Turno (`/dashboard/cash-register`).
+ * Componente Smart/Container dedicado al Arqueo y Cierre de Caja por Turno (`/dashboard/cash-register`).
+ *
+ * @description Permite a los cajeros y supervisores registrar el conteo físico de efectivo,
+ * contrastarlo contra el saldo teórico esperado (apertura + ventas en efectivo - gastos de caja)
+ * y persistir el acta de cierre con semaforización de diferencias (Cuadre Exacto, Sobrante o Faltante).
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-cash-register-view',
@@ -21,7 +28,7 @@ export class CashRegisterViewComponent {
   readonly assignedBranch = this.dummyData.assignedBranch;
   readonly currentSessionUser = this.dummyData.currentSessionUser;
   readonly cashAuditsList = this.dummyData.cashAuditsList;
-  readonly feedbackMessage = signal<string | null>(null);
+  readonly feedbackMessage = signal<FeedbackNotification | null>(null);
 
   newCashAudit = {
     shift: 'Turno Tarde/Cierre (14:00 - 22:00)',
@@ -69,8 +76,9 @@ export class CashRegisterViewComponent {
 
     this.dummyData.closeCashRegister(auditData);
 
-    this.feedbackMessage.set(
-      `Arqueo de Caja registrado en PostgreSQL para tu local (${this.assignedBranch()}) — Estado: ${status}.`
-    );
+    this.feedbackMessage.set({
+      text: `Arqueo de Caja registrado para tu local (${this.assignedBranch()}) — Estado: ${status} (Diferencia: $${diff}).`,
+      type: diff === 0 ? 'success' : 'warning',
+    });
   }
 }

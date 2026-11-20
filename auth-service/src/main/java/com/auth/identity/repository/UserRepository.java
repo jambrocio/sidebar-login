@@ -9,20 +9,33 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
- * Synchronous relational data access repository for identity management and user credentials,
- * querying schemas {@code auth} and {@code core}.
+ * Repositorio sincrónico de acceso a datos relacionales para usuarios, credenciales y asignaciones de sucursales.
+ *
+ * <p>Interactúa con los esquemas {@code auth}, {@code core} y {@code rbac} de PostgreSQL mediante {@link JdbcClient},
+ * asegurando alto rendimiento y total compatibilidad con Hilos Virtuales (Project Loom) en Java 21.</p>
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
  */
 @Repository
 public class UserRepository {
 
     private final JdbcClient jdbcClient;
 
+    /**
+     * Constructor con inyección del cliente JDBC de Spring.
+     *
+     * @param jdbcClient Cliente JDBC simplificado y de alto rendimiento.
+     */
     public UserRepository(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
     }
 
     /**
-     * Finds user authentication and enterprise context by username or email.
+     * Busca la identidad de autenticación y contexto empresarial del usuario por su nombre de usuario o correo.
+     *
+     * @param login Nombre de usuario o dirección de correo corporativo.
+     * @return {@link Optional} con el principal autenticado si existe en el sistema.
      */
     public Optional<AuthenticatedUserPrincipal> findActivePrincipalByLoginOrEmail(String login) {
         String sql = """
@@ -67,7 +80,10 @@ public class UserRepository {
     }
 
     /**
-     * Loads the complete User entity including password hash and security flags.
+     * Obtiene la entidad completa de dominio {@link User} por nombre de usuario o correo para validación de contraseñas.
+     *
+     * @param login Nombre de usuario o correo electrónico.
+     * @return {@link Optional} con la entidad de usuario si fue localizada.
      */
     public Optional<User> findUserByLogin(String login) {
         String sql = """
@@ -119,7 +135,10 @@ public class UserRepository {
     }
 
     /**
-     * Loads the complete User entity by its unique UUID.
+     * Obtiene un usuario por su identificador UUID único.
+     *
+     * @param id Identificador UUID del usuario.
+     * @return {@link Optional} con la entidad de usuario.
      */
     public Optional<User> findById(UUID id) {
         String sql = """
@@ -171,7 +190,10 @@ public class UserRepository {
     }
 
     /**
-     * Lists all authorized branch IDs assigned to a user in {@code core.usuario_sedes}.
+     * Consulta la lista de identificadores UUID de todas las sedes autorizadas para un usuario en {@code core.usuario_sedes}.
+     *
+     * @param userId Identificador UUID del usuario.
+     * @return Lista de UUIDs de sedes autorizadas.
      */
     public List<UUID> findAuthorizedBranchIdsByUserId(UUID userId) {
         String sql = "SELECT sede_id FROM core.usuario_sedes WHERE usuario_id = :userId";
@@ -181,6 +203,12 @@ public class UserRepository {
                 .list();
     }
 
+    /**
+     * Incrementa en una unidad el contador de intentos fallidos de autenticación.
+     * Si el contador alcanza 5 o más, actualiza automáticamente el estado a 'LOCKED'.
+     *
+     * @param userId Identificador UUID del usuario.
+     */
     public void incrementFailedAttempts(UUID userId) {
         String sql = """
                 UPDATE auth.usuarios
@@ -192,6 +220,11 @@ public class UserRepository {
         jdbcClient.sql(sql).param("id", userId).update();
     }
 
+    /**
+     * Restablece el contador de intentos fallidos a cero y actualiza la fecha de último acceso.
+     *
+     * @param userId Identificador UUID del usuario.
+     */
     public void resetFailedAttempts(UUID userId) {
         String sql = """
                 UPDATE auth.usuarios
@@ -203,6 +236,13 @@ public class UserRepository {
         jdbcClient.sql(sql).param("id", userId).update();
     }
 
+    /**
+     * Actualiza la contraseña del usuario con un nuevo hash criptográfico, resetea la expiración a 90 días
+     * y desbloquea la cuenta fijando el estado a 'ACTIVE'.
+     *
+     * @param userId Identificador UUID del usuario.
+     * @param newPasswordHash Nuevo hash encriptado de la contraseña con BCrypt.
+     */
     public void updatePassword(UUID userId, String newPasswordHash) {
         String sql = """
                 UPDATE auth.usuarios
@@ -220,6 +260,12 @@ public class UserRepository {
                 .update();
     }
 
+    /**
+     * Actualiza el estado operativo de la cuenta de usuario (ACTIVE, LOCKED, INACTIVE).
+     *
+     * @param userId Identificador UUID del usuario.
+     * @param status Nuevo código de estado.
+     */
     public void updateAccountStatus(UUID userId, String status) {
         String sql = """
                 UPDATE auth.usuarios
@@ -233,6 +279,11 @@ public class UserRepository {
                 .update();
     }
 
+    /**
+     * Obtiene el listado consolidado de todos los usuarios con sus empresas y sedes asignadas.
+     *
+     * @return Lista de mapas con los campos de la vista {@code core.vw_usuarios_empresas_sedes}.
+     */
     public List<Map<String, Object>> findAllUsersConsolidated() {
         String sql = "SELECT * FROM core.vw_usuarios_empresas_sedes ORDER BY id ASC";
         return jdbcClient.sql(sql).query().listOfRows();

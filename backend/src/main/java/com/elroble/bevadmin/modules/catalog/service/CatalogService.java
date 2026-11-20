@@ -12,6 +12,15 @@ import java.util.Map;
 public interface CatalogService {
 
     /**
+     * Lista las bebidas del catálogo maestro permitiendo filtrar por negocio (Superusuario) o forzar el del usuario.
+     *
+     * @param businessCode código opcional del negocio matriz
+     * @param user         usuario autenticado
+     * @return lista de bebidas
+     */
+    List<Map<String, Object>> listBeverages(String businessCode, AuthenticatedUserPrincipal user);
+
+    /**
      * Lista las bebidas del catálogo maestro para el negocio del usuario activo.
      *
      * @param user usuario autenticado
@@ -27,6 +36,15 @@ public interface CatalogService {
      * @return mapa con el SKU creado y su estado de stock
      */
     Map<String, Object> registerBeverage(CreateBeverageRequest request, AuthenticatedUserPrincipal user);
+
+    /**
+     * Lista las categorías de bebidas permitiendo filtrar por negocio (Superusuario).
+     *
+     * @param businessCode código opcional del negocio matriz
+     * @param user         usuario autenticado
+     * @return lista de categorías
+     */
+    List<Map<String, Object>> listCategories(String businessCode, AuthenticatedUserPrincipal user);
 
     /**
      * Lista las categorías de bebidas del negocio activo.

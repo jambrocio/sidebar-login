@@ -5,15 +5,25 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
- * Main entry point for the Centralized Identity and Access Management (IAM / IdP) Service.
+ * Punto de entrada principal del Servicio Centralizado de Gestión de Identidad y Accesos (IAM / IdP).
  * <p>
- * Provides centralized authentication, cryptographic asymmetric token issuance (RS256 / JWKS),
- * RBAC authorization, session monitoring, and user lifecycle management.
+ * Este microservicio actúa como Proveedor de Identidad (Identity Provider) centralizado para la plataforma,
+ * proporcionando autenticación robusta, emisión de tokens criptográficos asimétricos (RS256 / JWKS),
+ * control de acceso basado en roles (RBAC), gobernanza del ciclo de vida de sesiones de usuario y
+ * auditoría de seguridad inmutable.
+ * <p>
+ * Diseñado con Spring Boot 3.4 y Java 21 LTS bajo el modelo de Hilos Virtuales (Project Loom) para
+ * atender altos volúmenes de concurrencia con latencia ultrabaja.
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class IdentityApplication {
 
+    /**
+     * Método principal de arranque de la aplicación Spring Boot.
+     *
+     * @param args argumentos de línea de comandos pasados en tiempo de ejecución
+     */
     public static void main(String[] args) {
         SpringApplication.run(IdentityApplication.class, args);
     }

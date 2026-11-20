@@ -2,6 +2,7 @@ package com.elroble.bevadmin.modules.users.service;
 
 import com.elroble.bevadmin.common.exception.ResourceNotFoundException;
 import com.elroble.bevadmin.modules.users.dto.CreateUserWithBranchesRequest;
+import com.elroble.bevadmin.modules.users.dto.UpdateUserWithBranchesRequest;
 import com.elroble.bevadmin.modules.users.repository.UsersRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,8 +40,17 @@ public class UsersServiceImpl implements UsersService {
      */
     @Override
     @Transactional(readOnly = true)
+    public List<Map<String, Object>> listUsersWithBusinessAndBranches(String businessCode) {
+        return usersRepository.findAllUsersWithBusinessAndBranches(businessCode);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> listUsersWithBusinessAndBranches() {
-        return usersRepository.findAllUsersWithBusinessAndBranches();
+        return usersRepository.findAllUsersWithBusinessAndBranches(null);
     }
 
     /**
@@ -89,6 +99,59 @@ public class UsersServiceImpl implements UsersService {
                 "userId", newUserId,
                 "userCode", userCode,
                 "status", "Registrado"
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public Map<String, Object> updateUserWithBusinessAndBranches(String identifier, UpdateUserWithBranchesRequest request) {
+        UUID userId = usersRepository.findUserIdByIdentifier(identifier)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", identifier));
+
+        UUID businessId;
+        if (request.businessCode() != null && !request.businessCode().isBlank()) {
+            businessId = usersRepository.findBusinessIdByCode(request.businessCode())
+                    .orElseGet(() -> usersRepository.findBusinessIdByUserId(userId));
+        } else {
+            businessId = usersRepository.findBusinessIdByUserId(userId);
+        }
+
+        UUID primaryBranchId;
+        if (request.primaryBranchName() != null && !request.primaryBranchName().isBlank()) {
+            primaryBranchId = usersRepository.findBranchIdByBusinessAndName(businessId, request.primaryBranchName())
+                    .or(() -> usersRepository.findFirstBranchIdByBusiness(businessId))
+                    .orElseGet(() -> usersRepository.findPrimaryBranchIdByUserId(userId));
+        } else {
+            primaryBranchId = usersRepository.findPrimaryBranchIdByUserId(userId);
+        }
+
+        String encodedPassword = null;
+        if (request.password() != null && !request.password().isBlank()
+                && !"Admin123*".equals(request.password())
+                && !"Temporal2026*".equals(request.password())) {
+            encodedPassword = passwordEncoder.encode(request.password());
+        }
+
+        usersRepository.updateUser(userId, request, encodedPassword, businessId, primaryBranchId);
+
+        if (request.roleCode() != null && !request.roleCode().isBlank()) {
+            usersRepository.updateUserRoleAssignment(userId, request.roleCode());
+        }
+
+        if (request.authorizedBranchNames() != null && !request.authorizedBranchNames().isEmpty()) {
+            usersRepository.deleteUserBranchAssignments(userId);
+            for (String branchName : request.authorizedBranchNames()) {
+                usersRepository.insertUserBranchAssignment(userId, businessId, branchName, request.primaryBranchName());
+            }
+        }
+
+        return Map.of(
+                "userId", userId,
+                "status", "Actualizado",
+                "role", request.roleCode()
         );
     }
 }

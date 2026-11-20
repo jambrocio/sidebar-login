@@ -17,27 +17,49 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Primary identity provider endpoints for authentication, token rotation,
- * RFC 7662 introspection, and RFC 7517 JWKS discovery.
+ * Controlador REST principal del Proveedor de Identidad para la autenticación centralizada,
+ * rotación de tokens, introspección RFC 7662 y descubrimiento JWKS RFC 7517.
+ *
+ * <p>Expone los puntos de enlace públicos y autenticados para el inicio de sesión,
+ * renovación de tokens de acceso, cierre de sesión, renovación de contraseñas y diagnóstico de salud.</p>
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
  */
 @RestController
-@Tag(name = "Authentication & Identity Provider", description = "Centralized authentication, RS256 token issuance, and JWKS discovery")
+@Tag(name = "Autenticación y Proveedor de Identidad", description = "Autenticación centralizada, emisión de tokens RS256 y descubrimiento JWKS")
 public class AuthController {
 
     private final AuthService authService;
     private final JwtTokenService jwtTokenService;
 
+    /**
+     * Constructor con inyección del servicio de autenticación y el servicio de tokens criptográficos.
+     *
+     * @param authService Servicio centralizado de autenticación.
+     * @param jwtTokenService Servicio criptográfico de emisión de tokens JWT y JWKS.
+     */
     public AuthController(AuthService authService, JwtTokenService jwtTokenService) {
         this.authService = authService;
         this.jwtTokenService = jwtTokenService;
     }
 
+    /**
+     * Autentica credenciales corporativas y emite un par de tokens criptográficos.
+     *
+     * @param request Datos de la solicitud con identificador y contraseña.
+     * @param httpRequest Solicitud HTTP entrante para trazabilidad de red.
+     * @return {@link ResponseEntity} con {@link LoginResponse} en caso de éxito.
+     */
     @PostMapping("/api/v1/auth/login")
-    @Operation(summary = "Authenticate user credentials", description = "Validates username/email and password, issuing an asymmetric RS256 Access Token and a Refresh Token.")
-    @ApiResponse(responseCode = "200", description = "Successfully authenticated")
-    @ApiResponse(responseCode = "401", description = "Invalid credentials")
-    @ApiResponse(responseCode = "423", description = "Account locked due to excessive failed attempts")
-    @ApiResponse(responseCode = "403", description = "Password expired or mandatory change required")
+    @Operation(
+            summary = "Autenticar credenciales de usuario",
+            description = "Valida el nombre de usuario o correo corporativo junto con la contraseña en texto plano, emitiendo un Token de Acceso asimétrico RS256 y un Token de Refresco opaco."
+    )
+    @ApiResponse(responseCode = "200", description = "Autenticación exitosa y tokens emitidos")
+    @ApiResponse(responseCode = "401", description = "Credenciales incorrectas o usuario no encontrado")
+    @ApiResponse(responseCode = "423", description = "Cuenta bloqueada por políticas de seguridad o exceso de intentos fallidos")
+    @ApiResponse(responseCode = "403", description = "Contraseña expirada (política de 90 días) o cambio obligatorio requerido")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest
@@ -46,10 +68,20 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Rota el token de refresco y emite un nuevo token de acceso asimétrico.
+     *
+     * @param request Carga útil con el token de refresco vigente.
+     * @param httpRequest Solicitud HTTP entrante.
+     * @return {@link ResponseEntity} con nuevos tokens de acceso y refresco.
+     */
     @PostMapping("/api/v1/auth/refresh")
-    @Operation(summary = "Rotate refresh token and issue new access token", description = "Validates active refresh token, revokes it, and issues a new token pair.")
-    @ApiResponse(responseCode = "200", description = "Successfully refreshed")
-    @ApiResponse(responseCode = "401", description = "Invalid or revoked refresh token")
+    @Operation(
+            summary = "Rotar token de refresco y emitir nuevo token de acceso",
+            description = "Valida la vigencia del token de refresco, revoca la sesión previa y genera un nuevo par de credenciales criptográficas."
+    )
+    @ApiResponse(responseCode = "200", description = "Tokens renovados exitosamente")
+    @ApiResponse(responseCode = "401", description = "Token de refresco inválido, caducado o revocado")
     public ResponseEntity<LoginResponse> refresh(
             @Valid @RequestBody RefreshTokenRequest request,
             HttpServletRequest httpRequest
@@ -58,32 +90,75 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Introspecciona un token de acceso según la especificación RFC 7662.
+     *
+     * @param request Solicitud con la cadena del token a evaluar.
+     * @return {@link ResponseEntity} con el estado activo y metadatos del token.
+     */
     @PostMapping("/api/v1/auth/introspect")
-    @Operation(summary = "RFC 7662 Token Introspection", description = "Enables consumer applications and API gateways to query token status, roles, and claims.")
+    @Operation(
+            summary = "Introspección de tokens RFC 7662",
+            description = "Permite a microservicios consumidores y API gateways verificar la validez, roles y reclamos del token presentado."
+    )
+    @ApiResponse(responseCode = "200", description = "Resultado de la introspección del token")
     public ResponseEntity<TokenIntrospectResponse> introspect(@Valid @RequestBody TokenIntrospectRequest request) {
         TokenIntrospectResponse response = authService.introspectToken(request.token());
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Expone el conjunto público de llaves criptográficas JWKS según RFC 7517.
+     *
+     * @return {@link ResponseEntity} con la clave pública RSA en formato JSON.
+     */
     @GetMapping(value = "/.well-known/jwks.json", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "RFC 7517 JSON Web Key Set (JWKS)", description = "Exposes public RSA keys allowing consumer apps to verify RS256 signatures with zero network roundtrips.")
+    @Operation(
+            summary = "Descubrimiento de claves públicas JWKS RFC 7517",
+            description = "Expone las claves públicas RSA para que los servicios consumidores verifiquen firmas RS256 de forma local con cero latencia de red."
+    )
+    @ApiResponse(responseCode = "200", description = "Conjunto de claves públicas JWKS retornado exitosamente")
     public ResponseEntity<Map<String, Object>> getJwks() {
         return ResponseEntity.ok(jwtTokenService.getJwksMap());
     }
 
+    /**
+     * Cierra la sesión activa del usuario invalidando el token de refresco.
+     *
+     * @param request Carga opcional con el token de refresco.
+     * @param httpRequest Solicitud HTTP entrante.
+     * @return Mensaje confirmatorio de cierre de sesión.
+     */
     @PostMapping("/api/v1/auth/logout")
-    @Operation(summary = "Revoke user session", description = "Invalidates the refresh token and closes active session in database.")
+    @Operation(
+            summary = "Revocar sesión activa (Logout)",
+            description = "Invalida el token de refresco y finaliza la sesión activa en la base de datos de identidad."
+    )
+    @ApiResponse(responseCode = "200", description = "Sesión cerrada correctamente")
     public ResponseEntity<Map<String, String>> logout(
             @RequestBody(required = false) RefreshTokenRequest request,
             HttpServletRequest httpRequest
     ) {
         String token = request != null ? request.refreshToken() : null;
         authService.logout(token, httpRequest.getRemoteAddr());
-        return ResponseEntity.ok(Map.of("message", "Successfully logged out"));
+        return ResponseEntity.ok(Map.of("message", "Sesión cerrada exitosamente"));
     }
 
+    /**
+     * Actualiza la contraseña del usuario autenticado y revoca todas las sesiones previas.
+     *
+     * @param userIdStr Identificador UUID del usuario autenticado extraído del principal de seguridad.
+     * @param request Carga con contraseña actual y nueva contraseña.
+     * @param httpRequest Solicitud HTTP entrante.
+     * @return Mensaje confirmatorio de actualización de contraseña.
+     */
     @PostMapping("/api/v1/auth/change-password")
-    @Operation(summary = "Renew password", description = "Updates password, resets lockout and expiration, and terminates all active sessions.")
+    @Operation(
+            summary = "Renovar contraseña de usuario",
+            description = "Actualiza la contraseña, reinicia la fecha de vencimiento a 90 días y revoca todas las sesiones concurrentes activas."
+    )
+    @ApiResponse(responseCode = "200", description = "Contraseña actualizada exitosamente")
+    @ApiResponse(responseCode = "401", description = "La contraseña actual proporcionada es incorrecta")
     public ResponseEntity<Map<String, String>> changePassword(
             @AuthenticationPrincipal String userIdStr,
             @Valid @RequestBody ChangePasswordRequest request,
@@ -91,11 +166,20 @@ public class AuthController {
     ) {
         UUID userId = UUID.fromString(userIdStr);
         authService.changePassword(userId, request, httpRequest.getRemoteAddr());
-        return ResponseEntity.ok(Map.of("message", "Password successfully changed. Please log in again with your new credentials."));
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente. Por favor inicie sesión nuevamente con sus nuevas credenciales."));
     }
 
+    /**
+     * Punto de comprobación de salud del servicio de identidad.
+     *
+     * @return Mapa con estado operativo del servicio.
+     */
     @GetMapping("/api/v1/auth/health")
-    @Operation(summary = "Identity service health check", description = "Lightweight status probe for load balancers and orchestrators.")
+    @Operation(
+            summary = "Verificación de salud del servicio (Health Check)",
+            description = "Sonda de disponibilidad ligera para balanceadores de carga y orquestadores de contenedores."
+    )
+    @ApiResponse(responseCode = "200", description = "Servicio de identidad operando con normalidad")
     public ResponseEntity<Map<String, Object>> health() {
         return ResponseEntity.ok(Map.of(
                 "service", "centralized-auth-service",

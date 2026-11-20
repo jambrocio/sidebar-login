@@ -66,9 +66,12 @@ export class AuthApiService {
   private readonly baseUrl = environment.authUrl;
 
   /**
-   * Determina si existe una sesión de usuario válida activa en la pestaña/ventana actual.
-   * Al almacenarse en sessionStorage, se garantiza que al cerrar la pestaña o el navegador
-   * la sesión se destruye automáticamente, obligando a una nueva autenticación.
+   * Determina si existe una sesión de usuario válida y activa en la pestaña actual.
+   *
+   * @description Al persistirse en {@code sessionStorage}, se asegura que al cerrar la ventana o
+   * pestaña la sesión se descarte automáticamente, exigiendo nueva autenticación.
+   *
+   * @returns {@code true} si existe un token Bearer en almacenamiento de sesión; {@code false} de lo contrario.
    */
   isAuthenticated(): boolean {
     if (typeof window === 'undefined') {
@@ -79,7 +82,9 @@ export class AuthApiService {
   }
 
   /**
-   * Obtiene el token JWT activo de la sesión actual en memoria de pestaña (sessionStorage).
+   * Recupera el token JWT activo de la sesión actual en memoria de pestaña.
+   *
+   * @returns Cadena con el token Bearer o {@code null} si no hay sesión iniciada.
    */
   getToken(): string | null {
     if (typeof window === 'undefined') {
@@ -89,7 +94,10 @@ export class AuthApiService {
   }
 
   /**
-   * Persiste la sesión activa en sessionStorage para aislarla al ciclo de vida de la pestaña o navegador.
+   * Persiste la sesión activa en {@code sessionStorage} vinculándola al ciclo de vida del navegador.
+   *
+   * @param response DTO {@link LoginApiResponse} devuelto por el endpoint de autenticación.
+   * @returns void
    */
   setSession(response: LoginApiResponse): void {
     if (typeof window !== 'undefined') {
@@ -101,8 +109,10 @@ export class AuthApiService {
   }
 
   /**
-   * Cierra completamente la sesión activa del usuario, destruye los tokens
-   * y redirige al /login impidiendo cualquier navegación posterior.
+   * Termina de forma definitiva la sesión activa del usuario, destruye las credenciales
+   * temporales en memoria y redirige a la vista de login.
+   *
+   * @returns void
    */
   logout(): void {
     if (typeof window !== 'undefined') {
@@ -115,10 +125,12 @@ export class AuthApiService {
   }
 
   /**
-   * Envía las credenciales al backend Spring Boot 4 para iniciar sesión.
+   * Envía las credenciales corporativas al backend Spring Boot 4 para iniciar sesión.
    *
-   * @param username Correo o username institucional
-   * @param password Contraseña en texto plano
+   * @param username Correo corporativo o nombre de usuario institucional.
+   * @param password Contraseña en texto plano para verificación criptográfica BCrypt.
+   * @returns Observable con el contrato {@link LoginApiResponse} que incluye token y contexto organizacional.
+   * @throws ProblemDetailError Estructura normalizada de error RFC 7807 ante fallos de credenciales o cuenta bloqueada.
    */
   login(username: string, password: string): Observable<LoginApiResponse> {
     return this.http
@@ -134,11 +146,13 @@ export class AuthApiService {
   }
 
   /**
-   * Envía la solicitud de cambio o renovación de contraseña por expiración.
+   * Envía la solicitud de cambio obligatorio o renovación de contraseña por expiración.
    *
-   * @param username Nombre de usuario o correo corporativo
-   * @param currentPassword Contraseña actual o vencida
-   * @param newPassword Nueva contraseña (mínimo 8 caracteres)
+   * @param username Nombre de usuario o correo corporativo.
+   * @param currentPassword Contraseña actual o expirada.
+   * @param newPassword Nueva contraseña institucional cumpliendo políticas de robustez.
+   * @returns Observable con la respuesta {@link LoginApiResponse} renovada con nuevo token de acceso.
+   * @throws ProblemDetailError Estructura RFC 7807 si la contraseña actual es errónea o la nueva incumple políticas.
    */
   changePassword(
     username: string,
@@ -159,8 +173,11 @@ export class AuthApiService {
   }
 
   /**
-   * Mapea el objeto principal devuelto por el backend a la estructura `SystemUser`
-   * utilizada por el Navbar, Sidebar y Dashboard de Angular.
+   * Mapea el objeto principal devuelto por el backend a la estructura tipada {@link SystemUser}
+   * consumida por el Navbar, Sidebar y las interfaces operativas de Angular.
+   *
+   * @param response DTO {@link LoginApiResponse} emitido tras un login exitoso.
+   * @returns Instancia de {@link SystemUser} con las propiedades reactivas inicializadas.
    */
   mapToSystemUser(response: LoginApiResponse): SystemUser {
     const { user, passwordStatus, daysUntilExpiration, passwordExpiresAt, mustChangePassword } = response;
@@ -195,7 +212,11 @@ export class AuthApiService {
   }
 
   /**
-   * Extrae la estructura de error ProblemDetail del backend de forma tipada y segura.
+   * Extrae y normaliza la estructura de error RFC 7807 (ProblemDetail) emitida por el backend
+   * para su presentación legible en los formularios de autenticación.
+   *
+   * @param error Respuesta errónea HTTP {@link HttpErrorResponse}.
+   * @returns Estructura tipada {@link ProblemDetailError} con el detalle del fallo.
    */
   private parseBackendError(error: HttpErrorResponse): ProblemDetailError {
     if (error.error && typeof error.error === 'object') {

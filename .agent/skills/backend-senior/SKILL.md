@@ -16,7 +16,7 @@ Este documento establece el marco global de excelencia técnica, arquitectura li
 Define un **estándar de conocimiento universal y reutilizable**, aplicable en cualquier proyecto backend moderno (APIs RESTful, Microservicios, Arquitecturas Orientadas a Eventos, Pasarelas Transaccionales y Sistemas Multi-Tenant).
 
 > [!NOTE]
-> **Experiencia de Referencia**: Este marco ha sido puesto a prueba y validado en la construcción de sistemas empresariales como **BevAdmin Pro** (Spring Boot 4, Java 21 LTS con Hilos Virtuales síncronos, seguridad JWT con invalidación en base de datos, perfiles de despliegue `dev`, `qa` y `prod`, transaccionalidad ACID en PostgreSQL 17 y contratos OpenAPI 3.1 documentados).
+> **Experiencia de Referencia**: Este marco ha sido puesto a prueba y validado en la construcción de sistemas empresariales como **BevAdmin Pro** y su microservicio desacoplado de identidad **auth-service** (Spring Boot 3.4 / 4, Java 21 LTS con Hilos Virtuales síncronos, seguridad asimétrica RS256 con descubrimiento JWKS RFC 7517, perfiles de despliegue `dev`, `qa` y `prod`, transaccionalidad ACID en PostgreSQL 17 y contratos OpenAPI 3.1 documentados en español).
 
 ---
 
@@ -160,36 +160,133 @@ Un Backend Senior construye aplicaciones resistentes por defecto:
 
 ---
 
-## 4. Documentación y Contratos de Integración (OpenAPI / Swagger)
+## 4. Estándar Maestro de Documentación de Código en Español (JavaDoc y OpenAPI 3.1) [MANDATORIO]
 
-Todo endpoint backend debe auto-documentar su contrato funcional con anotaciones OpenAPI 3.1:
+> [!IMPORTANT]
+> **PROTOCOLO DE AUTO-APLICACIÓN OBLIGATORIA**: En cualquier tarea, desarrollo, refactorización o corrección en el backend (Java / Spring Boot / Node.js / Python), el agente DEBE aplicar de manera automática y sin requerir indicación expresa del usuario este estándar exhaustivo de documentación en **español neutro técnico**.
+
+### 4.1. Cobertura Exhaustiva de JavaDoc en Español
+Cada artefacto de código Java backend debe incluir comentarios JavaDoc completos y profesionales:
+1. **Encabezado de Clase / Interfaz / Record / Enum**:
+   - Descripción clara y conceptual del propósito, arquitectura y alcance del componente.
+   - Contexto de infraestructura o base de datos que maneja.
+   - Etiquetas `@author Equipo de Arquitectura e Identidad` y `@version 1.0`.
+2. **Métodos y Constructores**:
+   - Descripción concisa de la operación transaccional o lógica ejecutada.
+   - Etiqueta `@param <nombre>` explicando el propósito y formato de cada argumento.
+   - Etiqueta `@return` detallando el resultado, entidad o DTO devuelto.
+   - Etiqueta `@throws <TipoExcepcion>` describiendo las condiciones que detonan el error.
+3. **Parámetros de Java Records**:
+   - En Java Records inmutables, documentar en el bloque de clase cada componente mediante `@param <campo>` detallando significado, formato y ejemplos si aplica.
+
+### 4.2. Contratos OpenAPI 3.1 / Swagger en Español
+Todos los controladores y DTOs expuestos en la API REST deben contener metadatos OpenAPI 3.1 redactados íntegramente en español neutro técnico:
+1. **Controladores**:
+   - `@Tag(name = "...", description = "...")` en español formal.
+   - `@Operation(summary = "...", description = "...")` con resumen ejecutivo y descripción detallada.
+   - `@ApiResponse(responseCode = "...", description = "...")` cubriendo tanto escenarios exitosos (200, 201) como de error previstos (400, 401, 403, 404, 422, 423).
+2. **DTOs (Records)**:
+   - `@Schema(description = "...")` en el record.
+   - `@Schema(description = "...", example = "...")` en cada atributo para clarificar su uso en la consola interactiva Swagger UI.
 
 ```java
-@Operation(
-    summary = "Revocación remota de sesión activa",
-    description = "Permite a un administrador de seguridad invalidar una sesión activa y desconectar al usuario en tiempo real."
-)
-@ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Sesión revocada exitosamente"),
-    @ApiResponse(responseCode = "404", description = "Sesión no encontrada o ya expirada"),
-    @ApiResponse(responseCode = "403", description = "Permisos insuficientes para revocar sesiones")
-})
-@PostMapping("/sessions/{id}/revoke")
-public ResponseEntity<RevokeSessionResponse> revokeSession(
-    @PathVariable("id") UUID sessionId,
-    @Valid @RequestBody RevokeSessionRequest request,
-    @AuthenticationPrincipal AuthenticatedUser currentUser
-) {
-    return ResponseEntity.ok(sessionAuditService.revokeSession(sessionId, request.reason(), currentUser));
+/**
+ * Controlador REST para el gobierno de sesiones concurrentes activas y Kill Session remoto.
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
+ */
+@RestController
+@RequestMapping("/api/v1/sessions")
+@Tag(name = "Gobierno de Sesiones de Usuario", description = "Monitoreo de conexiones activas y revocación remota")
+public class SessionController {
+
+    private final SessionService sessionService;
+
+    public SessionController(SessionService sessionService) {
+        this.sessionService = sessionService;
+    }
+
+    /**
+     * Revoca remotamente una sesión activa invalidando el token de refresco.
+     *
+     * @param request Datos de la solicitud indicando el ID de sesión y motivo.
+     * @return Mensaje confirmatorio de revocación.
+     */
+    @PostMapping("/revoke")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+        summary = "Terminar sesión remotamente (Kill Session)",
+        description = "Invalida de inmediato una sesión activa específica forzando el rechazo de cualquier solicitud posterior."
+    )
+    @ApiResponse(responseCode = "200", description = "Sesión terminada exitosamente")
+    @ApiResponse(responseCode = "403", description = "Acceso restringido a usuarios con rol ADMIN")
+    public ResponseEntity<Map<String, String>> revokeSession(@Valid @RequestBody RevokeSessionRequest request) {
+        sessionService.revokeSession(request.sessionId(), true, request.reason());
+        return ResponseEntity.ok(Map.of("message", "Sesión terminada exitosamente."));
+    }
 }
 ```
 
 ---
 
-## 5. Checklist de Calidad Backend Senior
+## 5. Estándar SonarQube Clean as You Code (CAYC) y Cobertura de Código > 80% [MANDATORIO]
+
+Para garantizar sistemas empresariales altamente mantenibles, libres de vulnerabilidades y con una arquitectura evolutiva robusta, todo desarrollo backend debe certificar el **Quality Gate** de SonarQube bajo la filosofía **Clean as You Code (CAYC)**:
+
+### 5.1. Umbrales Mandatorios del Quality Gate Backend
+1. **Cobertura de Código (Code Coverage JaCoCo) > 80%**:
+   - Todo servicio de negocio (`@Service`), controlador REST (`@RestController`), repositorio y componente de seguridad debe alcanzar como mínimo un **80% de cobertura de líneas y ramas ejecutadas**.
+   - Ningún Pull Request o artefacto de compilación puede ser liberado si la cobertura global o del código nuevo desciende del 80%.
+2. **Confiabilidad (Reliability) - Calificación A**:
+   - `0` Bugs en el código fuente.
+   - Manejo exhaustivo de punteros nulos (`Optional<T>`, `@NonNull`, `@Nullable`), prevención de `NullPointerException` y cierre de flujos I/O mediante *try-with-resources*.
+3. **Seguridad (Security) - Calificación A**:
+   - `0` Vulnerabilidades y `0` Hotspots de seguridad sin auditar.
+   - Mitigación rigurosa de inyección SQL (uso obligatorio de sentencias parametrizadas en JDBC/JPA), protección contra CSRF, validación estricta de tokens JWT (verificación de firma y tiempo de expiración) y control de acceso RBAC por método.
+4. **Mantenibilidad (Maintainability) - Calificación A**:
+   - Tasa de Deuda Técnica (*Technical Debt Ratio*) menor al `5%`.
+   - `0` Code Smells bloqueantes o críticos.
+   - Líneas de código duplicadas inferiores al `3%`.
+
+### 5.2. Reglas de Complejidad y Calidad de Código
+- **Complejidad Cognitiva Máxima de 15 por Método**:
+   - Ningún método puede superar una complejidad cognitiva de `15`.
+   - Reemplazar condicionales profundamente anidados por cláusulas de guarda (*Guard Clauses*), polimorfismo o descomposición en métodos privados especializados.
+- **Inmutabilidad y DTOs**:
+   - Uso mandatorio de **Java Records** para todos los DTOs de solicitud y respuesta.
+   - Colecciones inmutables (`List.copyOf()`, `Collections.unmodifiableList()`) al retornar estructuras desde entidades o servicios para evitar efectos secundarios no controlados.
+- **Inyección por Constructor Exclusiva**:
+   - Prohibido el uso de `@Autowired` sobre atributos de clase (inyección de campo). Emplear inyección explícita por constructor para garantizar la testabilidad unitaria y la inmutabilidad (`final`).
+
+### 5.3. Estrategia de Testing Automatizado para Superar el 80% de Cobertura
+Las suites de prueba automatizadas (JUnit 5 + Mockito + AssertJ) deben estructurarse de la siguiente manera:
+1. **Tests Unitarios de Servicios (`@ExtendWith(MockitoExtension.class)`)**:
+   - Validación del flujo principal de negocio (*Happy Path*).
+   - Validación de reglas de negocio y excepciones esperadas: simulación de entidad no encontrada (`ResourceNotFoundException`), conflicto de unicidad o violación de reglas (`BusinessRuleException`).
+   - Verificación de interacciones con repositorios (`verify(repo).insert(...)`) y aislamiento completo de la base de datos.
+2. **Tests de Controladores REST (`@WebMvcTest`)**:
+   - Verificación de códigos de estado HTTP (200 OK, 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found).
+   - Validación de serialización/deserialización JSON de los DTOs y encabezados de respuesta.
+   - Verificación de validaciones declarativas `@Valid` (`@NotBlank`, `@Email`, `@Size`) asegurando que devuelvan el cuerpo RFC 7807 `ProblemDetail` esperado.
+3. **Tests de Integración y Persistencia (`@DataJpaTest` / Testcontainers)**:
+   - Verificación de transaccionalidad ACID y ejecución limpia de migraciones Flyway sobre PostgreSQL.
+   - Pruebas de constraints relacionales (claves foráneas, índices únicos, checks de dominio).
+4. **Casos Límite y Robustez (Edge Cases)**:
+   - Cadenas vacías, identificadores UUID malformados, colecciones nulas o sin elementos, y desbordamiento de límites numéricos.
+
+---
+
+## 6. Checklist de Calidad Backend Senior
 
 - [ ] **Compilación e Integración**: Compilación Maven/Gradle limpia (`mvn clean package -DskipTests=false`) con 100% de tests unitarios y de integración pasando.
+- [ ] **Documentación Completa en Español**: JavaDoc exhaustivo en el 100% de clases, métodos, parámetros y excepciones, junto con anotaciones OpenAPI 3.1 en español en controladores y DTOs.
+- [ ] **Calidad SonarQube (Quality Gate)**:
+  - [ ] Cobertura de código unitario JaCoCo > `80%`.
+  - [ ] `0` Bugs y `0` Vulnerabilidades (Calificación A).
+  - [ ] Complejidad cognitiva <= `15` en todos los métodos.
+  - [ ] Duplicidad de código < `3%`.
 - [ ] **Transaccionalidad Correcta**: `@Transactional(readOnly = true)` en consultas de lectura; aislamiento `READ_COMMITTED` por defecto en escrituras.
 - [ ] **Sin Fugas de Secretos**: Ninguna credencial ni clave hardcodeada en el código fuente.
 - [ ] **Health Checks Operativos**: Endpoints de `/actuator/health` o `/api/v1/auth/health` disponibles para orquestadores Docker y Kubernetes.
-- [ ] **Manejo de Errores Limpio**: Sin stacktraces expuestos a los clientes de la API.
+- [ ] **Manejo de Errores Limpio**: Sin stacktraces expuestos a los clientes de la API (RFC 7807 ProblemDetail).

@@ -19,6 +19,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Implementación del servicio de gestión de usuarios y gobierno de identidades corporativas.
+ *
+ * <p>Asegura la unicidad de nombres de usuario y correos electrónicos, cifra las contraseñas
+ * mediante BCrypt, asigna el rol y las sedes primarias y autorizadas, y registra las acciones
+ * en la bitácora de auditoría inmutable.</p>
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -30,6 +40,15 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final JdbcClient jdbcClient;
 
+    /**
+     * Constructor con inyección de repositorios y componentes de seguridad requeridos.
+     *
+     * @param userRepository Repositorio de persistencia de usuarios.
+     * @param rbacRepository Repositorio de roles RBAC.
+     * @param auditRepository Repositorio de auditoría de seguridad.
+     * @param passwordEncoder Codificador criptográfico BCrypt.
+     * @param jdbcClient Cliente JDBC para operaciones de asignación relacional.
+     */
     public UserServiceImpl(
             UserRepository userRepository,
             RbacRepository rbacRepository,
@@ -44,18 +63,25 @@ public class UserServiceImpl implements UserService {
         this.jdbcClient = jdbcClient;
     }
 
+    /**
+     * Aprovisiona un nuevo usuario de forma transaccional, asociando rol RBAC y sucursales operativas.
+     *
+     * @param request Datos de la solicitud de registro.
+     * @param registeredByUserId Identificador UUID del administrador responsable.
+     * @return Entidad {@link User} creada.
+     */
     @Override
     @Transactional
     public User createUser(CreateUserRequest request, UUID registeredByUserId) {
         if (userRepository.findUserByLogin(request.username()).isPresent()) {
-            throw new BusinessRuleException("Username '" + request.username() + "' is already registered.");
+            throw new BusinessRuleException("El nombre de usuario '" + request.username() + "' ya se encuentra registrado.");
         }
         if (userRepository.findUserByLogin(request.email()).isPresent()) {
-            throw new BusinessRuleException("Email '" + request.email() + "' is already registered.");
+            throw new BusinessRuleException("El correo electrónico '" + request.email() + "' ya se encuentra registrado.");
         }
 
         Role role = rbacRepository.findRoleByCode(request.roleCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Role '" + request.roleCode() + "' not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("El rol '" + request.roleCode() + "' no fue encontrado."));
 
         UUID userId = UUID.randomUUID();
         String hash = passwordEncoder.encode(request.password());
@@ -88,7 +114,7 @@ public class UserServiceImpl implements UserService {
                 .param("clientType", request.clientType() != null ? request.clientType() : "Personal Interno")
                 .update();
 
-        // Assign Role
+        // Asignar Rol RBAC
         String insertRoleSql = """
                 INSERT INTO rbac.usuario_roles (id, usuario_id, rol_id, asignado_por_id, fecha_asignacion)
                 VALUES (gen_random_uuid(), :userId, :roleId, :assignedBy, NOW())
@@ -99,7 +125,7 @@ public class UserServiceImpl implements UserService {
                 .param("assignedBy", registeredByUserId)
                 .update();
 
-        // Assign Primary Branch
+        // Asignar Sede Principal
         String insertBranchSql = """
                 INSERT INTO core.usuario_sedes (id, usuario_id, sede_id, es_principal, fecha_asignacion)
                 VALUES (gen_random_uuid(), :userId, :branchId, TRUE, NOW())
@@ -109,7 +135,7 @@ public class UserServiceImpl implements UserService {
                 .param("branchId", request.assignedBranchId())
                 .update();
 
-        // Assign other authorized branches
+        // Asignar Sedes Adicionales Autorizadas
         if (request.authorizedBranchIds() != null) {
             for (UUID extraBranchId : request.authorizedBranchIds()) {
                 if (!extraBranchId.equals(request.assignedBranchId())) {
@@ -128,42 +154,70 @@ public class UserServiceImpl implements UserService {
 
         auditRepository.logSecurityEvent(
                 userId, request.assignedBranchId(), "USER_CREATED",
-                "User " + request.username() + " created with role " + role.code(),
+                "Usuario " + request.username() + " creado con rol " + role.code(),
                 "Seguridad", null, null
         );
 
-        log.info("Successfully registered new user {} with ID {}", request.username(), userId);
+        log.info("Nuevo usuario registrado exitosamente: {} con ID {}", request.username(), userId);
         return userRepository.findById(userId).orElseThrow();
     }
 
+    /**
+     * Obtiene los datos del usuario por su identificador UUID.
+     *
+     * @param id Identificador UUID del usuario.
+     * @return Entidad {@link User}.
+     */
     @Override
     public User getUserById(UUID id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
+    /**
+     * Bloquea administrativamente una cuenta de usuario e ingresa la auditoría respectiva.
+     *
+     * @param id Identificador UUID del usuario.
+     * @param reason Motivo del bloqueo administrativo.
+     */
     @Override
     @Transactional
     public void lockUserAccount(UUID id, String reason) {
         userRepository.updateAccountStatus(id, "LOCKED");
-        auditRepository.logSecurityEvent(id, null, "ACCOUNT_LOCKED", "Locked by admin: " + reason, "Seguridad", null, null);
-        log.warn("Account {} locked by administrator", id);
+        auditRepository.logSecurityEvent(id, null, "ACCOUNT_LOCKED", "Bloqueado por administrador: " + reason, "Seguridad", null, null);
+        log.warn("Cuenta de usuario {} bloqueada por el administrador", id);
     }
 
+    /**
+     * Desbloquea administrativamente una cuenta, restableciendo el estado a ACTIVE y reiniciando intentos fallidos.
+     *
+     * @param id Identificador UUID del usuario.
+     */
     @Override
     @Transactional
     public void unlockUserAccount(UUID id) {
         userRepository.updateAccountStatus(id, "ACTIVE");
         userRepository.resetFailedAttempts(id);
-        auditRepository.logSecurityEvent(id, null, "ACCOUNT_UNLOCKED", "Unlocked by admin", "Seguridad", null, null);
-        log.info("Account {} unlocked by administrator", id);
+        auditRepository.logSecurityEvent(id, null, "ACCOUNT_UNLOCKED", "Desbloqueado por administrador", "Seguridad", null, null);
+        log.info("Cuenta de usuario {} desbloqueada por el administrador", id);
     }
 
+    /**
+     * Consulta todos los usuarios del sistema de forma consolidada.
+     *
+     * @return Lista de usuarios con datos de negocio y sedes.
+     */
     @Override
     public List<Map<String, Object>> getAllUsersConsolidated() {
         return userRepository.findAllUsersConsolidated();
     }
 
+    /**
+     * Genera automáticamente las iniciales del avatar a partir del nombre completo del usuario.
+     *
+     * @param name Nombre completo.
+     * @return Iniciales en mayúsculas (1 o 2 letras).
+     */
     private String computeInitials(String name) {
         if (name == null || name.isBlank()) return "US";
         String[] parts = name.trim().split("\\s+");

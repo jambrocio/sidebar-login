@@ -54,19 +54,22 @@ public class CatalogController {
     }
 
     /**
-     * Lista todas las bebidas del catálogo maestro pertenecientes al Negocio Matriz del usuario activo.
+     * Lista todas las bebidas del catálogo maestro permitiendo filtrar por negocio (Superusuario) o del negocio activo.
      *
-     * @param user usuario autenticado
+     * @param businessCode código opcional del negocio matriz
+     * @param user         usuario autenticado
      * @return lista de bebidas con precios por mayor/menor, stock y usuario registrador
      */
     @GetMapping("/products")
     @Operation(
             summary = "Listar el Catálogo Maestro de Bebidas (Mayor y Menor)",
-            description = "Devuelve todos los productos SKU registrados en 'beverage_products' para el negocio del usuario activo, incluyendo precio unitario, precio por caja y semáforo de stock."
+            description = "Devuelve los productos SKU registrados en 'beverage_products'. El Administrador General puede filtrar por negocio o ver todos; los usuarios de negocio ven exclusivamente los suyos."
     )
     @ApiResponse(responseCode = "200", description = "Catálogo de bebidas obtenido correctamente.")
-    public List<Map<String, Object>> listBeverages(@AuthenticationPrincipal AuthenticatedUserPrincipal user) {
-        return catalogService.listBeverages(user);
+    public List<Map<String, Object>> listBeverages(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String businessCode,
+            @AuthenticationPrincipal AuthenticatedUserPrincipal user) {
+        return catalogService.listBeverages(businessCode, user);
     }
 
     /**
@@ -99,11 +102,13 @@ public class CatalogController {
     @GetMapping("/categories")
     @Operation(
             summary = "Listar Líneas y Categorías de Bebidas",
-            description = "Consulta la tabla 'beverage_categories' y retorna las líneas comerciales junto con su margen mayorista."
+            description = "Consulta la tabla 'beverage_categories' y retorna las líneas comerciales. El Administrador General puede filtrar por negocio o ver todas; los usuarios de negocio ven exclusivamente las suyas."
     )
     @ApiResponse(responseCode = "200", description = "Categorías de bebidas obtenidas correctamente.")
-    public List<Map<String, Object>> listCategories(@AuthenticationPrincipal AuthenticatedUserPrincipal user) {
-        return catalogService.listCategories(user);
+    public List<Map<String, Object>> listCategories(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String businessCode,
+            @AuthenticationPrincipal AuthenticatedUserPrincipal user) {
+        return catalogService.listCategories(businessCode, user);
     }
 
     /**

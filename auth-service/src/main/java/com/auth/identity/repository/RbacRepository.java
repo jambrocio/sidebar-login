@@ -11,18 +11,33 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Synchronous relational data access repository for RBAC roles,
- * dynamic hierarchical menus, and effective permissions in schema {@code rbac}.
+ * Repositorio relacional sincrónico para roles del esquema RBAC y cálculo dinámico de permisos de menú.
+ *
+ * <p>Ejecuta consultas sobre {@code rbac.roles} e invoca la función almacenada {@code rbac.fn_obtener_menu_efectivo_usuario}
+ * para obtener la jerarquía completa de navegación y permisos de cada usuario.</p>
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
  */
 @Repository
 public class RbacRepository {
 
     private final JdbcClient jdbcClient;
 
+    /**
+     * Constructor con inyección del cliente JDBC de Spring.
+     *
+     * @param jdbcClient Cliente JDBC simplificado y de alto rendimiento.
+     */
     public RbacRepository(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
     }
 
+    /**
+     * Obtiene todos los roles activos configurados en el sistema ordenados alfabéticamente por código.
+     *
+     * @return Lista de entidades {@link Role} activas.
+     */
     public List<Role> findAllActiveRoles() {
         String sql = """
                 SELECT id, codigo, nombre, descripcion, alcance, es_sistema, activo,
@@ -47,6 +62,12 @@ public class RbacRepository {
                 .list();
     }
 
+    /**
+     * Busca un rol activo por su código funcional único.
+     *
+     * @param code Código semántico del rol (ej. "ADMIN", "SUPERVISOR", "ANALYST").
+     * @return {@link Optional} con el rol correspondiente si existe.
+     */
     public Optional<Role> findRoleByCode(String code) {
         String sql = """
                 SELECT id, codigo, nombre, descripcion, alcance, es_sistema, activo,
@@ -72,6 +93,13 @@ public class RbacRepository {
                 .optional();
     }
 
+    /**
+     * Invoca la función almacenada {@code rbac.fn_obtener_menu_efectivo_usuario} para calcular
+     * el menú jerárquico dinámico y los permisos efectivos CRUD asignados al usuario.
+     *
+     * @param userId Identificador UUID del usuario.
+     * @return Lista ordenada de elementos y permisos de menú {@link MenuItemPermission}.
+     */
     public List<MenuItemPermission> findEffectiveMenuPermissionsByUserId(UUID userId) {
         String sql = "SELECT * FROM rbac.fn_obtener_menu_efectivo_usuario(:userId)";
 

@@ -9,9 +9,22 @@
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
   <div class="card">
@@ -31,8 +44,8 @@
 
     <form (ngSubmit)="saveDiscountCoupon()" class="grid-form">
       <div class="form-group">
-        <label>Código del Cupón</label>
-        <input type="text" name="cpCode" [(ngModel)]="newCoupon.code" />
+        <label>Código del Cupón <span class="required-indicator">*</span></label>
+        <input type="text" name="cpCode" [(ngModel)]="newCoupon.code" required class="required-input" />
       </div>
       <div class="form-group">
         <label>Tipo de Descuento</label>
@@ -66,7 +79,7 @@
       <div class="form-group">
         <label>Categoría Permitida</label>
         <select name="cpCat" [(ngModel)]="newCoupon.targetCategory">
-          <option value="Todas">Todas las Bebidas</option>
+          <option value="Todas">Todos los Productos</option>
           <option value="Licores">Solo Licores</option>
           <option value="Cervezas">Solo Cervezas</option>
           <option value="Gaseosas">Solo Gaseosas</option>

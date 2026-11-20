@@ -12,18 +12,41 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Synchronous relational data access repository for session lifecycle,
- * concurrent token tracking, and remote session termination in {@code auth.sesiones_usuario}.
+ * Repositorio relacional sincrónico para la gestión del ciclo de vida de sesiones,
+ * concurrencia de clientes y revocación remota en la tabla {@code auth.sesiones_usuario}.
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
  */
 @Repository
 public class SessionRepository {
 
     private final JdbcClient jdbcClient;
 
+    /**
+     * Constructor con inyección del cliente JDBC de Spring.
+     *
+     * @param jdbcClient Cliente JDBC simplificado y de alto rendimiento.
+     */
     public SessionRepository(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
     }
 
+    /**
+     * Registra una nueva sesión de cliente activa en la base de datos con sus metadatos de entorno.
+     *
+     * @param sessionId Identificador UUID de la nueva sesión.
+     * @param userId Identificador UUID del usuario titular.
+     * @param refreshTokenHash Resumen criptográfico SHA-256 del token de refresco.
+     * @param ipAddress Dirección IP del cliente.
+     * @param userAgent Cadena User-Agent enviada por el navegador o cliente HTTP.
+     * @param deviceType Tipo de dispositivo clasificado.
+     * @param browserName Nombre del navegador detectado.
+     * @param locationName Ubicación estimada descriptiva.
+     * @param latitude Coordenada de latitud estimada.
+     * @param longitude Coordenada de longitud estimada.
+     * @param expiresAt Fecha y hora de expiración de la sesión.
+     */
     public void createSession(
             UUID sessionId,
             UUID userId,
@@ -64,6 +87,12 @@ public class SessionRepository {
                 .update();
     }
 
+    /**
+     * Busca una sesión activa y no expirada mediante el hash SHA-256 de su token de refresco.
+     *
+     * @param refreshTokenHash Resumen criptográfico del token de refresco presentado.
+     * @return {@link Optional} con la entidad {@link UserSession} si es válida y vigente.
+     */
     public Optional<UserSession> findActiveSessionByHash(String refreshTokenHash) {
         String sql = """
                 SELECT id, usuario_id, hash_token_refresco, direccion_ip, agente_usuario,
@@ -101,6 +130,11 @@ public class SessionRepository {
                 .optional();
     }
 
+    /**
+     * Actualiza la fecha y hora de última actividad (heartbeat) para mantener viva la sesión.
+     *
+     * @param sessionId Identificador UUID de la sesión activa.
+     */
     public void updateHeartbeat(UUID sessionId) {
         String sql = """
                 UPDATE auth.sesiones_usuario
@@ -110,6 +144,13 @@ public class SessionRepository {
         jdbcClient.sql(sql).param("id", sessionId).update();
     }
 
+    /**
+     * Marca una sesión como revocada registrando el motivo y si la acción provino de un administrador.
+     *
+     * @param sessionId Identificador UUID de la sesión a revocar.
+     * @param byAdmin true si fue terminada de forma remota por un administrador.
+     * @param reason Motivo explicativo de la revocación.
+     */
     public void revokeSession(UUID sessionId, boolean byAdmin, String reason) {
         String sql = """
                 UPDATE auth.sesiones_usuario
@@ -126,6 +167,12 @@ public class SessionRepository {
                 .update();
     }
 
+    /**
+     * Revoca todas las sesiones activas asociadas a un usuario en particular.
+     *
+     * @param userId Identificador UUID del usuario.
+     * @param reason Motivo de revocación global (ej. "Password Changed").
+     */
     public void revokeAllUserSessions(UUID userId, String reason) {
         String sql = """
                 UPDATE auth.sesiones_usuario
@@ -140,6 +187,11 @@ public class SessionRepository {
                 .update();
     }
 
+    /**
+     * Obtiene el listado consolidado de todas las sesiones activas en el sistema con sus datos de usuario.
+     *
+     * @return Lista de filas obtenidas desde la vista {@code auth.vw_sesiones_activas_usuario}.
+     */
     public List<Map<String, Object>> findActiveSessionsConsolidated() {
         String sql = "SELECT * FROM auth.vw_sesiones_activas_usuario ORDER BY fecha_inicio_sesion DESC";
         return jdbcClient.sql(sql).query().listOfRows();

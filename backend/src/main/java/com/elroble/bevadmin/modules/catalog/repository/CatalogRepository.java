@@ -27,6 +27,39 @@ public class CatalogRepository {
         this.jdbcClient = jdbcClient;
     }
 
+    public java.util.Optional<UUID> findBusinessIdByCode(String businessCode) {
+        return jdbcClient.sql("""
+                SELECT id FROM core.empresas
+                WHERE codigo = :code OR CAST(id AS text) = :code
+                LIMIT 1
+                """)
+                .param("code", businessCode.toUpperCase())
+                .query(UUID.class)
+                .optional();
+    }
+
+    /**
+     * Consulta todas las bebidas del catálogo maestro para todas las empresas (Superusuario).
+     *
+     * @return lista global de bebidas con precios por mayor/menor, stock y negocio propietario
+     */
+    public List<Map<String, Object>> findAllBeverages() {
+        return jdbcClient.sql("""
+                SELECT p.codigo_sku AS sku, p.nombre AS name, p.nombre_categoria AS category, p.presentacion AS presentation,
+                       p.precio_minorista AS "retailPrice", p.precio_mayorista AS "wholesalePrice",
+                       p.stock_cajas AS "stockBoxes", p.stock_unidades AS "stockUnits",
+                       p.estado_stock AS status,
+                       (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "registeredBy",
+                       e.codigo AS "businessCode", e.nombre_comercial AS "businessName"
+                FROM productos_bebidas p
+                INNER JOIN empresas e ON e.id = p.empresa_id
+                INNER JOIN usuarios u ON u.id = p.registrado_por_usuario_id
+                ORDER BY p.fecha_creacion DESC
+                """)
+                .query()
+                .listOfRows();
+    }
+
     /**
      * Consulta todas las bebidas del catálogo maestro para el Negocio Matriz especificado.
      *
@@ -39,8 +72,10 @@ public class CatalogRepository {
                        p.precio_minorista AS "retailPrice", p.precio_mayorista AS "wholesalePrice",
                        p.stock_cajas AS "stockBoxes", p.stock_unidades AS "stockUnits",
                        p.estado_stock AS status,
-                       (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "registeredBy"
+                       (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "registeredBy",
+                       e.codigo AS "businessCode", e.nombre_comercial AS "businessName"
                 FROM productos_bebidas p
+                INNER JOIN empresas e ON e.id = p.empresa_id
                 INNER JOIN usuarios u ON u.id = p.registrado_por_usuario_id
                 WHERE p.empresa_id = :businessId
                 ORDER BY p.fecha_creacion DESC
@@ -89,6 +124,25 @@ public class CatalogRepository {
     }
 
     /**
+     * Consulta todas las líneas y categorías de bebidas para todas las empresas (Superusuario).
+     *
+     * @return lista global de categorías con su margen mayorista
+     */
+    public List<Map<String, Object>> findAllCategories() {
+        return jdbcClient.sql("""
+                SELECT c.codigo AS id, c.nombre AS name, c.slug, c.total_productos AS products,
+                       c.margen_mayorista AS "wholesaleMargin",
+                       CASE WHEN c.activo THEN 'Activo' ELSE 'Inactivo' END AS status,
+                       e.codigo AS "businessCode"
+                FROM categorias_bebidas c
+                INNER JOIN empresas e ON e.id = c.empresa_id
+                ORDER BY c.codigo ASC
+                """)
+                .query()
+                .listOfRows();
+    }
+
+    /**
      * Consulta las líneas y categorías de bebidas ({@code categorias_bebidas}) del negocio matriz.
      *
      * @param businessId UUID del negocio matriz
@@ -96,12 +150,14 @@ public class CatalogRepository {
      */
     public List<Map<String, Object>> findCategoriesByBusinessId(UUID businessId) {
         return jdbcClient.sql("""
-                SELECT codigo AS id, nombre AS name, slug, total_productos AS products,
-                       margen_mayorista AS "wholesaleMargin",
-                       CASE WHEN activo THEN 'Activo' ELSE 'Inactivo' END AS status
-                FROM categorias_bebidas
-                WHERE empresa_id = :businessId
-                ORDER BY codigo ASC
+                SELECT c.codigo AS id, c.nombre AS name, c.slug, c.total_productos AS products,
+                       c.margen_mayorista AS "wholesaleMargin",
+                       CASE WHEN c.activo THEN 'Activo' ELSE 'Inactivo' END AS status,
+                       e.codigo AS "businessCode"
+                FROM categorias_bebidas c
+                INNER JOIN empresas e ON e.id = c.empresa_id
+                WHERE c.empresa_id = :businessId
+                ORDER BY c.codigo ASC
                 """)
                 .param("businessId", businessId)
                 .query()

@@ -22,8 +22,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 /**
- * Enterprise cryptographic token service using asymmetric RS256 signatures,
- * RFC 7517 JWKS generation, and secure refresh token hashing.
+ * Servicio criptográfico de emisión, firma y validación de tokens JWT bajo algoritmo asimétrico RS256.
+ *
+ * <p>Responsable de generar tokens de acceso estructurados con los reclamos (claims) corporativos del usuario,
+ * validar firmas contra la llave pública, emitir tokens opacos de refresco de alta entropía y calcular
+ * sus hashes criptográficos seguros en SHA-256 para almacenamiento protegido.</p>
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
  */
 @Service
 public class JwtTokenService {
@@ -39,15 +45,21 @@ public class JwtTokenService {
     @Value("${auth.security.jwt.access-token-expiration-minutes:30}")
     private long accessTokenExpirationMinutes;
 
+    /**
+     * Constructor con inyección de dependencias del proveedor criptográfico de llaves RSA.
+     *
+     * @param keyPairProvider Proveedor de llaves asimétricas RSA.
+     */
     public JwtTokenService(KeyPairProvider keyPairProvider) {
         this.keyPairProvider = keyPairProvider;
     }
 
     /**
-     * Issues an asymmetric RS256 Signed JWT containing the user identity, roles, and enterprise scope.
+     * Emite un token de acceso firmado con algoritmo asimétrico RS256 conteniendo la identidad y alcance del usuario.
      *
-     * @param principal authenticated user principal
-     * @return serialized compact JWT string
+     * @param principal Identidad del usuario autenticado y su contexto corporativo.
+     * @return Cadena JWT compacta y firmada digitalmente.
+     * @throws IllegalStateException Si ocurre un fallo en el proceso de firmado criptográfico.
      */
     public String generateAccessToken(AuthenticatedUserPrincipal principal) {
         Instant now = Instant.now();
@@ -87,16 +99,16 @@ public class JwtTokenService {
             signedJWT.sign(signer);
             return signedJWT.serialize();
         } catch (JOSEException e) {
-            log.error("Failed to sign JWT with private key", e);
-            throw new IllegalStateException("Cryptographic signing error", e);
+            log.error("Fallo al firmar el JWT con la llave privada RSA", e);
+            throw new IllegalStateException("Error criptográfico de firma de token", e);
         }
     }
 
     /**
-     * Verifies the cryptographic signature and expiration of an access token.
+     * Verifica la validez criptográfica de la firma digital y la caducidad temporal de un token de acceso.
      *
-     * @param token compact serialized JWT
-     * @return {@link Optional} containing parsed claims if valid and not expired
+     * @param token Cadena JWT serializada recibida en el encabezado de autorización.
+     * @return {@link Optional} con el conjunto de reclamos decodificados si el token es íntegro y válido.
      */
     public Optional<JWTClaimsSet> verifyToken(String token) {
         try {
@@ -104,26 +116,28 @@ public class JwtTokenService {
             RSASSAVerifier verifier = new RSASSAVerifier(keyPairProvider.getPublicKey());
 
             if (!signedJWT.verify(verifier)) {
-                log.warn("JWT signature verification failed");
+                log.warn("Fallo de verificación de firma en token JWT");
                 return Optional.empty();
             }
 
             JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
             Date expiration = claims.getExpirationTime();
             if (expiration == null || expiration.before(new Date())) {
-                log.warn("JWT has expired");
+                log.warn("El token JWT ha expirado temporalmente");
                 return Optional.empty();
             }
 
             return Optional.of(claims);
         } catch (ParseException | JOSEException e) {
-            log.warn("Invalid JWT format or cryptographic payload: {}", e.getMessage());
+            log.warn("Formato o carga útil inválida en token JWT: {}", e.getMessage());
             return Optional.empty();
         }
     }
 
     /**
-     * Generates a high-entropy cryptographically random Refresh Token.
+     * Genera un token de refresco opaco con alta entropía mediante {@link SecureRandom}.
+     *
+     * @return Cadena segura en Base64 URL-safe de 64 bytes criptográficos aleatorios.
      */
     public String generateOpaqueRefreshToken() {
         byte[] randomBytes = new byte[64];
@@ -132,7 +146,10 @@ public class JwtTokenService {
     }
 
     /**
-     * Computes the SHA-256 hash of a Refresh Token to store securely in the database.
+     * Calcula el resumen criptográfico SHA-256 en formato hexadecimal de un token de refresco.
+     *
+     * @param token Token opaco en texto plano.
+     * @return Hash SHA-256 en formato hexadecimal de 64 caracteres.
      */
     public String hashToken(String token) {
         try {
@@ -140,17 +157,24 @@ public class JwtTokenService {
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 digest unavailable", e);
+            throw new IllegalStateException("El algoritmo de digest SHA-256 no está disponible", e);
         }
     }
 
     /**
-     * Exports the public JSON Web Key Set (JWKS) format map.
+     * Exporta el mapa JSON representativo del conjunto de claves públicas (JWKS).
+     *
+     * @return Estructura {@link Map} compatible con RFC 7517 lista para serializarse en JSON.
      */
     public Map<String, Object> getJwksMap() {
         return keyPairProvider.getPublicJwkSet().toJSONObject();
     }
 
+    /**
+     * Retorna el tiempo total de expiración configurado para los tokens de acceso en segundos.
+     *
+     * @return Segundos de validez de cada token de acceso emitido.
+     */
     public long getAccessTokenExpirationSeconds() {
         return accessTokenExpirationMinutes * 60;
     }

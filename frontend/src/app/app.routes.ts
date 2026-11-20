@@ -4,6 +4,15 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { authGuard } from './core/guards/auth.guard';
 
 /**
+ * @fileoverview Tabla maestra de rutas y navegación de la aplicación (Angular Router).
+ * Configura la carga diferida (Lazy Loading con `loadComponent`), migas de pan (Breadcrumbs)
+ * jerárquicas y protección de rutas autenticadas mediante `authGuard`.
+ *
+ * @author Equipo de Arquitectura Frontend
+ * @version 1.0.0
+ */
+
+/**
  * Definición de rutas del Sistema de Distribución y Venta de Bebidas.
  * Cada vista operativa e interfaz administrativa cuenta con su propio
  * componente standalone cargado mediante Lazy Loading (`loadComponent`).
@@ -55,7 +64,7 @@ export const routes: Routes = [
             m => m.PurchasesViewComponent
           ),
         data: {
-          title: 'Compras y Abastecimiento de Bebidas',
+          title: 'Compras y Abastecimiento de Productos',
           breadcrumb: 'Compras y Abastecimiento',
           parent: 'Comercial y Ventas',
         },
@@ -92,9 +101,9 @@ export const routes: Routes = [
             m => m.ProductsListComponent
           ),
         data: {
-          title: 'Inventario de Licores, Cervezas y Gaseosas',
-          breadcrumb: 'Inventario Mayor / Menor',
-          parent: ['Catálogo de Bebidas', 'Productos y Precios'],
+          title: 'Inventario Maestro de Productos y Precios',
+          breadcrumb: 'Inventario de Productos',
+          parent: ['Catálogo de Productos', 'Productos y Precios'],
         },
       },
       {
@@ -104,9 +113,9 @@ export const routes: Routes = [
             m => m.ProductAddComponent
           ),
         data: {
-          title: 'Registrar Nueva Bebida o Licor',
-          breadcrumb: 'Registrar Bebida',
-          parent: ['Catálogo de Bebidas', 'Productos y Precios'],
+          title: 'Registrar Nuevo Producto',
+          breadcrumb: 'Registrar Producto',
+          parent: ['Catálogo de Productos', 'Productos y Precios'],
         },
       },
       {
@@ -116,9 +125,9 @@ export const routes: Routes = [
             m => m.CategoriesListComponent
           ),
         data: {
-          title: 'Líneas de Bebidas y Licores',
+          title: 'Categorías y Líneas Comerciales de Productos',
           breadcrumb: 'Listar Categorías',
-          parent: ['Catálogo de Bebidas', 'Productos y Precios', 'Líneas y Categorías'],
+          parent: ['Catálogo de Productos', 'Productos y Precios', 'Categorías de Productos'],
         },
       },
       {
@@ -128,9 +137,9 @@ export const routes: Routes = [
             m => m.CategoryAddComponent
           ),
         data: {
-          title: 'Nueva Línea de Bebidas',
+          title: 'Nueva Categoría de Productos',
           breadcrumb: 'Nueva Categoría',
-          parent: ['Catálogo de Bebidas', 'Productos y Precios', 'Líneas y Categorías'],
+          parent: ['Catálogo de Productos', 'Productos y Precios', 'Categorías de Productos'],
         },
       },
       {
@@ -153,7 +162,19 @@ export const routes: Routes = [
           ),
         data: {
           title: 'Registro de Usuarios y Asignación de Negocio / Locales',
-          breadcrumb: 'Clientes y Usuarios',
+          breadcrumb: 'Usuarios',
+          parent: 'Administración',
+        },
+      },
+      {
+        path: 'customers',
+        loadComponent: () =>
+          import('./pages/customers/customers-management.component').then(
+            m => m.CustomersManagementComponent
+          ),
+        data: {
+          title: 'Directorio de Clientes Comerciales y Asignación por Negocio',
+          breadcrumb: 'Clientes',
           parent: 'Administración',
         },
       },

@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { BreadcrumbComponent } from './breadcrumbs/breadcrumb.component';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AuthApiService } from '../../core/services/auth-api.service';
@@ -39,7 +40,7 @@ export interface UserProfileInfo {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, BreadcrumbComponent],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, BreadcrumbComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
@@ -51,6 +52,18 @@ export class NavbarComponent implements OnInit {
 
   /** Datos del Negocio Matriz cargado desde `json/business-and-branches.json` */
   readonly businessInfo = this.dummyData.businessInfo;
+  readonly businesses = this.dummyData.businesses;
+  readonly isGeneralAdmin = this.dummyData.isGeneralAdmin;
+
+  /**
+   * Conmuta el Negocio Matriz de trabajo activo para el Administrador General (Superusuario).
+   *
+   * @param businessId Código identificador del negocio destino (ej. BIZ-002).
+   * @returns void
+   */
+  onSwitchBusiness(businessId: string): void {
+    this.dummyData.switchWorkingBusiness(businessId);
+  }
 
   /** Datos del usuario activo en la sesión */
   readonly currentUser = this.dummyData.currentUserProfile;
@@ -112,26 +125,50 @@ export class NavbarComponent implements OnInit {
     }
   }
 
+  /**
+   * Emite el evento para contraer o expandir el menú lateral (Sidebar).
+   *
+   * @returns void
+   */
   onToggleSidebar(): void {
     this.toggleSidebar.emit();
   }
 
   /**
-   * Alterna la apertura del menú desplegable de notificaciones.
+   * Alterna la apertura y cierre del panel desplegable de notificaciones institucionales.
+   *
+   * @returns void
    */
   toggleNotifications(): void {
     this.isDropdownOpen.set(false);
     this.isNotificationsOpen.update(open => !open);
   }
 
+  /**
+   * Cierra el menú flotante de notificaciones.
+   *
+   * @returns void
+   */
   closeNotifications(): void {
     this.isNotificationsOpen.set(false);
   }
 
+  /**
+   * Establece el criterio de filtrado para las alertas ('all' o 'unread').
+   *
+   * @param filter Filtro de notificaciones seleccionado.
+   * @returns void
+   */
   setNotificationFilter(filter: 'all' | 'unread'): void {
     this.activeNotificationFilter.set(filter);
   }
 
+  /**
+   * Marca una notificación específica como leída en la base de datos y en el estado local.
+   *
+   * @param id Identificador de la notificación.
+   * @returns void
+   */
   markNotificationAsRead(id: string): void {
     this.adminApi.markNotificationRead(id).subscribe({
       next: () => {
@@ -147,6 +184,11 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  /**
+   * Marca masivamente todas las notificaciones pendientes como leídas.
+   *
+   * @returns void
+   */
   markAllNotificationsAsRead(): void {
     this.adminApi.markAllNotificationsRead().subscribe({
       next: () => {
@@ -162,28 +204,52 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  /**
+   * Descarta y remueve visualmente una notificación de la bandeja.
+   *
+   * @param id Identificador de la notificación.
+   * @param event Evento del DOM para evitar propagación de clicks.
+   * @returns void
+   */
   dismissNotification(id: string, event: Event): void {
     event.stopPropagation();
     this.notifications.update(list => list.filter(item => item.id !== id));
   }
 
+  /**
+   * Alterna el menú desplegable del perfil de usuario y sesión.
+   *
+   * @returns void
+   */
   toggleDropdown(): void {
     this.isNotificationsOpen.set(false);
     this.isDropdownOpen.update(open => !open);
   }
 
+  /**
+   * Cierra el menú desplegable de perfil de usuario.
+   *
+   * @returns void
+   */
   closeDropdown(): void {
     this.isDropdownOpen.set(false);
   }
 
   /**
-   * Cierra completamente la sesión y redirige al login obligando a nueva autenticación.
+   * Cierra completamente la sesión activa y redirige al login obligando a nueva autenticación.
+   *
+   * @returns void
    */
   onLogout(): void {
     this.closeDropdown();
     this.authApi.logout();
   }
 
+  /**
+   * Alterna entre el tema visual Claro y Oscuro guardando la preferencia en almacenamiento local.
+   *
+   * @returns void
+   */
   toggleDarkMode(): void {
     const newMode = !this.isDarkMode();
     this.isDarkMode.set(newMode);
@@ -194,6 +260,12 @@ export class NavbarComponent implements OnInit {
     }
   }
 
+  /**
+   * Aplica el atributo data-theme en el elemento body del documento HTML.
+   *
+   * @param isDark Indicador booleano de activación de modo oscuro.
+   * @returns void
+   */
   private applyTheme(isDark: boolean): void {
     if (typeof document !== 'undefined') {
       document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');

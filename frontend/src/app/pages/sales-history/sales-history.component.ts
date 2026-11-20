@@ -7,10 +7,13 @@ import { BeverageSale } from '../../core/models/domain.models';
 import { SaleReceiptViewComponent } from '../../shared/components/sale-receipt-view/sale-receipt-view.component';
 
 /**
- * Componente dedicado al Historial de Ventas Emitidas (`/dashboard/sales-history`).
+ * Componente Smart/Container dedicado al Historial de Ventas Emitidas (`/dashboard/sales-history`).
  *
- * Cumple la regla de negocio: muestra exclusivamente las ventas registradas
- * por el usuario autenticado actual y permite abrir la vista de Comprobante de Venta.
+ * @description Muestra las ventas registradas por el usuario autenticado actual, permitiendo búsqueda
+ * por cliente o número de documento y apertura del comprobante fiscal detallado.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-sales-history',

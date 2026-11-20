@@ -55,11 +55,20 @@ public class RolesController {
     @GetMapping
     @PreAuthorize("@menuPermissionEvaluator.hasAccess(authentication, 'MGMT_ROLES', 'VIEW')")
     @Operation(
-            summary = "Listar todos los Roles del sistema",
-            description = "Consulta la tabla 'roles' a través de la capa de servicio y calcula cuántos usuarios tienen asignado cada rol."
+            summary = "Listar roles del sistema (filtrados según el perfil del usuario)",
+            description = "Consulta la tabla 'roles'. Si el usuario es Administrador General devuelve todos los roles; si es usuario de negocio, excluye el rol ADMIN/Superusuario."
     )
     @ApiResponse(responseCode = "200", description = "Catálogo de roles devuelto correctamente.")
-    public List<Map<String, Object>> listRoles() {
+    public List<Map<String, Object>> listRoles(org.springframework.security.core.Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof com.elroble.bevadmin.security.AuthenticatedUserPrincipal user) {
+            if (!user.isSuperAdmin()) {
+                return rolesService.listRoles().stream()
+                        .filter(r -> !"ADMIN".equalsIgnoreCase((String) r.get("code")) &&
+                                !"ROLE_ADMIN".equalsIgnoreCase((String) r.get("code")) &&
+                                !String.valueOf(r.get("name")).contains("Superusuario"))
+                        .toList();
+            }
+        }
         return rolesService.listRoles();
     }
 
@@ -77,7 +86,16 @@ public class RolesController {
             description = "Inserta un nuevo rol en la tabla 'roles' definiendo si su alcance es Multi-Local (Negocio) o restringido al Local Asignado."
     )
     @ApiResponse(responseCode = "200", description = "Rol creado exitosamente.")
-    public Map<String, Object> createRole(@Valid @RequestBody CreateRoleRequest req) {
+    public Map<String, Object> createRole(
+            org.springframework.security.core.Authentication authentication,
+            @Valid @RequestBody CreateRoleRequest req) {
+        if (authentication != null && authentication.getPrincipal() instanceof com.elroble.bevadmin.security.AuthenticatedUserPrincipal user) {
+            if (!user.isSuperAdmin() && ("ADMIN".equalsIgnoreCase(req.code()) ||
+                    String.valueOf(req.scope()).contains("Superusuario") ||
+                    String.valueOf(req.scope()).contains("Plataforma"))) {
+                throw new org.springframework.security.access.AccessDeniedException("Solo el Administrador General puede crear roles con alcance de plataforma o Superusuario.");
+            }
+        }
         return rolesService.createRole(req);
     }
 

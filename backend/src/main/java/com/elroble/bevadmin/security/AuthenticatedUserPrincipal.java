@@ -25,12 +25,30 @@ public record AuthenticatedUserPrincipal(
         List<String> roles,
         String roleScope
 ) {
+    public boolean isSuperAdmin() {
+        return roles != null && (roles.contains("ADMIN") || roles.contains("ROLE_ADMIN"));
+    }
+
+    public boolean isBusinessAdmin() {
+        return roles != null && (roles.contains("ADMIN_NEGOCIO") || roles.contains("ROLE_ADMIN_NEGOCIO"));
+    }
+
+    public boolean isAnyAdmin() {
+        return isSuperAdmin() || isBusinessAdmin();
+    }
+
     public boolean isBusinessWideScope() {
-        return "Nivel Negocio (Multi-Local)".equalsIgnoreCase(roleScope);
+        return "Nivel Negocio (Multi-Local)".equalsIgnoreCase(roleScope)
+                || "Nivel Plataforma (Superusuario)".equalsIgnoreCase(roleScope)
+                || isSuperAdmin()
+                || isBusinessAdmin();
     }
 
     public boolean isAuthorizedForBranch(UUID targetBranchId) {
-        if (assignedBranchId.equals(targetBranchId)) {
+        if (isSuperAdmin()) {
+            return true;
+        }
+        if (assignedBranchId != null && assignedBranchId.equals(targetBranchId)) {
             return true;
         }
         return isBusinessWideScope() && authorizedBranchIds != null && authorizedBranchIds.contains(targetBranchId);

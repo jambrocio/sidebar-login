@@ -3,11 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AdminApiService, CreateBusinessRequestDto, CreateBranchRequestDto } from '../../core/services/admin-api.service';
-import { BusinessBranch, BusinessProfile } from '../../core/models/domain.models';
+import { BusinessBranch, BusinessProfile, FeedbackNotification } from '../../core/models/domain.models';
 
 /**
- * Componente dedicado a la Estructura Organizacional: Administración de Negocios Matriz y Locales Asociados.
- * Permite gestionar la jerarquía `1 Negocio Matriz (Empresa) -> N Locales / Sucursales`.
+ * Componente Smart/Container dedicado a la Estructura Organizacional: Negocios Matriz y Locales.
+ *
+ * @description Gobierna la jerarquía multi-tenant `1 Negocio Matriz (Empresa) -> N Locales / Sucursales`,
+ * permitiendo crear empresas, registrar sucursales, series de facturación y puntos de venta en PostgreSQL.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-branches-management',
@@ -22,13 +27,30 @@ export class BranchesManagementComponent implements OnInit {
 
   readonly businessInfo = this.dummyData.businessInfo;
   readonly businesses = this.dummyData.businesses;
+  readonly availableBusinesses = this.dummyData.availableBusinesses;
   readonly branches = this.dummyData.branches;
   readonly assignedBranch = this.dummyData.assignedBranch;
+  readonly currentUserProfile = this.dummyData.currentUserProfile;
 
-  /** Pestaña activa: por defecto y primera posición es 'businesses' */
+  /** Determina si el usuario en sesión es Administrador General (Superusuario) */
+  readonly isGeneralAdmin = computed<boolean>(() => {
+    const roleName = (this.currentUserProfile()?.role || '').trim();
+    if (roleName.includes('Negocio') || roleName === 'ADMIN_NEGOCIO') {
+      return false;
+    }
+    return roleName === 'ADMIN' || roleName.includes('Administrador General') || roleName.includes('Superusuario');
+  });
+
+  /** Determina si el usuario en sesión es Administrador de Negocio */
+  readonly isBusinessAdmin = computed<boolean>(() => {
+    const roleName = (this.currentUserProfile()?.role || '').trim();
+    return roleName === 'ADMIN_NEGOCIO' || roleName.includes('Administrador de Negocio');
+  });
+
+  /** Pestaña activa: por defecto 'businesses' para Superadmin, 'branches' para Administrador de Negocio */
   readonly activeTab = signal<'businesses' | 'branches'>('businesses');
   readonly selectedBusinessFilter = signal<string>('ALL');
-  readonly feedbackMessage = signal<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  readonly feedbackMessage = signal<FeedbackNotification | null>(null);
   readonly isSubmittingBusiness = signal<boolean>(false);
   readonly isSubmittingBranch = signal<boolean>(false);
 
@@ -56,6 +78,13 @@ export class BranchesManagementComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    // Si no es Administrador General, limitar a la vista de locales de su propio negocio
+    if (!this.isGeneralAdmin()) {
+      this.activeTab.set('branches');
+      const myBiz = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
+      this.selectedBusinessFilter.set(myBiz);
+      this.newBranch.businessId = myBiz;
+    }
     this.loadBusinessesAndBranchesFromBackend();
     this.newBusiness.code = this.suggestNextBusinessCode();
   }
@@ -128,6 +157,10 @@ export class BranchesManagementComponent implements OnInit {
   }
 
   readonly filteredBranches = computed(() => {
+    if (!this.isGeneralAdmin()) {
+      const myBiz = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
+      return this.branches().filter(b => b.businessId?.toUpperCase() === myBiz.toUpperCase());
+    }
     const filter = this.selectedBusinessFilter();
     if (filter === 'ALL') return this.branches();
     return this.branches().filter(b => b.businessId?.toUpperCase() === filter.toUpperCase());
@@ -176,6 +209,10 @@ export class BranchesManagementComponent implements OnInit {
    * Registra un nuevo Negocio Matriz / Empresa en PostgreSQL.
    */
   registerBusiness(): void {
+    if (!this.isGeneralAdmin()) {
+      this.feedbackMessage.set({ text: 'Acceso restringido: Solo el Administrador General (Superusuario) puede registrar nuevos Negocios Matriz.', type: 'error' });
+      return;
+    }
     const code = this.newBusiness.code.trim().toUpperCase();
     const legalName = this.newBusiness.legalName.trim();
     const commercialName = this.newBusiness.commercialName.trim() || legalName;
@@ -183,22 +220,22 @@ export class BranchesManagementComponent implements OnInit {
     const fiscalAddress = this.newBusiness.fiscalAddress.trim();
 
     if (!code) {
-      this.feedbackMessage.set({ text: 'El código del negocio es obligatorio (ej. BIZ-004).', type: 'error' });
+      this.feedbackMessage.set({ text: 'Por favor, completa el código del negocio (ej. BIZ-004).', type: 'warning' });
       return;
     }
 
     if (!legalName) {
-      this.feedbackMessage.set({ text: 'Ingresa la Razón Social de la empresa.', type: 'error' });
+      this.feedbackMessage.set({ text: 'Por favor, ingresa la Razón Social de la empresa.', type: 'warning' });
       return;
     }
 
     if (!/^[0-9]{11}$/.test(taxId)) {
-      this.feedbackMessage.set({ text: 'El RUC / Identificación Fiscal debe tener exactamente 11 dígitos numéricos.', type: 'error' });
+      this.feedbackMessage.set({ text: 'El RUC / Identificación Fiscal debe tener exactamente 11 dígitos numéricos.', type: 'warning' });
       return;
     }
 
     if (!fiscalAddress) {
-      this.feedbackMessage.set({ text: 'Ingresa el domicilio fiscal legal de la empresa.', type: 'error' });
+      this.feedbackMessage.set({ text: 'Por favor, ingresa el domicilio fiscal legal de la empresa.', type: 'warning' });
       return;
     }
 
@@ -208,7 +245,7 @@ export class BranchesManagementComponent implements OnInit {
       const suggested = this.suggestNextBusinessCode();
       this.feedbackMessage.set({
         text: `El código "${code}" ya pertenece a "${existingByCode.legalName}". Te sugerimos utilizar "${suggested}".`,
-        type: 'error',
+        type: 'warning',
       });
       this.newBusiness.code = suggested;
       return;
@@ -292,7 +329,9 @@ export class BranchesManagementComponent implements OnInit {
    * Limpia los campos del formulario de registro de local.
    */
   resetBranchForm(selectedBizId?: string): void {
-    const currentBiz = selectedBizId || this.newBranch.businessId || (this.businesses().length > 0 ? this.businesses()[0].id : '');
+    const currentBiz = (!this.isGeneralAdmin())
+      ? (this.currentUserProfile().assignedBusinessId || 'BIZ-001')
+      : (selectedBizId || this.newBranch.businessId || (this.businesses().length > 0 ? this.businesses()[0].id : ''));
     this.newBranch = {
       businessId: currentBiz,
       name: '',
@@ -326,13 +365,17 @@ export class BranchesManagementComponent implements OnInit {
    * Registra un nuevo Local / Sucursal dentro de un Negocio Matriz seleccionado en PostgreSQL.
    */
   registerBusinessBranch(): void {
+    if (!this.isGeneralAdmin()) {
+      this.newBranch.businessId = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
+    }
+
     if (!this.newBranch.businessId) {
-      this.feedbackMessage.set({ text: 'Selecciona el Negocio Propietario al que pertenecerá el local.', type: 'error' });
+      this.feedbackMessage.set({ text: 'Por favor, selecciona el Negocio Propietario al que pertenecerá el local.', type: 'warning' });
       return;
     }
 
     if (!this.newBranch.name.trim()) {
-      this.feedbackMessage.set({ text: 'Ingresa el nombre del nuevo Local o Sucursal del negocio.', type: 'error' });
+      this.feedbackMessage.set({ text: 'Por favor, ingresa el nombre del nuevo Local o Sucursal del negocio.', type: 'warning' });
       return;
     }
 

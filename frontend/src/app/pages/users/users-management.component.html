@@ -5,13 +5,49 @@
       <p class="subtitle">
         Negocio Activo: <strong>{{ businessInfo().legalName }}</strong>
         — Administrador: <strong>{{ currentSessionUser() }}</strong>
+        <span *ngIf="isGeneralAdmin()" class="role-badge badge-vip" style="margin-left: 0.5rem">
+          <i class="bi bi-shield-check" style="margin-right: 0.25rem"></i> Administrador General (Multi-Negocio)
+        </span>
+        <span *ngIf="!isGeneralAdmin()" class="role-badge badge-business" style="margin-left: 0.5rem">
+          <i class="bi bi-building-lock" style="margin-right: 0.25rem"></i> Administrador de Negocio ({{ currentUserProfile().assignedBusinessId }})
+        </span>
       </p>
+    </div>
+
+    <!-- Filtro de Negocio para el Administrador General -->
+    <div class="header-actions" *ngIf="isGeneralAdmin()">
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted, #64748b)">Filtrar Negocio:</label>
+        <select
+          [ngModel]="filterBusinessCode()"
+          (ngModelChange)="onFilterBusinessChange($event)"
+          style="padding: 0.45rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1)"
+        >
+          <option value="ALL">🏢 Todos los Negocios</option>
+          <option *ngFor="let b of businesses()" [value]="b.id">
+            {{ b.id }} — {{ b.commercialName || b.legalName }}
+          </option>
+        </select>
+      </div>
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
   <!-- 1. Formulario de Registro / Edición de Usuario con Asignación de Negocio, Locales y Vigencia de Clave -->
@@ -37,49 +73,67 @@
 
     <form (ngSubmit)="saveUserWithBusinessAndBranches()" class="grid-form">
       <div class="form-group">
-        <label>Nombre Completo del Usuario</label>
+        <label>
+          Nombre Completo del Usuario <span class="required-asterisk">*</span>
+        </label>
         <input
           type="text"
           name="usrFullName"
           [(ngModel)]="userForm.name"
           placeholder="Ej. Roberto Díaz Salazar"
+          required
+          class="required-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Usuario de Acceso (Login)</label>
+        <label>
+          Usuario de Acceso (Login) <span class="required-asterisk">*</span>
+        </label>
         <input
           type="text"
           name="usrUsername"
           [(ngModel)]="userForm.username"
           placeholder="Ej. rdiaz"
+          required
+          class="required-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Correo Electrónico Corporativo</label>
+        <label>
+          Correo Electrónico Corporativo <span class="required-asterisk">*</span>
+        </label>
         <input
           type="email"
           name="usrEmail"
           [(ngModel)]="userForm.email"
           placeholder="rdiaz@empresa.com"
+          required
+          class="required-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Contraseña Inicial / Actual</label>
+        <label>
+          Contraseña Inicial / Actual <span class="required-asterisk">*</span>
+        </label>
         <input
           type="text"
           name="usrPassword"
           [(ngModel)]="userForm.password"
           placeholder="Ej. Temporal2026*"
+          required
+          class="required-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Rol Asignado en el Sistema</label>
-        <select name="usrRole" [(ngModel)]="userForm.role">
-          <option *ngFor="let r of systemRoles()" [value]="r.name">
+        <label>
+          Rol Asignado en el Sistema <span class="required-asterisk">*</span>
+        </label>
+        <select name="usrRole" [(ngModel)]="userForm.role" required class="required-input">
+          <option *ngFor="let r of assignableRoles()" [value]="r.name">
             {{ r.name }} ({{ r.scope }})
           </option>
         </select>
@@ -97,13 +151,19 @@
 
       <!-- Selección del Negocio al que pertenece el usuario -->
       <div class="form-group">
-        <label>1. Negocio Asignado al Usuario</label>
+        <label>
+          1. Negocio Asignado al Usuario <span class="required-asterisk">*</span>
+          <span *ngIf="!isGeneralAdmin()" style="font-size: 0.75rem; color: #0284c7">(Por default)</span>
+        </label>
         <select
           name="usrBusinessId"
           [(ngModel)]="userForm.businessId"
           (ngModelChange)="onBusinessChange($event)"
+          [disabled]="!isGeneralAdmin()"
+          required
+          class="required-input"
         >
-          <option *ngFor="let biz of businesses()" [value]="biz.id">
+          <option *ngFor="let biz of availableBusinesses()" [value]="biz.id">
             {{ biz.legalName }} (RUC: {{ biz.taxId }})
           </option>
         </select>
@@ -111,8 +171,10 @@
 
       <!-- Selección del Local Principal donde el usuario registra operaciones -->
       <div class="form-group">
-        <label>2. Local Principal de Operación (Por Defecto)</label>
-        <select name="usrPrimaryBranch" [(ngModel)]="userForm.assignedBranch">
+        <label>
+          2. Local Principal de Operación (Por Defecto) <span class="required-asterisk">*</span>
+        </label>
+        <select name="usrPrimaryBranch" [(ngModel)]="userForm.assignedBranch" required class="required-input">
           <option *ngFor="let br of branchesForSelectedBusiness()" [value]="br.name">
             {{ br.name }} ({{ br.code }})
           </option>

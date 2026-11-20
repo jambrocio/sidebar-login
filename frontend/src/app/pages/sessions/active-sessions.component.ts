@@ -4,15 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { AdminApiService, ActiveSessionDto } from '../../core/services/admin-api.service';
 
 /**
- * Componente Smart para la Auditoría de Conexiones de Red,
- * Monitoreo Semaforizado de Sesiones y Cierre Remoto de Dispositivos (Kill Session).
- * <p>
- * Permite al Administrador:
- * 1. Inspeccionar en tiempo real las IPs y navegadores de todos los usuarios conectados.
- * 2. Visualizar el estado de actividad mediante semáforos (🟢 En Línea, 🟡 Ausente, 🔴 Desconectado/Revocado).
- * 3. Identificar la ubicación geográfica aproximada y consultar el mapa de conexiones.
- * 4. Revocar remotamente la sesión a cualquier dispositivo o infiltrado.
- * 5. Bloquear la cuenta del usuario en PostgreSQL y revocar todas sus conexiones activas de inmediato.
+ * Componente Smart/Container para la Auditoría de Conexiones de Red y Sesiones (NOC).
+ *
+ * @description Monitorea de forma semaforizada en tiempo real las IPs, navegadores, dispositivos
+ * y ubicación geográfica de los usuarios conectados, permitiendo ejecutar terminación forzada
+ * de tokens JWT (Kill Session) y bloqueo preventivo de cuentas sospechosas en PostgreSQL.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-active-sessions',

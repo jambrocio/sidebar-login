@@ -32,6 +32,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Implementación del servicio centralizado de autenticación empresarial.
+ *
+ * <p>Aplica control estricto de políticas de seguridad:
+ * <ul>
+ *   <li>Bloqueo automático de cuentas tras 5 intentos fallidos consecutivos.</li>
+ *   <li>Verificación criptográfica de contraseñas mediante algoritmo BCrypt.</li>
+ *   <li>Expiración mandataria de contraseñas cada 90 días o bandera forzada.</li>
+ *   <li>Generación de tokens asimétricos RS256 con reclamos empresariales y de sucursal.</li>
+ *   <li>Rotación obligatoria de tokens de refresco y registro inmutable en auditoría.</li>
+ * </ul>
+ * </p>
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -51,6 +67,17 @@ public class AuthServiceImpl implements AuthService {
     @Value("${auth.security.password.warning-threshold-days:7}")
     private long warningThresholdDays;
 
+    /**
+     * Constructor con inyección de dependencias para los repositorios y servicios de seguridad.
+     *
+     * @param userRepository Repositorio de usuarios.
+     * @param sessionRepository Repositorio de sesiones.
+     * @param rbacRepository Repositorio de RBAC y menús.
+     * @param auditRepository Repositorio de auditoría de seguridad.
+     * @param sessionService Servicio de gestión de sesiones concurrentes.
+     * @param jwtTokenService Servicio criptográfico de tokens JWT.
+     * @param passwordEncoder Codificador de contraseñas BCrypt.
+     */
     public AuthServiceImpl(
             UserRepository userRepository,
             SessionRepository sessionRepository,
@@ -69,6 +96,13 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Ejecuta el flujo transaccional de inicio de sesión con validación de credenciales y generación de tokens.
+     *
+     * @param request Solicitud de autenticación con identificador y contraseña.
+     * @param httpRequest Solicitud HTTP para obtención de IP de origen y cabecera de cliente.
+     * @return Respuesta con par de tokens, información de perfil y menú autorizado.
+     */
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest) {
@@ -78,68 +112,68 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findUserByLogin(login)
                 .orElseThrow(() -> {
-                    log.warn("Login attempt for non-existent identifier: {}", login);
-                    auditRepository.logSecurityEvent(null, null, "LOGIN_FAILED", "User not found: " + login, "Seguridad", ip, null);
-                    return new AuthenticationFailedException("Invalid credentials.");
+                    log.warn("Intento de acceso para identificador inexistente: {}", login);
+                    auditRepository.logSecurityEvent(null, null, "LOGIN_FAILED", "Usuario no encontrado: " + login, "Seguridad", ip, null);
+                    return new AuthenticationFailedException("Credenciales inválidas.");
                 });
 
-        // 1. Check account lockout policy
+        // 1. Verificar política de bloqueo de cuenta
         if (user.isLocked() || user.failedLoginAttempts() >= maxFailedAttempts) {
-            log.warn("Login blocked for locked user account: {}", user.username());
-            auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "ACCOUNT_LOCKED", "Access attempt on locked account", "Seguridad", ip, null);
-            throw new AccountLockedException("Your account is locked due to security policy or excessive failed login attempts. Contact an administrator.");
+            log.warn("Acceso bloqueado por cuenta inhabilitada o exceso de intentos: {}", user.username());
+            auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "ACCOUNT_LOCKED", "Intento de acceso a cuenta bloqueada", "Seguridad", ip, null);
+            throw new AccountLockedException("Su cuenta se encuentra bloqueada por políticas de seguridad. Contacte al administrador.");
         }
 
-        // 2. Check active status
+        // 2. Verificar estado activo
         if (!user.isActive()) {
-            log.warn("Login blocked for inactive user: {}", user.username());
-            throw new AuthenticationFailedException("Account is currently disabled.");
+            log.warn("Acceso denegado a usuario inactivo: {}", user.username());
+            throw new AuthenticationFailedException("La cuenta de usuario está desactivada temporalmente.");
         }
 
-        // 3. Cryptographic password verification (BCrypt)
+        // 3. Verificación criptográfica de contraseña (BCrypt)
         if (!passwordEncoder.matches(request.password(), user.passwordHash())) {
             userRepository.incrementFailedAttempts(user.id());
             int currentAttempts = user.failedLoginAttempts() + 1;
-            log.warn("Password mismatch for user {} (failed attempts: {}/{})", user.username(), currentAttempts, maxFailedAttempts);
+            log.warn("Discrepancia de contraseña para el usuario {} (intentos fallidos: {}/{})", user.username(), currentAttempts, maxFailedAttempts);
 
-            auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "LOGIN_FAILED", "Bad password (attempt " + currentAttempts + ")", "Seguridad", ip, null);
+            auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "LOGIN_FAILED", "Contraseña errónea (intento " + currentAttempts + ")", "Seguridad", ip, null);
 
             if (currentAttempts >= maxFailedAttempts) {
-                throw new AccountLockedException("Maximum login attempts reached. Your account has been locked for security.");
+                throw new AccountLockedException("Ha alcanzado el límite máximo de intentos fallidos. Su cuenta ha sido bloqueada por seguridad.");
             }
-            throw new AuthenticationFailedException("Invalid credentials.");
+            throw new AuthenticationFailedException("Credenciales inválidas.");
         }
 
-        // 4. Check password expiration policy (90 days or mandatory rotation flag)
+        // 4. Verificar política de caducidad de contraseña (90 días o rotación obligatoria)
         OffsetDateTime now = OffsetDateTime.now();
         boolean isExpired = user.passwordExpiresAt() != null && user.passwordExpiresAt().isBefore(now);
         if (user.mustChangePassword() || isExpired) {
-            log.info("Credentials expired for user {}. Must change password before continuing.", user.username());
-            auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "CREDENTIALS_EXPIRED", "Credentials expired or change required", "Seguridad", ip, null);
-            throw new CredentialsExpiredException("Your password has expired or a mandatory reset is required. Please update your password.");
+            log.info("Credenciales vencidas para el usuario {}. Obligado a actualizar contraseña.", user.username());
+            auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "CREDENTIALS_EXPIRED", "Credenciales vencidas o cambio mandatorio", "Seguridad", ip, null);
+            throw new CredentialsExpiredException("Su contraseña ha caducado o requiere un cambio obligatorio. Por favor actualice su clave.");
         }
 
-        // 5. Successful authentication: reset failed attempts
+        // 5. Autenticación exitosa: reiniciar intentos fallidos
         userRepository.resetFailedAttempts(user.id());
 
-        // 6. Build principal and tokens
+        // 6. Construir principal y generar tokens criptográficos
         AuthenticatedUserPrincipal principal = userRepository.findActivePrincipalByLoginOrEmail(login)
-                .orElseThrow(() -> new AuthenticationFailedException("Failed to construct principal context."));
+                .orElseThrow(() -> new AuthenticationFailedException("Fallo al construir el contexto del principal de seguridad."));
 
         String accessToken = jwtTokenService.generateAccessToken(principal);
         String refreshToken = jwtTokenService.generateOpaqueRefreshToken();
 
-        // 7. Register session and audit
+        // 7. Registrar sesión activa y bitácora de auditoría
         sessionService.registerSession(user.id(), refreshToken, ip, userAgent);
-        auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "LOGIN_SUCCESS", "Successful authentication", "Seguridad", ip, null);
+        auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "LOGIN_SUCCESS", "Autenticación exitosa", "Seguridad", ip, null);
 
-        // 8. Calculate expiration warning
+        // 8. Calcular advertencia de caducidad próxima
         long daysUntilExpiration = user.passwordExpiresAt() != null
                 ? Math.max(0, ChronoUnit.DAYS.between(now, user.passwordExpiresAt()))
                 : 90;
         boolean expiringSoon = daysUntilExpiration <= warningThresholdDays;
 
-        // 9. Load permissions
+        // 9. Cargar menú dinámico de permisos efectivos
         List<MenuItemPermission> permissions = rbacRepository.findEffectiveMenuPermissionsByUserId(user.id());
 
         return new LoginResponse(
@@ -165,6 +199,13 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /**
+     * Rota el token de refresco validando la sesión activa y emite un nuevo token de acceso RS256.
+     *
+     * @param refreshToken Token de refresco recibido.
+     * @param httpRequest Solicitud HTTP entrante.
+     * @return Nueva respuesta con par de tokens renovados.
+     */
     @Override
     @Transactional
     public LoginResponse refreshToken(String refreshToken, HttpServletRequest httpRequest) {
@@ -174,28 +215,28 @@ public class AuthServiceImpl implements AuthService {
 
         UserSession session = sessionRepository.findActiveSessionByHash(hash)
                 .orElseThrow(() -> {
-                    log.warn("Invalid or revoked refresh token provided from IP: {}", ip);
-                    return new AuthenticationFailedException("Refresh token is invalid or has been revoked.");
+                    log.warn("Token de refresco inválido o revocado desde la IP: {}", ip);
+                    return new AuthenticationFailedException("El token de refresco es inválido o ha sido revocado.");
                 });
 
         User user = userRepository.findById(session.userId())
-                .orElseThrow(() -> new AuthenticationFailedException("User identity not found."));
+                .orElseThrow(() -> new AuthenticationFailedException("Identidad de usuario no encontrada."));
 
         if (!user.isActive()) {
-            throw new AuthenticationFailedException("User account is inactive.");
+            throw new AuthenticationFailedException("La cuenta de usuario está desactivada.");
         }
 
-        // Invalidate old session and issue new token pair (Token Rotation)
-        sessionRepository.revokeSession(session.id(), false, "Token Rotated");
+        // Invalidar la sesión previa y generar nuevo par de tokens (Rotación de Tokens)
+        sessionRepository.revokeSession(session.id(), false, "Token Rotado");
 
         AuthenticatedUserPrincipal principal = userRepository.findActivePrincipalByLoginOrEmail(user.username())
-                .orElseThrow(() -> new AuthenticationFailedException("Failed to load user principal."));
+                .orElseThrow(() -> new AuthenticationFailedException("Fallo al cargar el principal del usuario."));
 
         String newAccessToken = jwtTokenService.generateAccessToken(principal);
         String newRefreshToken = jwtTokenService.generateOpaqueRefreshToken();
 
         sessionService.registerSession(user.id(), newRefreshToken, ip, userAgent);
-        auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "TOKEN_REFRESH", "Rotated refresh token", "Seguridad", ip, null);
+        auditRepository.logSecurityEvent(user.id(), user.assignedBranchId(), "TOKEN_REFRESH", "Token de refresco rotado exitosamente", "Seguridad", ip, null);
 
         long daysUntilExpiration = user.passwordExpiresAt() != null
                 ? Math.max(0, ChronoUnit.DAYS.between(OffsetDateTime.now(), user.passwordExpiresAt()))
@@ -226,6 +267,12 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /**
+     * Realiza introspección RFC 7662 sobre el token de acceso provisto.
+     *
+     * @param token Cadena del token JWT.
+     * @return Respuesta estructurada con los reclamos y vigencia del token.
+     */
     @Override
     public TokenIntrospectResponse introspectToken(String token) {
         Optional<JWTClaimsSet> claimsOpt = jwtTokenService.verifyToken(token);
@@ -254,39 +301,59 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /**
+     * Cambia la contraseña del usuario previa comprobación de la contraseña actual,
+     * reiniciando el ciclo de vigencia y cerrando las demás sesiones abiertas.
+     *
+     * @param userId Identificador UUID del usuario.
+     * @param request Carga útil con la contraseña actual y la nueva.
+     * @param ipAddress Dirección IP de red para la traza de seguridad.
+     */
     @Override
     @Transactional
     public void changePassword(UUID userId, ChangePasswordRequest request, String ipAddress) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthenticationFailedException("User identity not found."));
+                .orElseThrow(() -> new AuthenticationFailedException("Identidad de usuario no encontrada."));
 
         if (!passwordEncoder.matches(request.currentPassword(), user.passwordHash())) {
-            auditRepository.logSecurityEvent(userId, user.assignedBranchId(), "PASSWORD_CHANGE_FAILED", "Current password mismatch", "Seguridad", ipAddress, null);
-            throw new AuthenticationFailedException("Current password does not match.");
+            auditRepository.logSecurityEvent(userId, user.assignedBranchId(), "PASSWORD_CHANGE_FAILED", "Contraseña actual incorrecta", "Seguridad", ipAddress, null);
+            throw new AuthenticationFailedException("La contraseña actual proporcionada no coincide.");
         }
 
         String newHash = passwordEncoder.encode(request.newPassword());
         userRepository.updatePassword(userId, newHash);
 
-        // Terminate all sessions except any newly initiated one
-        sessionService.revokeAllUserSessions(userId, "Password Changed");
+        // Terminar todas las sesiones concurrentes para forzar nuevo login
+        sessionService.revokeAllUserSessions(userId, "Cambio de Contraseña");
 
-        auditRepository.logSecurityEvent(userId, user.assignedBranchId(), "PASSWORD_CHANGED", "Password successfully renewed", "Seguridad", ipAddress, null);
-        log.info("Password successfully changed for user {}", user.username());
+        auditRepository.logSecurityEvent(userId, user.assignedBranchId(), "PASSWORD_CHANGED", "Contraseña actualizada satisfactoriamente", "Seguridad", ipAddress, null);
+        log.info("Contraseña actualizada exitosamente para el usuario {}", user.username());
     }
 
+    /**
+     * Cierra la sesión activa revocando el token de refresco y registrando el suceso en auditoría.
+     *
+     * @param refreshToken Token de refresco a dar de baja.
+     * @param ipAddress Dirección IP del cliente.
+     */
     @Override
     @Transactional
     public void logout(String refreshToken, String ipAddress) {
         if (refreshToken != null && !refreshToken.isBlank()) {
             String hash = jwtTokenService.hashToken(refreshToken);
             sessionRepository.findActiveSessionByHash(hash).ifPresent(s -> {
-                sessionRepository.revokeSession(s.id(), false, "User Logged Out");
-                auditRepository.logSecurityEvent(s.userId(), null, "LOGOUT", "User session logged out", "Seguridad", ipAddress, null);
+                sessionRepository.revokeSession(s.id(), false, "Cierre Voluntario de Sesión");
+                auditRepository.logSecurityEvent(s.userId(), null, "LOGOUT", "Cierre de sesión de usuario registrado", "Seguridad", ipAddress, null);
             });
         }
     }
 
+    /**
+     * Extrae de forma segura la dirección IP real del cliente, considerando encabezados de proxies inversos.
+     *
+     * @param request Solicitud HTTP entrante.
+     * @return Dirección IP del cliente.
+     */
     private String extractClientIp(HttpServletRequest request) {
         String xf = request.getHeader("X-Forwarded-For");
         if (xf != null && !xf.isBlank()) {

@@ -30,9 +30,22 @@
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
   <!-- Vista de Comprobante Electrónico Emitido -->
@@ -42,14 +55,14 @@
     [business]="businessInfo()"
     [showHistoryShortcut]="true"
     (closed)="selectedReceipt.set(null)"
-    (printRequested)="feedbackMessage.set('Imprimiendo / Descargando PDF del comprobante ' + $event + '...')"
+    (printRequested)="feedbackMessage.set({ text: 'Imprimiendo / Descargando PDF del comprobante ' + $event + '...', type: 'info' })"
   ></app-sale-receipt-view>
 
   <!-- Constructor de Venta Multiproducto -->
   <ng-container *ngIf="!selectedReceipt()">
     <div class="card">
       <h2 class="section-title">
-        1. Datos del Cliente y Selección de Bebidas (Por Mayor y por Menor)
+        1. Datos del Cliente y Selección de Productos (Por Mayor y por Menor)
       </h2>
       <div class="grid-form">
         <div class="form-group">
@@ -90,7 +103,7 @@
         </div>
 
         <div class="form-group">
-          <label>Seleccionar Bebida / Licor</label>
+          <label>Seleccionar Producto</label>
           <select
             name="saleSku"
             [(ngModel)]="newSale.selectedSku"
@@ -157,7 +170,7 @@
           <thead>
             <tr>
               <th>SKU</th>
-              <th>Bebida / Licor</th>
+              <th>Producto</th>
               <th>Modalidad</th>
               <th>Formato</th>
               <th>Cantidad</th>

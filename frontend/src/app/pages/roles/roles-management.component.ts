@@ -3,14 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AdminApiService } from '../../core/services/admin-api.service';
-import { SystemRole } from '../../core/models/domain.models';
+import { FeedbackNotification, SystemRole } from '../../core/models/domain.models';
 
 /**
- * Componente dedicado al Registro y Administración de Roles y Matriz RBAC de Permisos (`/dashboard/roles`).
+ * Componente Smart/Container para el Registro y Administración de Roles y Matriz RBAC de Permisos (`/dashboard/roles`).
  *
- * Responsabilidades:
- * - Permitir registrar nuevos roles o editar roles existentes definiendo su alcance (`Nivel Negocio (Multi-Local)` vs `Nivel Local Asignado`).
- * - Administrar el estado de cada rol y su matriz de permisos por opción de menú del Sidebar.
+ * @description Permite registrar nuevos roles o editar roles existentes definiendo su alcance
+ * (Nivel Plataforma, Nivel Negocio Multi-Local, Nivel Local Asignado), y gobernar la matriz granular
+ * de permisos de lectura, creación, edición, eliminación y exportación por opción de menú.
+ *
+ * @author Equipo de Arquitectura Frontend Senior
+ * @version 2.0
  */
 @Component({
   selector: 'app-roles-management',
@@ -24,18 +27,19 @@ export class RolesManagementComponent implements OnInit {
   private readonly adminApi = inject(AdminApiService);
 
   readonly businessInfo = this.dummyData.businessInfo;
+  readonly isGeneralAdmin = this.dummyData.isGeneralAdmin;
   readonly systemRoles = this.dummyData.systemRoles;
   readonly roleMenuMatrix = this.dummyData.roleMenuMatrix;
 
   readonly selectedRoleCode = signal<string>('ADMIN');
   readonly isEditingRole = signal<boolean>(false);
-  readonly feedbackMessage = signal<string | null>(null);
+  readonly feedbackMessage = signal<FeedbackNotification | null>(null);
 
   roleForm = {
     code: '',
     name: '',
     description: '',
-    scope: 'Nivel Local Asignado' as 'Nivel Negocio (Multi-Local)' | 'Nivel Local Asignado',
+    scope: 'Nivel Local Asignado' as 'Nivel Plataforma (Superusuario)' | 'Nivel Negocio (Multi-Local)' | 'Nivel Local Asignado',
   };
 
   ngOnInit(): void {
@@ -75,7 +79,10 @@ export class RolesManagementComponent implements OnInit {
     const cleanName = this.roleForm.name.trim();
 
     if (!cleanCode || !cleanName) {
-      this.feedbackMessage.set('Ingresa el código y el nombre descriptivo del rol.');
+      this.feedbackMessage.set({
+        text: 'Por favor, ingresa el código y el nombre descriptivo del rol.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -92,7 +99,10 @@ export class RolesManagementComponent implements OnInit {
             : r
         )
       );
-      this.feedbackMessage.set(`Rol "${cleanName}" (${cleanCode}) actualizado exitosamente.`);
+      this.feedbackMessage.set({
+        text: `Rol "${cleanName}" (${cleanCode}) actualizado exitosamente.`,
+        type: 'success',
+      });
       this.resetRoleForm();
       return;
     }
@@ -111,9 +121,10 @@ export class RolesManagementComponent implements OnInit {
     // Actualización reactiva inmediata en la UI
     this.systemRoles.update(list => [...list, newRole]);
     this.selectedRoleCode.set(cleanCode);
-    this.feedbackMessage.set(
-      `Rol "${cleanName}" (${cleanCode}) creado localmente. Sincronizando con PostgreSQL...`
-    );
+    this.feedbackMessage.set({
+      text: `Rol "${cleanName}" (${cleanCode}) creado localmente. Sincronizando con PostgreSQL...`,
+      type: 'info',
+    });
 
     // Persistencia transaccional en PostgreSQL via Spring Boot
     this.adminApi
@@ -125,16 +136,18 @@ export class RolesManagementComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          this.feedbackMessage.set(
-            `Rol "${cleanName}" (${cleanCode}) registrado exitosamente en la base de datos PostgreSQL.`
-          );
+          this.feedbackMessage.set({
+            text: `Rol "${cleanName}" (${cleanCode}) registrado exitosamente en la base de datos PostgreSQL.`,
+            type: 'success',
+          });
           this.loadRolesFromBackend();
         },
         error: err => {
           console.warn('Rol persistido en memoria (backend error):', err?.status);
-          this.feedbackMessage.set(
-            `Rol "${cleanName}" (${cleanCode}) creado. (Nota: ${err?.error?.detail || 'sesión offline o token faltante'}).`
-          );
+          this.feedbackMessage.set({
+            text: `Rol "${cleanName}" (${cleanCode}) creado. (Nota: ${err?.error?.detail || 'sesión offline o token faltante'}).`,
+            type: 'warning',
+          });
         },
       });
 
@@ -169,7 +182,7 @@ export class RolesManagementComponent implements OnInit {
 
   selectRoleForMatrix(roleCode: string): void {
     this.selectedRoleCode.set(roleCode);
-    const isAdmin = roleCode === 'ADMIN';
+    const isAdmin = roleCode === 'ADMIN' || roleCode === 'ADMIN_NEGOCIO';
     const isSupervisor = roleCode === 'SUPERVISOR';
     const isAnalyst = roleCode === 'ANALYST';
     const isAuditor = roleCode === 'AUDITOR';
@@ -269,19 +282,24 @@ export class RolesManagementComponent implements OnInit {
     const roleCode = this.selectedRoleCode();
     const matrix = this.roleMenuMatrix();
 
-    this.feedbackMessage.set(`Guardando matriz de permisos del rol "${roleCode}" en PostgreSQL...`);
+    this.feedbackMessage.set({
+      text: `Guardando matriz de permisos del rol "${roleCode}" en PostgreSQL...`,
+      type: 'info',
+    });
 
     this.adminApi.saveRolePermissions(roleCode, matrix).subscribe({
       next: () => {
-        this.feedbackMessage.set(
-          `¡Matriz de permisos del rol "${roleCode}" guardada y sincronizada exitosamente en PostgreSQL!`
-        );
+        this.feedbackMessage.set({
+          text: `¡Matriz de permisos del rol "${roleCode}" guardada y sincronizada exitosamente en PostgreSQL!`,
+          type: 'success',
+        });
       },
       error: err => {
         console.warn('Error al guardar matriz en backend:', err?.status);
-        this.feedbackMessage.set(
-          `Matriz del rol "${roleCode}" guardada localmente (${err?.error?.detail || 'Modo offline'}).`
-        );
+        this.feedbackMessage.set({
+          text: `Matriz del rol "${roleCode}" guardada localmente (${err?.error?.detail || 'Modo offline'}).`,
+          type: 'warning',
+        });
       },
     });
   }

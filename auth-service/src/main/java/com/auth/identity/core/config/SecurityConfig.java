@@ -16,8 +16,17 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Spring Security configuration establishing stateless JWT-based authorization,
- * public endpoints for IAM / IdP authentication and JWKS, and strict endpoint protections.
+ * Configuración maestra de Spring Security que establece autorización sin estado (Stateless)
+ * basada en tokens JWT, endpoints públicos para autenticación IdP / JWKS y protección estricta
+ * de operaciones administrativas.
+ * <p>
+ * Aplica buenas prácticas de OWASP Top 10:
+ * <ul>
+ *   <li>Deshabilitación de CSRF por diseño al no manejar cookies de sesión síncronas.</li>
+ *   <li>Política de sesiones {@code STATELESS} obligatoria.</li>
+ *   <li>Puntos de entrada personalizados para respuestas 401 Unauthorized y 403 Forbidden.</li>
+ *   <li>Cifrado de contraseñas con {@link BCryptPasswordEncoder} con factor de costo 12.</li>
+ * </ul>
  */
 @Configuration
 @EnableWebSecurity
@@ -26,15 +35,32 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /**
+     * Constructor con inyección de dependencias del filtro JWT.
+     *
+     * @param jwtAuthenticationFilter filtro interceptor de tokens de acceso
+     */
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    /**
+     * Bean del codificador de contraseñas mediante algoritmo BCrypt seguro.
+     *
+     * @return instancia de {@link PasswordEncoder} con factor de trabajo 12
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 
+    /**
+     * Define la cadena de filtros de seguridad (Security Filter Chain) y las reglas de acceso a rutas.
+     *
+     * @param http constructor de seguridad HTTP de Spring
+     * @return cadena de filtros configurada
+     * @throws Exception en caso de error durante la inicialización de seguridad
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http

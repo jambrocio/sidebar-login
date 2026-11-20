@@ -5,12 +5,21 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-@Schema(description = "Remote session termination request (Kill Session)")
+/**
+ * Carga útil para la terminación remota forzada de una sesión de usuario (Kill Session).
+ *
+ * @param sessionId Identificador UUID de la sesión activa a revocar.
+ * @param reason Motivo o justificación administrativa del cierre de sesión forzoso.
+ *
+ * @author Equipo de Arquitectura e Identidad
+ * @version 1.0
+ */
+@Schema(description = "Solicitud de terminación remota de sesión activa (Kill Session)")
 public record RevokeSessionRequest(
-        @Schema(description = "UUID of the session to terminate")
-        @NotNull(message = "Session ID is required")
+        @Schema(description = "Identificador UUID de la sesión a revocar")
+        @NotNull(message = "El identificador de sesión es obligatorio")
         UUID sessionId,
 
-        @Schema(description = "Administrative reason for terminating the session", example = "Suspicious location change")
+        @Schema(description = "Motivo administrativo de la terminación", example = "Cierre por detección de ubicación anómala")
         String reason
 ) {}

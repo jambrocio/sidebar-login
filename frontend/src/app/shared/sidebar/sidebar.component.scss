@@ -138,31 +138,79 @@
   }
 }
 
-/* Submenús multinivel con línea guía lateral */
+/* Estilo para grupo padre cuando una de sus rutas hijas está activa */
+.sidebar-nav li.parent-active > a {
+  color: var(--primary-color);
+  font-weight: 600;
+  background: rgba(var(--primary-rgb, 0, 123, 255), 0.08);
+
+  .item-icon,
+  .submenu-indicator {
+    color: var(--primary-color);
+  }
+}
+
+/* Submenús multinivel con línea guía lateral y espaciado optimizado */
 .submenu {
-  margin: 0.2rem 0 0.25rem 1.35rem !important;
+  margin: 0.25rem 0 0.35rem 1rem !important;
   padding-left: 0.65rem !important;
-  border-left: 1.5px solid var(--sidebar-border);
+  border-left: 2px solid rgba(var(--primary-rgb, 0, 123, 255), 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  li {
+    width: 100%;
+  }
 
   li a {
-    padding: 0.55rem 0.75rem;
-    font-size: 0.85rem;
+    padding: 0.52rem 0.75rem;
+    font-size: 0.86rem;
+    font-weight: 500;
+    border-radius: 6px;
+    gap: 0.65rem;
+    transition: all 0.2s ease;
 
     .item-icon {
-      font-size: 1rem;
+      font-size: 1.05rem;
+      width: 20px;
+      color: var(--sidebar-muted-text);
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    &:hover {
+      background: var(--sidebar-hover-bg);
+      color: var(--primary-color);
+
+      .item-icon {
+        color: var(--primary-color);
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  /* Submenú anidado (ej. Categorías y Productos) */
+  .submenu {
+    margin: 0.2rem 0 0.25rem 0.85rem !important;
+    padding-left: 0.55rem !important;
+    border-left: 2px dashed rgba(var(--primary-rgb, 0, 123, 255), 0.45);
+
+    li a {
+      padding: 0.46rem 0.65rem;
+      font-size: 0.83rem;
     }
   }
 }
 
 /* Estado activo principal */
 .sidebar-nav li.active > a {
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
+  background: var(--sidebar-active-bg) !important;
+  color: var(--sidebar-active-text) !important;
   font-weight: 600;
-  box-shadow: 0 4px 10px rgba(var(--primary-rgb, 0, 123, 255), 0.22);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 0, 123, 255), 0.3);
 
   .item-icon {
-    color: var(--sidebar-active-text);
+    color: var(--sidebar-active-text) !important;
   }
 }
 
