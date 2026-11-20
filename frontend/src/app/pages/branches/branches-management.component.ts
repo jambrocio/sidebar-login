@@ -1,15 +1,17 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AdminApiService, CreateBusinessRequestDto, CreateBranchRequestDto } from '../../core/services/admin-api.service';
-import { BusinessBranch, BusinessProfile, FeedbackNotification } from '../../core/models/domain.models';
+import { BusinessBranch, BusinessProfile, FeedbackNotification, SYSTEM_AVAILABLE_CURRENCIES, SupportedCurrencyOption } from '../../core/models/domain.models';
+import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
 
 /**
  * Componente Smart/Container dedicado a la Estructura Organizacional: Negocios Matriz y Locales.
  *
  * @description Gobierna la jerarquía multi-tenant `1 Negocio Matriz (Empresa) -> N Locales / Sucursales`,
  * permitiendo crear empresas, registrar sucursales, series de facturación y puntos de venta en PostgreSQL.
+ * Incluye paginación de 15 registros por página en cada tabla.
  *
  * @author Equipo de Arquitectura Frontend Senior
  * @version 2.0
@@ -17,7 +19,7 @@ import { BusinessBranch, BusinessProfile, FeedbackNotification } from '../../cor
 @Component({
   selector: 'app-branches-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TablePaginationComponent],
   templateUrl: './branches-management.component.html',
   styleUrl: './branches-management.component.scss',
 })
@@ -47,12 +49,31 @@ export class BranchesManagementComponent implements OnInit {
     return roleName === 'ADMIN_NEGOCIO' || roleName.includes('Administrador de Negocio');
   });
 
-  /** Pestaña activa: por defecto 'businesses' para Superadmin, 'branches' para Administrador de Negocio */
-  readonly activeTab = signal<'businesses' | 'branches'>('businesses');
+  /** Pestaña activa: 'branches' para Administrador de Negocio, 'businesses' para Superadmin */
+  readonly activeTab = signal<'businesses' | 'branches'>('branches');
   readonly selectedBusinessFilter = signal<string>('ALL');
   readonly feedbackMessage = signal<FeedbackNotification | null>(null);
   readonly isSubmittingBusiness = signal<boolean>(false);
   readonly isSubmittingBranch = signal<boolean>(false);
+  readonly formSubmittedBusiness = signal<boolean>(false);
+  readonly formSubmittedBranch = signal<boolean>(false);
+
+  readonly systemCurrencies: SupportedCurrencyOption[] = SYSTEM_AVAILABLE_CURRENCIES;
+
+  constructor() {
+    // Sincronizar automáticamente la pestaña y el negocio según el rol del usuario
+    effect(() => {
+      if (this.isGeneralAdmin()) {
+        // Superadmin puede acceder a ambas pestañas
+      } else {
+        // Administrador de Negocio: forzar siempre pestaña de locales y su propio negocio
+        this.activeTab.set('branches');
+        const myBiz = this.currentUserProfile().assignedBusinessId || this.businessInfo().id || 'BIZ-001';
+        this.selectedBusinessFilter.set(myBiz);
+        this.newBranch.businessId = myBiz;
+      }
+    });
+  }
 
   newBusiness = {
     code: '',
@@ -63,6 +84,8 @@ export class BranchesManagementComponent implements OnInit {
     phone: '',
     supportEmail: '',
     currency: 'PEN',
+    defaultCurrency: 'PEN',
+    supportedCurrencies: ['PEN', 'USD'],
   };
 
   /** Formulario de Local: campos completamente limpios por defecto */
@@ -74,14 +97,15 @@ export class BranchesManagementComponent implements OnInit {
     phone: '',
     invoiceSeries: '',
     managerUser: '',
-    posTerminals: 1,
+    posTerminals: null as any,
   };
 
   ngOnInit(): void {
-    // Si no es Administrador General, limitar a la vista de locales de su propio negocio
-    if (!this.isGeneralAdmin()) {
+    if (this.isGeneralAdmin()) {
+      this.activeTab.set('businesses');
+    } else {
       this.activeTab.set('branches');
-      const myBiz = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
+      const myBiz = this.currentUserProfile().assignedBusinessId || this.businessInfo().id || 'BIZ-001';
       this.selectedBusinessFilter.set(myBiz);
       this.newBranch.businessId = myBiz;
     }
@@ -98,6 +122,15 @@ export class BranchesManagementComponent implements OnInit {
         if (backendBizList && backendBizList.length > 0) {
           const mappedBusinesses: BusinessProfile[] = backendBizList.map(b => {
             const code = b.code || b.id || '';
+            const defCurr = b.defaultCurrency || b.currency || 'PEN';
+            let supp = b.supportedCurrencies;
+            if (!supp || supp.length === 0) {
+              if (b.supportedCurrenciesRaw) {
+                supp = b.supportedCurrenciesRaw.split(',').map((s: string) => s.trim()).filter(Boolean);
+              } else {
+                supp = [defCurr, defCurr === 'PEN' ? 'USD' : 'PEN'];
+              }
+            }
             return {
               id: code,
               commercialName: b.commercialName || b.legalName || code,
@@ -107,7 +140,9 @@ export class BranchesManagementComponent implements OnInit {
               phone: b.phone || '+51 01 440-1200',
               supportEmail: b.supportEmail || 'contacto@empresa.pe',
               timezone: b.timezone || 'America/Lima (UTC-5)',
-              currency: b.currency || 'PEN',
+              currency: defCurr,
+              defaultCurrency: defCurr,
+              supportedCurrencies: supp,
             };
           });
 
@@ -156,6 +191,13 @@ export class BranchesManagementComponent implements OnInit {
     });
   }
 
+  /** Tamaño de página estándar (15 registros) */
+  readonly pageSize = 15;
+
+  /** Páginas activas */
+  readonly currentBusinessPage = signal<number>(1);
+  readonly currentBranchPage = signal<number>(1);
+
   readonly filteredBranches = computed(() => {
     if (!this.isGeneralAdmin()) {
       const myBiz = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
@@ -164,6 +206,18 @@ export class BranchesManagementComponent implements OnInit {
     const filter = this.selectedBusinessFilter();
     if (filter === 'ALL') return this.branches();
     return this.branches().filter(b => b.businessId?.toUpperCase() === filter.toUpperCase());
+  });
+
+  /** Locales paginados a 15 registros por página */
+  readonly pagedBranches = computed(() => {
+    const start = (this.currentBranchPage() - 1) * this.pageSize;
+    return this.filteredBranches().slice(start, start + this.pageSize);
+  });
+
+  /** Negocios paginados a 15 registros por página */
+  readonly pagedBusinesses = computed(() => {
+    const start = (this.currentBusinessPage() - 1) * this.pageSize;
+    return this.businesses().slice(start, start + this.pageSize);
   });
 
   getBusinessName(businessId: string): string {
@@ -175,6 +229,28 @@ export class BranchesManagementComponent implements OnInit {
   getBranchCount(businessId: string): number {
     if (!businessId) return 0;
     return this.branches().filter(b => b.businessId.toUpperCase() === businessId.toUpperCase()).length;
+  }
+
+  toggleSupportedCurrency(code: string): void {
+    const list = [...this.newBusiness.supportedCurrencies];
+    const idx = list.indexOf(code);
+    if (idx >= 0) {
+      if (list.length === 1) {
+        return; // Al menos una moneda debe quedar seleccionada
+      }
+      list.splice(idx, 1);
+      if (this.newBusiness.defaultCurrency === code) {
+        this.newBusiness.defaultCurrency = list[0];
+        this.newBusiness.currency = list[0];
+      }
+    } else {
+      list.push(code);
+    }
+    this.newBusiness.supportedCurrencies = list;
+  }
+
+  isCurrencySupported(code: string): boolean {
+    return this.newBusiness.supportedCurrencies.includes(code);
   }
 
   suggestNextBusinessCode(): string {
@@ -192,6 +268,9 @@ export class BranchesManagementComponent implements OnInit {
   }
 
   switchTab(tab: 'branches' | 'businesses'): void {
+    if (tab === 'businesses' && !this.isGeneralAdmin()) {
+      return; // Bloqueo estricto: el Administrador de Negocio no tiene autorización para acceder a registro de negocios
+    }
     this.activeTab.set(tab);
     this.feedbackMessage.set(null);
     if (tab === 'branches') {
@@ -213,29 +292,21 @@ export class BranchesManagementComponent implements OnInit {
       this.feedbackMessage.set({ text: 'Acceso restringido: Solo el Administrador General (Superusuario) puede registrar nuevos Negocios Matriz.', type: 'error' });
       return;
     }
+    this.formSubmittedBusiness.set(true);
+
     const code = this.newBusiness.code.trim().toUpperCase();
     const legalName = this.newBusiness.legalName.trim();
     const commercialName = this.newBusiness.commercialName.trim() || legalName;
     const taxId = this.newBusiness.taxId.trim();
     const fiscalAddress = this.newBusiness.fiscalAddress.trim();
 
-    if (!code) {
-      this.feedbackMessage.set({ text: 'Por favor, completa el código del negocio (ej. BIZ-004).', type: 'warning' });
-      return;
-    }
-
-    if (!legalName) {
-      this.feedbackMessage.set({ text: 'Por favor, ingresa la Razón Social de la empresa.', type: 'warning' });
+    if (!code || !legalName || !commercialName || !taxId || !fiscalAddress) {
+      this.feedbackMessage.set({ text: 'Por favor, completa todos los campos obligatorios del negocio marcados en rojo.', type: 'warning' });
       return;
     }
 
     if (!/^[0-9]{11}$/.test(taxId)) {
       this.feedbackMessage.set({ text: 'El RUC / Identificación Fiscal debe tener exactamente 11 dígitos numéricos.', type: 'warning' });
-      return;
-    }
-
-    if (!fiscalAddress) {
-      this.feedbackMessage.set({ text: 'Por favor, ingresa el domicilio fiscal legal de la empresa.', type: 'warning' });
       return;
     }
 
@@ -263,6 +334,9 @@ export class BranchesManagementComponent implements OnInit {
     this.isSubmittingBusiness.set(true);
     this.feedbackMessage.set(null);
 
+    const defCurr = this.newBusiness.defaultCurrency || this.newBusiness.currency || 'PEN';
+    const suppCurrs = this.newBusiness.supportedCurrencies.length > 0 ? this.newBusiness.supportedCurrencies : [defCurr];
+
     const payload: CreateBusinessRequestDto = {
       code,
       commercialName,
@@ -271,7 +345,9 @@ export class BranchesManagementComponent implements OnInit {
       fiscalAddress,
       phone: this.newBusiness.phone.trim() || '+51 01 440-1200',
       supportEmail: this.newBusiness.supportEmail.trim() || `contacto@${code.toLowerCase()}.pe`,
-      currency: this.newBusiness.currency || 'PEN',
+      currency: defCurr,
+      defaultCurrency: defCurr,
+      supportedCurrencies: suppCurrs,
     };
 
     const newBusinessProfile: BusinessProfile = {
@@ -283,7 +359,9 @@ export class BranchesManagementComponent implements OnInit {
       phone: payload.phone || '+51 01 440-1200',
       supportEmail: payload.supportEmail || 'contacto@empresa.pe',
       timezone: 'America/Lima (UTC-5)',
-      currency: payload.currency || 'PEN',
+      currency: defCurr,
+      defaultCurrency: defCurr,
+      supportedCurrencies: suppCurrs,
     };
 
     this.adminApi.createBusiness(payload).subscribe({
@@ -313,6 +391,7 @@ export class BranchesManagementComponent implements OnInit {
   }
 
   private resetBusinessForm(): void {
+    this.formSubmittedBusiness.set(false);
     this.newBusiness = {
       code: this.suggestNextBusinessCode(),
       commercialName: '',
@@ -322,6 +401,8 @@ export class BranchesManagementComponent implements OnInit {
       phone: '',
       supportEmail: '',
       currency: 'PEN',
+      defaultCurrency: 'PEN',
+      supportedCurrencies: ['PEN', 'USD'],
     };
   }
 
@@ -329,6 +410,7 @@ export class BranchesManagementComponent implements OnInit {
    * Limpia los campos del formulario de registro de local.
    */
   resetBranchForm(selectedBizId?: string): void {
+    this.formSubmittedBranch.set(false);
     const currentBiz = (!this.isGeneralAdmin())
       ? (this.currentUserProfile().assignedBusinessId || 'BIZ-001')
       : (selectedBizId || this.newBranch.businessId || (this.businesses().length > 0 ? this.businesses()[0].id : ''));
@@ -340,7 +422,7 @@ export class BranchesManagementComponent implements OnInit {
       phone: '',
       invoiceSeries: '',
       managerUser: '',
-      posTerminals: 1,
+      posTerminals: null as any,
     };
   }
 
@@ -368,14 +450,10 @@ export class BranchesManagementComponent implements OnInit {
     if (!this.isGeneralAdmin()) {
       this.newBranch.businessId = this.currentUserProfile().assignedBusinessId || 'BIZ-001';
     }
+    this.formSubmittedBranch.set(true);
 
-    if (!this.newBranch.businessId) {
-      this.feedbackMessage.set({ text: 'Por favor, selecciona el Negocio Propietario al que pertenecerá el local.', type: 'warning' });
-      return;
-    }
-
-    if (!this.newBranch.name.trim()) {
-      this.feedbackMessage.set({ text: 'Por favor, ingresa el nombre del nuevo Local o Sucursal del negocio.', type: 'warning' });
+    if (!this.newBranch.businessId || !this.newBranch.name.trim() || !this.newBranch.type) {
+      this.feedbackMessage.set({ text: 'Por favor, completa todos los campos obligatorios del local marcados en rojo.', type: 'warning' });
       return;
     }
 

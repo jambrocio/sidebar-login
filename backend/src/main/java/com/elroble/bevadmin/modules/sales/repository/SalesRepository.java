@@ -73,6 +73,19 @@ public class SalesRepository {
     }
 
     /**
+     * Genera el siguiente código correlativo de venta si no se envía uno desde el cliente.
+     */
+    public String generateNextSaleCode() {
+        Integer max = jdbcClient.sql("""
+                SELECT COALESCE(MAX(CAST(SUBSTRING(codigo_venta FROM '[0-9]+$') AS INT)), 0) + 1
+                FROM ventas
+                """)
+                .query(Integer.class)
+                .single();
+        return String.format("VTA-%04d", max != null ? max : 1);
+    }
+
+    /**
      * Inserta la cabecera del comprobante de venta en la tabla {@code ventas}.
      *
      * @param saleId               UUID generado para la venta
@@ -87,6 +100,7 @@ public class SalesRepository {
      */
     public void insertSaleHeader(
             UUID saleId,
+            String saleCode,
             EmitSaleRequest req,
             AuthenticatedUserPrincipal user,
             String consolidatedModality,
@@ -107,7 +121,7 @@ public class SalesRepository {
                 )
                 """)
                 .param("id", saleId)
-                .param("saleCode", req.saleCode())
+                .param("saleCode", saleCode)
                 .param("documentType", req.documentType())
                 .param("businessId", user.businessId())
                 .param("branchId", user.assignedBranchId())
@@ -168,5 +182,63 @@ public class SalesRepository {
                 .param("businessId", businessId)
                 .param("code", couponCode.toUpperCase())
                 .update();
+    }
+
+    /**
+     * Descuenta del inventario el producto vendido según su modalidad (Cajas x Mayor o Unidades x Menor).
+     *
+     * @param businessId  UUID del negocio matriz
+     * @param sku         código SKU del producto (opcional si coincide nombre)
+     * @param productName nombre del producto
+     * @param modality    modalidad de venta ('Por Mayor' o 'Por Menor')
+     * @param quantity    cantidad vendida
+     */
+    public void decrementProductStock(UUID businessId, String sku, String productName, String modality, int quantity) {
+        String cleanSku = sku != null ? sku.trim() : "";
+        String cleanName = productName != null ? productName.trim() : "";
+
+        if ("Por Mayor".equalsIgnoreCase(modality)) {
+            jdbcClient.sql("""
+                    UPDATE inventario.productos_bebidas
+                    SET stock_cajas = GREATEST(0, stock_cajas - :qty),
+                        stock_unidades = GREATEST(0, stock_unidades - (:qty * 12)),
+                        estado_stock = CASE WHEN GREATEST(0, stock_cajas - :qty) > 10 THEN 'En Stock'
+                                            WHEN GREATEST(0, stock_cajas - :qty) > 0 THEN 'Stock Bajo'
+                                            ELSE 'Agotado' END
+                    WHERE (:businessId::uuid IS NULL OR empresa_id = :businessId)
+                      AND (
+                        (:sku != '' AND UPPER(codigo_sku) = UPPER(:sku))
+                        OR UPPER(nombre) = UPPER(:name)
+                        OR :name ILIKE '%' || nombre || '%'
+                        OR nombre ILIKE '%' || :name || '%'
+                      )
+                    """)
+                    .param("qty", quantity)
+                    .param("businessId", businessId)
+                    .param("sku", cleanSku)
+                    .param("name", cleanName)
+                    .update();
+        } else {
+            jdbcClient.sql("""
+                    UPDATE inventario.productos_bebidas
+                    SET stock_unidades = GREATEST(0, stock_unidades - :qty),
+                        stock_cajas = GREATEST(0, stock_unidades - :qty) / 12,
+                        estado_stock = CASE WHEN (GREATEST(0, stock_unidades - :qty) / 12) > 10 THEN 'En Stock'
+                                            WHEN GREATEST(0, stock_unidades - :qty) / 12 > 0 THEN 'Stock Bajo'
+                                            ELSE 'Agotado' END
+                    WHERE (:businessId::uuid IS NULL OR empresa_id = :businessId)
+                      AND (
+                        (:sku != '' AND UPPER(codigo_sku) = UPPER(:sku))
+                        OR UPPER(nombre) = UPPER(:name)
+                        OR :name ILIKE '%' || nombre || '%'
+                        OR nombre ILIKE '%' || :name || '%'
+                      )
+                    """)
+                    .param("qty", quantity)
+                    .param("businessId", businessId)
+                    .param("sku", cleanSku)
+                    .param("name", cleanName)
+                    .update();
+        }
     }
 }

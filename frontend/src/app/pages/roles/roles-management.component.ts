@@ -1,16 +1,18 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { FeedbackNotification, SystemRole } from '../../core/models/domain.models';
+import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
 
 /**
  * Componente Smart/Container para el Registro y Administración de Roles y Matriz RBAC de Permisos (`/dashboard/roles`).
  *
  * @description Permite registrar nuevos roles o editar roles existentes definiendo su alcance
  * (Nivel Plataforma, Nivel Negocio Multi-Local, Nivel Local Asignado), y gobernar la matriz granular
- * de permisos de lectura, creación, edición, eliminación y exportación por opción de menú.
+ * de permisos de lectura, creación, edición, eliminación y exportación por opción de menú
+ * con paginación de 15 registros por página.
  *
  * @author Equipo de Arquitectura Frontend Senior
  * @version 2.0
@@ -18,7 +20,7 @@ import { FeedbackNotification, SystemRole } from '../../core/models/domain.model
 @Component({
   selector: 'app-roles-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TablePaginationComponent],
   templateUrl: './roles-management.component.html',
   styleUrl: './roles-management.component.scss',
 })
@@ -34,6 +36,19 @@ export class RolesManagementComponent implements OnInit {
   readonly selectedRoleCode = signal<string>('ADMIN');
   readonly isEditingRole = signal<boolean>(false);
   readonly feedbackMessage = signal<FeedbackNotification | null>(null);
+  readonly formSubmitted = signal<boolean>(false);
+
+  /** Tamaño de página estándar (15 registros) */
+  readonly pageSize = 15;
+
+  /** Página activa actual */
+  readonly currentPage = signal<number>(1);
+
+  /** Roles paginados a 15 por página */
+  readonly pagedRoles = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.systemRoles().slice(start, start + this.pageSize);
+  });
 
   roleForm = {
     code: '',
@@ -43,6 +58,7 @@ export class RolesManagementComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    this.resetRoleForm();
     this.loadRolesFromBackend();
     this.selectRoleForMatrix(this.selectedRoleCode());
   }
@@ -75,12 +91,13 @@ export class RolesManagementComponent implements OnInit {
    * Registra un nuevo rol o actualiza uno existente en el catálogo de roles.
    */
   saveRole(): void {
+    this.formSubmitted.set(true);
     const cleanCode = this.roleForm.code.trim().toUpperCase().replace(/\s+/g, '_');
     const cleanName = this.roleForm.name.trim();
 
-    if (!cleanCode || !cleanName) {
+    if (!cleanCode || !cleanName || !this.roleForm.scope) {
       this.feedbackMessage.set({
-        text: 'Por favor, ingresa el código y el nombre descriptivo del rol.',
+        text: 'Por favor, completa todos los campos obligatorios del rol marcados en rojo.',
         type: 'warning',
       });
       return;
@@ -171,6 +188,7 @@ export class RolesManagementComponent implements OnInit {
   }
 
   resetRoleForm(): void {
+    this.formSubmitted.set(false);
     this.isEditingRole.set(false);
     this.roleForm = {
       code: '',

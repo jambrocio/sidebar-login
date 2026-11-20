@@ -71,7 +71,7 @@
       </button>
     </div>
 
-    <form (ngSubmit)="saveUserWithBusinessAndBranches()" class="grid-form">
+    <form (ngSubmit)="saveUserWithBusinessAndBranches()" class="grid-form" [class.was-validated]="formSubmitted()">
       <div class="form-group">
         <label>
           Nombre Completo del Usuario <span class="required-asterisk">*</span>
@@ -83,6 +83,7 @@
           placeholder="Ej. Roberto Díaz Salazar"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !userForm.name.trim()"
         />
       </div>
 
@@ -97,6 +98,7 @@
           placeholder="Ej. rdiaz"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !userForm.username.trim()"
         />
       </div>
 
@@ -111,6 +113,7 @@
           placeholder="rdiaz@empresa.com"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !userForm.email.trim()"
         />
       </div>
 
@@ -125,6 +128,7 @@
           placeholder="Ej. Temporal2026*"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !editingUserId() && !userForm.password.trim()"
         />
       </div>
 
@@ -132,7 +136,7 @@
         <label>
           Rol Asignado en el Sistema <span class="required-asterisk">*</span>
         </label>
-        <select name="usrRole" [(ngModel)]="userForm.role" required class="required-input">
+        <select name="usrRole" [(ngModel)]="userForm.role" required class="required-input" [class.is-invalid]="formSubmitted() && !userForm.role">
           <option *ngFor="let r of assignableRoles()" [value]="r.name">
             {{ r.name }} ({{ r.scope }})
           </option>
@@ -162,6 +166,7 @@
           [disabled]="!isGeneralAdmin()"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !userForm.businessId"
         >
           <option *ngFor="let biz of availableBusinesses()" [value]="biz.id">
             {{ biz.legalName }} (RUC: {{ biz.taxId }})
@@ -174,7 +179,7 @@
         <label>
           2. Local Principal de Operación (Por Defecto) <span class="required-asterisk">*</span>
         </label>
-        <select name="usrPrimaryBranch" [(ngModel)]="userForm.assignedBranch" required class="required-input">
+        <select name="usrPrimaryBranch" [(ngModel)]="userForm.assignedBranch" required class="required-input" [class.is-invalid]="formSubmitted() && !userForm.assignedBranch">
           <option *ngFor="let br of branchesForSelectedBusiness()" [value]="br.name">
             {{ br.name }} ({{ br.code }})
           </option>
@@ -252,7 +257,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of filteredUsers()">
+          <tr *ngFor="let user of pagedUsers()">
             <td><code>{{ user.id }}</code></td>
             <td>
               <strong>{{ user.name }}</strong>
@@ -291,7 +296,7 @@
                 {{ user.passwordStatus }}
               </span>
               <div class="text-muted" style="font-size: 0.75rem; margin-top: 0.2rem">
-                Vence: <strong>{{ user.passwordExpiresAt }}</strong> ({{
+                Vence: <strong>{{ user.passwordExpiresAt | appDate }}</strong> ({{
                   user.daysUntilExpiration >= 0
                     ? user.daysUntilExpiration + ' días'
                     : 'vencida hace ' + -user.daysUntilExpiration + 'd'
@@ -318,6 +323,15 @@
                   <span>Editar</span>
                 </button>
                 <button
+                  type="button"
+                  class="btn-secondary btn-sm btn-reset-pass"
+                  (click)="resetUserPasswordToDefault(user)"
+                  title="Restablecer contraseña a la clave estándar por default (Cotic2026#)"
+                >
+                  <i class="bi bi-key-fill" style="color: #f59e0b;"></i>
+                  <span>Reset Clave</span>
+                </button>
+                <button
                   *ngIf="user.passwordStatus !== 'Expirada'"
                   type="button"
                   class="btn-secondary btn-sm"
@@ -340,5 +354,13 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de 15 registros por página -->
+    <app-table-pagination
+      [totalItems]="filteredUsers().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

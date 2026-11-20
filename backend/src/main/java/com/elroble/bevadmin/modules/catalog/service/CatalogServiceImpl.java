@@ -1,5 +1,6 @@
 package com.elroble.bevadmin.modules.catalog.service;
 
+import com.elroble.bevadmin.common.exception.BusinessRuleException;
 import com.elroble.bevadmin.modules.catalog.dto.CreateBeverageRequest;
 import com.elroble.bevadmin.modules.catalog.repository.CatalogRepository;
 import com.elroble.bevadmin.security.AuthenticatedUserPrincipal;
@@ -68,13 +69,22 @@ public class CatalogServiceImpl implements CatalogService {
                     .orElse(user.businessId());
         }
 
+        // Validación de unicidad de SKU si se especifica (campo opcional)
+        String cleanSku = (request.sku() != null && !request.sku().trim().isBlank())
+                ? request.sku().trim().toUpperCase()
+                : null;
+
+        if (cleanSku != null && catalogRepository.existsProductBySku(targetBusinessId, cleanSku)) {
+            throw new BusinessRuleException("El código SKU '" + cleanSku + "' ya se encuentra registrado en otro producto de este negocio.");
+        }
+
         // Regla de negocio: Determina el semáforo de stock según la cantidad de cajas iniciales
         String stockStatus = request.stockBoxes() == 0
                 ? "Agotado"
                 : (request.stockBoxes() < 20 ? "Stock Bajo" : "En Stock");
 
-        catalogRepository.insertBeverageProduct(targetBusinessId, user.userId(), request, stockStatus);
-        return Map.of("sku", request.sku().toUpperCase(), "status", stockStatus, "businessId", targetBusinessId);
+        catalogRepository.insertBeverageProduct(targetBusinessId, user.userId(), request, cleanSku, stockStatus);
+        return Map.of("sku", cleanSku != null ? cleanSku : "—", "status", stockStatus, "businessId", targetBusinessId);
     }
 
     /**
@@ -113,12 +123,30 @@ public class CatalogServiceImpl implements CatalogService {
                     .orElse(user.businessId());
         }
 
-        String code = String.valueOf(request.getOrDefault("code", "CAT-" + System.currentTimeMillis())).toUpperCase();
-        String name = String.valueOf(request.getOrDefault("name", "Nueva Línea"));
-        String slug = String.valueOf(request.getOrDefault("slug", name.toLowerCase().replace(" ", "-")));
-        String margin = String.valueOf(request.getOrDefault("wholesaleMargin", "15% - 20%"));
+        String name = String.valueOf(request.getOrDefault("name", "")).trim();
+        if (name.isBlank() || "null".equalsIgnoreCase(name)) {
+            throw new BusinessRuleException("El nombre de la categoría es obligatorio.");
+        }
+
+        String rawCode = String.valueOf(request.getOrDefault("code", "")).trim();
+        String code = (rawCode.isBlank() || "null".equalsIgnoreCase(rawCode))
+                ? "CAT-" + System.currentTimeMillis() % 100000
+                : rawCode.toUpperCase();
+
+        String rawSlug = String.valueOf(request.getOrDefault("slug", "")).trim();
+        String slug = (rawSlug.isBlank() || "null".equalsIgnoreCase(rawSlug))
+                ? name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "")
+                : rawSlug.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
+
+        String margin = String.valueOf(request.getOrDefault("wholesaleMargin", "15% - 20%")).trim();
+
+        // Validar unicidad de la categoría por negocio (código y nombre)
+        if (catalogRepository.existsCategoryByNameOrCode(targetBusinessId, code, name)) {
+            throw new BusinessRuleException(
+                    "Ya existe una categoría con el nombre '" + name + "' o código '" + code + "' registrada para este negocio.");
+        }
 
         catalogRepository.insertCategory(targetBusinessId, code, name, slug, margin);
-        return Map.of("code", code, "name", name, "status", "Activo");
+        return Map.of("code", code, "name", name, "status", "Activo", "businessId", targetBusinessId);
     }
 }

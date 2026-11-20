@@ -46,6 +46,7 @@ services:
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME:-bevadmin.com}
       - ACME_EMAIL=${ACME_EMAIL:-admin@bevadmin.com}
+      - TZ=${TZ:-America/Lima}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./ops/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
@@ -74,6 +75,7 @@ services:
     restart: unless-stopped
     environment:
       - COLLECTIONS=crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/whitelist-good-actors
+      - TZ=${TZ:-America/Lima}
     volumes:
       - ./ops/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
       - crowdsec-data:/var/lib/crowdsec/data
@@ -98,6 +100,8 @@ services:
     image: louislam/uptime-kuma:latest
     container_name: bevadmin-uptime-kuma
     restart: unless-stopped
+    environment:
+      - TZ=${TZ:-America/Lima}
     ports:
       - "127.0.0.1:3001:3001"
     volumes:
@@ -124,6 +128,7 @@ services:
       - AUTOHEAL_CONTAINER_LABEL=autoheal
       - AUTOHEAL_INTERVAL=15
       - AUTOHEAL_START_PERIOD=30
+      - TZ=${TZ:-America/Lima}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -145,6 +150,7 @@ services:
       - BACKUP_KEEP_DAYS=7
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
+      - TZ=${TZ:-America/Lima}
       # Variables de Notificación y Métricas (Push Monitor / Telegram / Discord / Webhook)
       - BACKUP_PUSH_URL=${BACKUP_PUSH_URL:-}
       - BACKUP_TELEGRAM_BOT_TOKEN=${BACKUP_TELEGRAM_BOT_TOKEN:-}

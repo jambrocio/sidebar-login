@@ -63,9 +63,8 @@
   </div>
 
   <!-- Pestañas de Navegación: Empresas (Solo Superusuario) y Locales (Negocio) -->
-  <nav class="tab-navigation" aria-label="Gestión de Negocios y Locales">
+  <nav class="tab-navigation" aria-label="Gestión de Negocios y Locales" *ngIf="isGeneralAdmin()">
     <button
-      *ngIf="isGeneralAdmin()"
       type="button"
       class="tab-btn"
       [class.active]="activeTab() === 'businesses'"
@@ -88,9 +87,9 @@
   </nav>
 
   <!-- ========================================================================= -->
-  <!-- TAB 1: NEGOCIOS Y EMPRESAS MATRIZ (POR DEFECTO Y PRIMERA POSICIÓN)        -->
+  <!-- TAB 1: NEGOCIOS Y EMPRESAS MATRIZ (SOLO SUPERADMINISTRADOR GENERAL)       -->
   <!-- ========================================================================= -->
-  <ng-container *ngIf="activeTab() === 'businesses'">
+  <ng-container *ngIf="isGeneralAdmin() && activeTab() === 'businesses'">
     <!-- Formulario para Registrar Nuevo Negocio Matriz -->
     <div class="card">
       <h2 class="section-title">
@@ -101,7 +100,7 @@
         Crea una nueva entidad fiscal y comercial en PostgreSQL. Una vez creada, podrás afiliar múltiples locales y asignar usuarios.
       </p>
 
-      <form (ngSubmit)="registerBusiness()" class="grid-form">
+      <form (ngSubmit)="registerBusiness()" class="grid-form" [class.was-validated]="formSubmittedBusiness()">
         <div class="form-group">
           <label>Código del Negocio *</label>
           <input
@@ -111,6 +110,8 @@
             placeholder="Ej. BIZ-004"
             maxlength="20"
             required
+            class="required-input"
+            [class.is-invalid]="formSubmittedBusiness() && !newBusiness.code.trim()"
           />
           <small class="field-hint">Código único correlativo identificador en el sistema</small>
         </div>
@@ -124,6 +125,8 @@
             placeholder="Ej. Distribuidora de Bebidas del Sur S.A.C."
             maxlength="200"
             required
+            class="required-input"
+            [class.is-invalid]="formSubmittedBusiness() && !newBusiness.legalName.trim()"
           />
           <small class="field-hint">Nombre oficial registrado tributariamente</small>
         </div>
@@ -137,6 +140,8 @@
             placeholder="Ej. Bebidas del Sur — Matriz"
             maxlength="150"
             required
+            class="required-input"
+            [class.is-invalid]="formSubmittedBusiness() && !newBusiness.commercialName.trim()"
           />
           <small class="field-hint">Nombre visible en cabeceras y menú</small>
         </div>
@@ -151,6 +156,8 @@
             maxlength="11"
             pattern="[0-9]{11}"
             required
+            class="required-input"
+            [class.is-invalid]="formSubmittedBusiness() && (!newBusiness.taxId.trim() || !/^[0-9]{11}$/.test(newBusiness.taxId.trim()))"
           />
           <small class="field-hint">11 dígitos numéricos sin guiones</small>
         </div>
@@ -164,6 +171,8 @@
             placeholder="Ej. Av. Panamericana Sur Km 14.5, Arequipa"
             maxlength="250"
             required
+            class="required-input"
+            [class.is-invalid]="formSubmittedBusiness() && !newBusiness.fiscalAddress.trim()"
           />
         </div>
 
@@ -190,11 +199,24 @@
         </div>
 
         <div class="form-group">
-          <label>Moneda Principal</label>
-          <select name="bizCurrency" [(ngModel)]="newBusiness.currency">
-            <option value="PEN">PEN (Soles — S/)</option>
-            <option value="USD">USD (Dólares — $)</option>
+          <label>Moneda por Defecto (Auto-selección) <span class="required-indicator">*</span></label>
+          <select name="bizDefaultCurrency" [(ngModel)]="newBusiness.defaultCurrency" (ngModelChange)="newBusiness.currency = $event" required class="required-input" [class.is-invalid]="formSubmittedBusiness() && !newBusiness.defaultCurrency">
+            <option *ngFor="let curr of newBusiness.supportedCurrencies" [value]="curr">
+              {{ curr === 'PEN' ? 'PEN (Soles — S/)' : (curr === 'USD' ? 'USD (Dólares — $)' : 'EUR (Euros — €)') }} (Por Defecto)
+            </option>
           </select>
+          <small class="field-hint">Divisa configurada que se auto-seleccionará por defecto en los formularios</small>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Monedas Permitidas / Admitidas (Multi-Moneda)</label>
+          <div style="display: flex; gap: 1.5rem; align-items: center; padding: 0.5rem 0.85rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg)">
+            <label *ngFor="let sc of systemCurrencies" style="display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; min-height: unset; font-size: 0.86rem; margin: 0">
+              <input type="checkbox" [checked]="isCurrencySupported(sc.code)" (change)="toggleSupportedCurrency(sc.code)" />
+              <span><strong>{{ sc.code }}</strong> ({{ sc.symbol }}) — {{ sc.name }}</span>
+            </label>
+          </div>
+          <small class="field-hint">Selecciona los tipos de moneda con los que esta empresa podrá transaccionar en catálogos y ventas</small>
         </div>
 
         <div class="form-actions full-width">
@@ -230,14 +252,21 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let biz of businesses()">
+            <tr *ngFor="let biz of pagedBusinesses()">
               <td><code>{{ biz.id }}</code></td>
               <td><strong>{{ biz.commercialName }}</strong></td>
               <td>{{ biz.legalName }}</td>
               <td><code>{{ biz.taxId }}</code></td>
               <td>{{ biz.fiscalAddress }}</td>
               <td>{{ biz.phone }}</td>
-              <td><span class="badge badge-info">{{ biz.currency || 'PEN' }}</span></td>
+              <td>
+                <span class="badge badge-success" title="Moneda configurada por defecto">
+                  {{ biz.defaultCurrency || biz.currency || 'PEN' }} (Default)
+                </span>
+                <div *ngIf="biz.supportedCurrencies && biz.supportedCurrencies.length > 0" style="font-size: 0.73rem; color: var(--text-muted-color); margin-top: 0.25rem">
+                  Admite: <strong>{{ biz.supportedCurrencies.join(', ') }}</strong>
+                </div>
+              </td>
               <td>
                 <span class="badge badge-primary">
                   {{ getBranchCount(biz.id) }} locales
@@ -258,35 +287,57 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Paginación de Negocios (15 por página) -->
+      <app-table-pagination
+        [totalItems]="businesses().length"
+        [pageSize]="pageSize"
+        [currentPage]="currentBusinessPage()"
+        (pageChange)="currentBusinessPage.set($event)"
+      ></app-table-pagination>
     </div>
   </ng-container>
 
   <!-- ========================================================================= -->
-  <!-- TAB 2: LOCALES Y SUCURSALES EN RED                                        -->
+  <!-- TAB 2: LOCALES Y SUCURSALES EN RED (DISPONIBLE PARA ADMIN NEGOCIO)        -->
   <!-- ========================================================================= -->
-  <ng-container *ngIf="activeTab() === 'branches'">
+  <ng-container *ngIf="!isGeneralAdmin() || activeTab() === 'branches'">
     <!-- Formulario para afiliar un nuevo Local a un Negocio -->
     <div class="card">
       <h2 class="section-title">
         <i class="bi bi-plus-circle-fill"></i>
-        Registrar Nuevo Local / Sucursal para un Negocio
+        Registrar Nuevo Local / Sucursal para {{ isGeneralAdmin() ? 'un Negocio' : businessInfo().legalName }}
       </h2>
-      <form (ngSubmit)="registerBusinessBranch()" class="grid-form">
+      <p class="section-description" *ngIf="!isGeneralAdmin()">
+        Como Administrador de Negocio, puedes registrar y aperturar nuevos locales, tiendas o almacenes directamente para tu empresa <strong>{{ businessInfo().legalName }} ({{ currentUserProfile().assignedBusinessId }})</strong>.
+      </p>
+
+      <form (ngSubmit)="registerBusinessBranch()" class="grid-form" [class.was-validated]="formSubmittedBranch()">
         <div class="form-group">
           <label>
-            Negocio Propietario *
-            <span *ngIf="!isGeneralAdmin()" style="font-size: 0.75rem; color: #0284c7">(Asignado por Defecto)</span>
+            Negocio Propietario <span class="required-indicator">*</span>
+            <span *ngIf="!isGeneralAdmin()" style="font-size: 0.75rem; color: #0284c7">(Tu Negocio Asignado)</span>
           </label>
           <select
+            *ngIf="isGeneralAdmin()"
             name="brBizId"
             [(ngModel)]="newBranch.businessId"
-            [disabled]="!isGeneralAdmin()"
             required
+            class="required-input"
+            [class.is-invalid]="formSubmittedBranch() && !newBranch.businessId"
           >
             <option *ngFor="let biz of availableBusinesses()" [value]="biz.id">
               {{ biz.legalName }} ({{ biz.id }} - RUC: {{ biz.taxId }})
             </option>
           </select>
+          <input
+            *ngIf="!isGeneralAdmin()"
+            type="text"
+            [value]="(businessInfo().legalName || getBusinessName(newBranch.businessId)) + ' (' + (currentUserProfile().assignedBusinessId || newBranch.businessId) + ')'"
+            readonly
+            disabled
+            style="background-color: var(--bg-hover, #f1f5f9); cursor: not-allowed; font-weight: 600"
+          />
         </div>
         <div class="form-group">
           <label>Nombre del Nuevo Local / Tienda *</label>
@@ -296,25 +347,18 @@
             [(ngModel)]="newBranch.name"
             placeholder="Ej. Sucursal Callao (Mayorista)"
             required
+            class="required-input"
+            [class.is-invalid]="formSubmittedBranch() && !newBranch.name.trim()"
           />
         </div>
         <div class="form-group">
           <label>Tipo de Operación del Local <span class="required-indicator">*</span></label>
-          <select name="brType" [(ngModel)]="newBranch.type" required class="required-input">
+          <select name="brType" [(ngModel)]="newBranch.type" required class="required-input" [class.is-invalid]="formSubmittedBranch() && !newBranch.type">
             <option value="Almacén Central y Mayorista">Almacén Central y Mayorista</option>
             <option value="Centro Mayorista y Minorista">Centro Mayorista y Minorista</option>
             <option value="Tienda Minorista / Express">Tienda Minorista / Express</option>
             <option value="Sucursal Mixta HORECA">Sucursal Mixta HORECA</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label>Dirección del Local</label>
-          <input
-            type="text"
-            name="brAddress"
-            [(ngModel)]="newBranch.address"
-            placeholder="Av. Argentina 2410, Callao"
-          />
         </div>
         <div class="form-group">
           <label>Serie de Facturación Electrónica</label>
@@ -341,6 +385,15 @@
             min="1"
             max="20"
             [(ngModel)]="newBranch.posTerminals"
+          />
+        </div>
+        <div class="form-group full-width">
+          <label>Dirección del Local</label>
+          <input
+            type="text"
+            name="brAddress"
+            [(ngModel)]="newBranch.address"
+            placeholder="Av. Argentina 2410, Callao"
           />
         </div>
         <div class="form-actions full-width">
@@ -389,7 +442,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let branch of filteredBranches()">
+            <tr *ngFor="let branch of pagedBranches()">
               <td><code>{{ branch.code }}</code></td>
               <td><strong>{{ getBusinessName(branch.businessId) }}</strong></td>
               <td><strong>{{ branch.name }}</strong></td>
@@ -416,6 +469,14 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Paginación de Locales (15 por página) -->
+      <app-table-pagination
+        [totalItems]="filteredBranches().length"
+        [pageSize]="pageSize"
+        [currentPage]="currentBranchPage()"
+        (pageChange)="currentBranchPage.set($event)"
+      ></app-table-pagination>
     </div>
   </ng-container>
 </section>

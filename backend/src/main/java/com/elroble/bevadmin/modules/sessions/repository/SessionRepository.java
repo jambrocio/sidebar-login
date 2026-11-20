@@ -105,6 +105,55 @@ public class SessionRepository {
     }
 
     /**
+     * Consulta las sesiones de un negocio específico filtradas por su empresa_id.
+     */
+    public List<ActiveSessionDto> findActiveSessionsByBusiness(UUID businessId) {
+        String sql = """
+            SELECT
+                s.sesion_id AS session_id,
+                s.usuario_id AS user_id,
+                s.codigo_usuario AS user_code,
+                s.nombre_usuario AS username,
+                s.nombre_completo AS full_name,
+                s.correo_electronico AS email,
+                s.estado_usuario AS user_status,
+                s.codigo_rol AS role_code,
+                s.nombre_rol AS role_name,
+                s.codigo_sede AS branch_code,
+                s.nombre_sede AS branch_name,
+                s.nombre_empresa AS business_name,
+                s.direccion_ip AS ip_address,
+                s.nombre_navegador AS browser_name,
+                s.tipo_dispositivo AS device_type,
+                s.agente_usuario AS user_agent,
+                s.nombre_ubicacion AS location_name,
+                s.latitud AS latitude,
+                s.longitud AS longitude,
+                s.fecha_inicio_sesion AS login_at,
+                s.fecha_ultima_actividad AS last_activity_at,
+                s.fecha_expiracion AS expires_at,
+                s.es_revocada AS is_revoked,
+                s.revocada_por_admin AS revoked_by_admin,
+                s.motivo_revocacion AS revoked_reason,
+                s.fecha_revocacion AS revoked_at,
+                s.estado_conexion AS connection_status,
+                s.indicador_semaforo AS semaphore_indicator
+            FROM vw_sesiones_activas_usuario s
+            JOIN auth.usuarios u ON s.usuario_id = u.id
+            WHERE u.empresa_id = ?
+            ORDER BY
+                CASE s.estado_conexion
+                    WHEN 'ONLINE' THEN 1
+                    WHEN 'IDLE' THEN 2
+                    ELSE 3
+                END,
+                s.fecha_ultima_actividad DESC
+            LIMIT 50
+        """;
+        return jdbcTemplate.query(sql, ACTIVE_SESSION_ROW_MAPPER, businessId);
+    }
+
+    /**
      * Busca una sesión específica por su UUID.
      */
     public Optional<ActiveSessionDto> findSessionById(UUID sessionId) {

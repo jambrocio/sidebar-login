@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BevAdmin Pro — Plataforma Inteligente de Ventas POS y Gestión para Distribuidoras de Bebidas</title>
+  <title>COTIC — SISTEMA POS & GESTIÓN DE PRODUCTOS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -735,11 +735,11 @@
   <header>
     <div class="brand">
       <div class="brand-icon">
-        <i class="bi bi-cup-straw"></i>
+        <i class="bi bi-box-seam-fill"></i>
       </div>
       <div class="brand-text">
-        <h1>BevAdmin Pro</h1>
-        <span>SISTEMA POS & GESTIÓN DE BEBIDAS</span>
+        <h1>COTIC</h1>
+        <span>SISTEMA POS & GESTIÓN DE PRODUCTOS</span>
       </div>
     </div>
 
@@ -747,8 +747,11 @@
       <button class="nav-tab active" onclick="switchMainView('deck')">
         <i class="bi bi-presentation"></i> Presentación Guiada
       </button>
-      <button class="nav-tab" onclick="switchMainView('video')">
-        <i class="bi bi-play-btn-fill" style="color: #ef4444;"></i> Video Promocional
+      <button class="nav-tab" id="tabVideoSpot" onclick="switchMainView('videoSpot')">
+        <i class="bi bi-camera-reels-fill" style="color: #0284c7;"></i> Video 1: Spot Comercial (50s)
+      </button>
+      <button class="nav-tab" id="tabVideoSofia" onclick="switchMainView('videoSofia')">
+        <i class="bi bi-person-video3" style="color: #ec4899;"></i> Video 2: Demo con Sofía (65s)
       </button>
       <button class="nav-tab" onclick="switchMainView('simulator')">
         <i class="bi bi-cart-check"></i> Simulador POS
@@ -758,7 +761,10 @@
       </button>
     </nav>
 
-    <div class="header-actions">
+    <div class="header-actions" style="display: flex; gap: 0.5rem;">
+      <a class="btn-cta" href="../manual/index.html" target="_self" style="background: linear-gradient(135deg, #0284c7, #2563eb);">
+        <i class="bi bi-book-half"></i> Manual de Usuario
+      </a>
       <a class="btn-cta" href="../diagrams/index.html" target="_self">
         <i class="bi bi-diagram-3-fill"></i> Ver Diagramas Técnicos
       </a>
@@ -769,13 +775,13 @@
   <section class="hero-banner">
     <div class="hero-container">
       <div class="pill-hero">
-        <i class="bi bi-patch-check-fill"></i> Solución Especializada para Mayoristas y Licorerías
+        <i class="bi bi-patch-check-fill"></i> Solución Especializada para Mayoristas, Distribuidoras y Comercio de Productos en General
       </div>
       <h2 class="hero-title">
-        Multiplica tus Ventas y Blinda tu Caja con <span>BevAdmin Pro</span>
+        Multiplica tus Ventas y Blinda tu Caja con <span>COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS</span>
       </h2>
       <p class="hero-lead">
-        La plataforma comercial integral que unifica tus tiendas físicas, inventario de bebidas por caja y botella, facturación electrónica instantánea y arqueo de turnos sin descuadres.
+        La plataforma comercial integral que unifica tus tiendas físicas, inventario multirubro por caja, fardo, paquete y unidad, facturación electrónica instantánea y arqueo de turnos sin descuadres.
       </p>
 
       <div class="kpi-grid">
@@ -797,9 +803,12 @@
         </div>
       </div>
 
-      <div style="margin-top: 1.75rem;">
-        <button class="btn-cta" onclick="switchMainView('video')" style="font-size: 0.95rem; padding: 0.75rem 1.75rem;">
-          <i class="bi bi-play-circle-fill"></i> Ver Spot Promocional en 38s (HyperFrames)
+      <div style="margin-top: 1.75rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <button class="btn-cta" onclick="switchMainView('videoSpot')" style="font-size: 0.95rem; padding: 0.75rem 1.75rem; background: linear-gradient(135deg, #0284c7, #2563eb);">
+          <i class="bi bi-camera-reels-fill"></i> Ver Video 1: Spot Comercial (50s)
+        </button>
+        <button class="btn-cta" onclick="switchMainView('videoSofia')" style="font-size: 0.95rem; padding: 0.75rem 1.75rem; background: linear-gradient(135deg, #ec4899, #8b5cf6);">
+          <i class="bi bi-person-video3"></i> Ver Video 2: Demo con Sofía (65s)
         </button>
       </div>
     </div>
@@ -812,25 +821,34 @@
     <div id="videoView" class="sim-container" style="display: none; padding: 1.5rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
         <div>
-          <span class="slide-tag" style="background: rgba(2, 132, 199, 0.15); color: #0284c7;">
-            <i class="bi bi-film"></i> Video-as-Code Oficial &bull; HyperFrames (38 Segundos)
+          <span class="slide-tag" id="videoBadge" style="background: rgba(2, 132, 199, 0.15); color: #0284c7;">
+            <i class="bi bi-camera-reels-fill"></i> Spot Comercial Oficial &bull; HyperFrames (50 Segundos HD)
           </span>
-          <h3 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">
-            Spot Comercial Oficial: BevAdmin Pro
+          <h3 id="videoTitle" style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">
+            Video 1: Spot Publicitario Comercial (50s)
           </h3>
-          <p style="font-size: 0.9rem; color: var(--text-secondary);">
-            Producción audiovisual en movimiento con narración en español, simulación de venta POS por mayor y menor, y demostración de arqueo sin descuadres.
+          <p id="videoDesc" style="font-size: 0.9rem; color: var(--text-secondary);">
+            Producción audiovisual en movimiento con música sintetizada, animación de ventas POS de productos en general (abarrotes, bebidas, limpieza, snacks), control de stock y arqueo de caja sin descuadres.
           </p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-          <a class="btn-cta" href="video_promocional_bevadmin.html" target="_blank" style="font-size: 0.85rem; padding: 0.55rem 1.15rem;">
-            <i class="bi bi-arrows-fullscreen"></i> Abrir en Pantalla Completa
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+          <!-- Selector de Videos -->
+          <div style="display: flex; background: var(--surface-subtle); padding: 0.25rem; border-radius: 9999px; border: 1px solid var(--card-border); gap: 0.25rem;">
+            <button id="btnVideoSpot" onclick="selectVideoSource('spot')" style="border: none; padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; cursor: pointer; background: #0284c7; color: #fff;">
+              <i class="bi bi-camera-reels-fill"></i> Video 1: Spot (50s)
+            </button>
+            <button id="btnVideoSofia" onclick="selectVideoSource('sofia')" style="border: none; padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-muted);">
+              <i class="bi bi-person-circle"></i> Video 2: Sofía (65s)
+            </button>
+          </div>
+          <a id="btnVideoFullscreen" class="btn-cta" href="video_promocional_bevadmin.html" target="_blank" style="font-size: 0.85rem; padding: 0.55rem 1.15rem;">
+            <i class="bi bi-arrows-fullscreen"></i> Pantalla Completa
           </a>
         </div>
       </div>
 
       <div style="width: 100%; aspect-ratio: 16 / 9; max-height: 560px; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-xl); border: 1px solid var(--card-border); background: #000;">
-        <iframe src="video_promocional_bevadmin.html" style="width: 100%; height: 100%; border: none;" title="Video Promocional BevAdmin Pro"></iframe>
+        <iframe id="promoVideoIframe" src="video_promocional_bevadmin.html" style="width: 100%; height: 100%; border: none;" title="Video Promocional BevAdmin Pro" allow="autoplay; fullscreen"></iframe>
       </div>
     </div>
 
@@ -875,8 +893,36 @@
         <!-- Catálogo de productos interactivo -->
         <div class="catalog-box">
           <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">
-            <i class="bi bi-grid-fill" style="color: var(--primary);"></i> Catálogo de Bebidas Disponibles
+            <i class="bi bi-grid-fill" style="color: var(--primary);"></i> Catálogo Multirubro de Productos Disponibles
           </h4>
+
+          <div class="product-row">
+            <div class="prod-info">
+              <h5>Arroz Costeño Extra 50kg (Saco Mayorista)</h5>
+              <span>SKU: ARR-COST-50K &bull; Stock: 120 Sacos</span>
+            </div>
+            <div class="prod-pricing">
+              <div class="prod-price">S/ 175.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Saco Mayorista</span>
+            </div>
+            <button class="btn-add" onclick="addToCart('Arroz Costeño Extra 50kg (Saco)', 175.00)">
+              <i class="bi bi-plus-lg"></i> Agregar
+            </button>
+          </div>
+
+          <div class="product-row">
+            <div class="prod-info">
+              <h5>Aceite Primor Premium 1L (Caja x 12)</h5>
+              <span>SKU: ACE-PRIM-12 &bull; Stock: 80 Cajas</span>
+            </div>
+            <div class="prod-pricing">
+              <div class="prod-price">S/ 92.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Por Mayor</span>
+            </div>
+            <button class="btn-add" onclick="addToCart('Aceite Primor 1L (Caja x 12)', 92.00)">
+              <i class="bi bi-plus-lg"></i> Agregar
+            </button>
+          </div>
 
           <div class="product-row">
             <div class="prod-info">
@@ -887,49 +933,49 @@
               <div class="prod-price">S/ 135.00</div>
               <span style="font-size: 0.72rem; color: var(--text-muted);">Por Mayor</span>
             </div>
-            <button class="btn-add" onclick="addToCart('Cerveza Cusqueña Trigo (Caja)', 135.00)">
+            <button class="btn-add" onclick="addToCart('Cerveza Cusqueña Trigo (Caja x 24)', 135.00)">
               <i class="bi bi-plus-lg"></i> Agregar
             </button>
           </div>
 
           <div class="product-row">
             <div class="prod-info">
-              <h5>Whisky Johnnie Walker Black Label (750ml)</h5>
-              <span>SKU: JW-BLACK-750 &bull; Stock: 42 Botellas</span>
+              <h5>Detergente Ariel 4.5kg (Fardo x 6)</h5>
+              <span>SKU: DET-ARIEL-45 &bull; Stock: 45 Fardos</span>
             </div>
             <div class="prod-pricing">
-              <div class="prod-price">S/ 98.00</div>
-              <span style="font-size: 0.72rem; color: var(--text-muted);">Por Menor</span>
+              <div class="prod-price">S/ 114.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Fardo Comercial</span>
             </div>
-            <button class="btn-add" onclick="addToCart('JW Black Label (750ml)', 98.00)">
+            <button class="btn-add" onclick="addToCart('Detergente Ariel 4.5kg (Fardo x 6)', 114.00)">
               <i class="bi bi-plus-lg"></i> Agregar
             </button>
           </div>
 
           <div class="product-row">
             <div class="prod-info">
-              <h5>Gaseosa Coca Cola 3 Litros (Pack x 4)</h5>
-              <span>SKU: COCA-3L-PK4 &bull; Stock: 110 Packs</span>
+              <h5>Bebida Piscano Quebranta (Caja x 12)</h5>
+              <span>SKU: BEV-PISC-12 &bull; Stock: 60 Cajas</span>
             </div>
             <div class="prod-pricing">
-              <div class="prod-price">S/ 48.00</div>
-              <span style="font-size: 0.72rem; color: var(--text-muted);">Pack Comercial</span>
+              <div class="prod-price">S/ 150.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Por Mayor</span>
             </div>
-            <button class="btn-add" onclick="addToCart('Coca Cola 3L (Pack x 4)', 48.00)">
+            <button class="btn-add" onclick="addToCart('Bebida Piscano Quebranta (Caja x 12)', 150.00)">
               <i class="bi bi-plus-lg"></i> Agregar
             </button>
           </div>
 
           <div class="product-row">
             <div class="prod-info">
-              <h5>Pisco Cuatro Gallos Quebranta (750ml)</h5>
-              <span>SKU: PISCO-4G-QUEB &bull; Stock: 36 Botellas</span>
+              <h5>Leche Gloria Azul (Plancha x 24)</h5>
+              <span>SKU: LEC-GLOR-24 &bull; Stock: 95 Planchas</span>
             </div>
             <div class="prod-pricing">
-              <div class="prod-price">S/ 45.00</div>
-              <span style="font-size: 0.72rem; color: var(--text-muted);">Unidad</span>
+              <div class="prod-price">S/ 89.00</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Plancha x 24</span>
             </div>
-            <button class="btn-add" onclick="addToCart('Pisco Cuatro Gallos Quebranta', 45.00)">
+            <button class="btn-add" onclick="addToCart('Leche Gloria Azul (Plancha x 24)', 89.00)">
               <i class="bi bi-plus-lg"></i> Agregar
             </button>
           </div>
@@ -996,14 +1042,27 @@
 
     <!-- MODO 3: CALCULADORA DE RETORNO DE INVERSIÓN (ROI) -->
     <div id="roiView" class="roi-section" style="display: none;">
-      <div style="text-align: center; max-width: 700px; margin: 0 auto 2.5rem;">
+      <div style="text-align: center; max-width: 700px; margin: 0 auto 2rem;">
         <span class="slide-tag"><i class="bi bi-graph-up-arrow"></i> RETORNO DE INVERSIÓN GARANTIZADO</span>
         <h3 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
           Calcula cuánto Ahorra tu Negocio al Mes
         </h3>
         <p style="color: var(--text-secondary); font-size: 1rem;">
-          Descubre el impacto económico de eliminar mermas, acelerar cobros y blindar la caja registradora de todas tus tiendas.
+          Descubre el impacto económico de eliminar mermas, acelerar cobros y blindar la caja registradora de todas tus tiendas en la divisa de tu empresa.
         </p>
+
+        <!-- Selector de Moneda de la Calculadora -->
+        <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.25rem;">
+          <button id="btnCurrPEN" onclick="setRoiCurrency('PEN')" style="border: none; padding: 0.45rem 1.15rem; border-radius: 9999px; font-weight: 800; cursor: pointer; background: #0284c7; color: #fff;">
+            🇵🇪 Soles (S/)
+          </button>
+          <button id="btnCurrUSD" onclick="setRoiCurrency('USD')" style="border: 1px solid var(--card-border); padding: 0.45rem 1.15rem; border-radius: 9999px; font-weight: 800; cursor: pointer; background: var(--surface-subtle); color: var(--text-muted);">
+            🇺🇸 Dólares ($)
+          </button>
+          <button id="btnCurrEUR" onclick="setRoiCurrency('EUR')" style="border: 1px solid var(--card-border); padding: 0.45rem 1.15rem; border-radius: 9999px; font-weight: 800; cursor: pointer; background: var(--surface-subtle); color: var(--text-muted);">
+            🇪🇺 Euros (€)
+          </button>
+        </div>
       </div>
 
       <div class="roi-grid">
@@ -1013,7 +1072,7 @@
               <span>Número de Tiendas o Sucursales:</span>
               <span style="color: var(--primary); font-family: 'JetBrains Mono', monospace;" id="lblStores">2 Tiendas</span>
             </div>
-            <input type="range" id="rngStores" min="1" max="15" value="2" oninput="calcRoi()">
+            <input type="range" id="rngStores" min="1" max="20" value="2" oninput="calcRoi()">
           </div>
 
           <div class="slider-box">
@@ -1021,7 +1080,7 @@
               <span>Venta Mensual Estimada por Tienda:</span>
               <span style="color: var(--primary); font-family: 'JetBrains Mono', monospace;" id="lblSales">S/ 35,000</span>
             </div>
-            <input type="range" id="rngSales" min="10000" max="150000" step="5000" value="35000" oninput="calcRoi()">
+            <input type="range" id="rngSales" min="10000" max="250000" step="5000" value="35000" oninput="calcRoi()">
           </div>
 
           <div class="slider-box">
@@ -1029,17 +1088,33 @@
               <span>Cajeros / Vendedores por Turno:</span>
               <span style="color: var(--primary); font-family: 'JetBrains Mono', monospace;" id="lblCashiers">3 Personas</span>
             </div>
-            <input type="range" id="rngCashiers" min="1" max="10" value="3" oninput="calcRoi()">
+            <input type="range" id="rngCashiers" min="1" max="12" value="3" oninput="calcRoi()">
           </div>
         </div>
 
         <div class="roi-result-card">
           <span style="font-size: 0.85rem; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.05em;">
-            Ahorro Mensual Estimado
+            Ahorro y Ganancia Mensual Estimada
           </span>
-          <div class="roi-amount" id="lblAhorro">S/ 3,150</div>
-          <p style="font-size: 0.9rem; color: #166534; margin-bottom: 1.5rem; line-height: 1.5;">
-            Por erradicación de descuadres de caja, reducción de mermas de almacén y +35% de velocidad comercial.
+          <div class="roi-amount" id="lblAhorro">S/ 3,950</div>
+          
+          <div style="text-align: left; background: rgba(255,255,255,0.7); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: #14532d; display: flex; flex-direction: column; gap: 0.4rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>• Mermas y fugas de almacén evitadas (3.5%):</span>
+              <strong id="lblAhorroMermas">S/ 2,450</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>• Ahorro en horas hombre y conciliación:</span>
+              <strong id="lblAhorroHoras">S/ 1,500</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #86efac; padding-top: 0.35rem; color: #15803d;">
+              <span>• Mayor capacidad de cobro en hora punta:</span>
+              <strong>+35% clientes</strong>
+            </div>
+          </div>
+
+          <p style="font-size: 0.88rem; color: #166534; margin-bottom: 1.25rem; line-height: 1.4;">
+            El sistema se autofinancia desde el primer mes gracias a la eliminación total de descuadres y la agilización de cobros.
           </p>
           <a class="btn-cta" href="tel:+51999999999" style="width: 100%; justify-content: center;">
             <i class="bi bi-whatsapp"></i> Solicitar Demostración Personalizada
@@ -1053,49 +1128,71 @@
   <!-- PIE DE PÁGINA -->
   <footer>
     <p style="font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">
-      BevAdmin Pro &bull; Plataforma Empresarial de Ventas POS y Control para Distribuidoras de Bebidas
+      COTIC &bull; SISTEMA POS & GESTIÓN DE PRODUCTOS
     </p>
     <p>Desarrollado con Angular 21, Spring Boot 4 y PostgreSQL 17 &bull; Cumplimiento normativo y seguridad OWASP.</p>
   </footer>
 
   <script>
-    // SLIDES DATA PARA USUARIOS FINALES
+    // SLIDES DATA PARA USUARIOS FINALES (6 Módulos Multirubro)
     const slidesData = [
       {
-        tag: "1. Venta Rápida en Mostrador",
-        title: "Punto de Venta (POS) Mayorista y Minorista Ultra Ágil",
-        desc: "Atiende a tus clientes en segundos. Vende tanto por cajas cerradas como por botellas sueltas con cálculo automático de precios diferenciados.",
-        callout: "El sistema actualiza el stock al instante en tu sede y aplica descuentos por cupones promocionales con total transparencia.",
+        tag: "1. Venta Rápida en Mostrador & Búsqueda Ágil",
+        title: "Punto de Venta (POS) Mayorista y Minorista Multirubro Ultra Ágil",
+        desc: "Atiende a tus clientes en segundos. Filtra productos de cualquier rubro (abarrotes, bebidas, limpieza, snacks) por nombre o SKU con stock disponible en tiempo real, ajusta cantidades directamente en el carrito y disfruta de recálculos instantáneos.",
+        callout: "Cuadre contable riguroso: Subtotal = Importe Total - IGV, garantizando la igualdad matemática exacta al centavo.",
         features: [
-          { icon: "bi-lightning-charge-fill", title: "Atención sin Colas", desc: "Interfaz táctil optimizada para teclado y lector de código de barras." },
-          { icon: "bi-boxes", title: "Precios Mayor y Menor", desc: "Reglas de precio por volumen automáticas sin que el cajero deba memorizarlas." },
-          { icon: "bi-ticket-perforated-fill", title: "Cupones y Promociones", desc: "Descuentos por porcentaje o monto fijo validados en tiempo real." }
+          { icon: "bi-search", title: "Búsqueda Ágil con Stock", desc: "Listado con stock de paquetes, cajas y unidades visible antes de agregar al carrito." },
+          { icon: "bi-boxes", title: "Precios Mayor y Menor", desc: "Reglas de precio por volumen automáticas con edición libre de cantidades." },
+          { icon: "bi-receipt", title: "Impresión Dual Instantánea", desc: "Formato optimizado para ticketera térmica de 80mm y PDF en tamaño A4 limpio." }
         ]
       },
       {
-        tag: "2. Blindaje de Caja y Dinero",
+        tag: "2. Histórico de Compras y Ventas por Producto",
+        title: "Trazabilidad Total: Historial de Entradas y Salidas en Inventario",
+        desc: "Visualiza al detalle el ciclo de vida de cada producto. Consulta al instante todas las compras que abastecieron el almacén y todas las ventas que redujeron el stock, con fechas exactas, números de comprobante, precios y clientes.",
+        callout: "Auditoría de inventario inmediata con balance en tiempo real: Stock Actual = Compras Acumuladas - Ventas Despachadas.",
+        features: [
+          { icon: "bi-clock-history", title: "Histórico Unificado", desc: "Acceso con un clic desde el catálogo de inventario para ver compras y ventas por ítem." },
+          { icon: "bi-graph-up-arrow", title: "Balance de Unidades", desc: "Contabiliza con precisión cuántas unidades entraron por compras y salieron por POS." },
+          { icon: "bi-journal-text", title: "Trazabilidad por Comprobante", desc: "Identifica boletas, facturas y órdenes de compra asociadas a cada movimiento." }
+        ]
+      },
+      {
+        tag: "3. Blindaje de Caja y Dinero",
         title: "Arqueo de Turno Inteligente: Cero Descuadres",
         desc: "Cada cajero abre su turno con un monto inicial y al finalizar realiza su conteo físico. El sistema detecta sobrantes o faltantes al centavo.",
         callout: "Separa automáticamente el dinero en efectivo de las transferencias digitales (Yape, Plin y tarjetas) para una conciliación perfecta.",
         features: [
           { icon: "bi-calculator-fill", title: "Cálculo Automático", desc: "Compara el saldo del sistema contra el efectivo contado sin dar lugar a dudas." },
           { icon: "bi-shield-check", title: "Actas Inmutables", desc: "Cada cierre de caja queda firmado con fecha, hora, usuario y local asignado." },
-          { icon: "bi-wallet2", title: "Múltiples Medios de Pago", desc: "Control discriminado de efectivo, POS bancario, Yape, Plin y vales." }
+          { icon: "bi-wallet2", title: "Múltiples Medios de Pago", desc: "Control discriminado de efectivo, POS bancario, Yape, Plin y transferencias." }
         ]
       },
       {
-        tag: "3. Control Multi-Tienda y Almacenes",
-        title: "Gestiona Todas tus Sucursales desde un Solo Lugar",
-        desc: "Supervisa en tiempo real qué tienda vende más, qué sede necesita mercadería y transfiere productos entre almacenes sin errores.",
-        callout: "Aislamiento estricto por local: los cajeros solo operan su tienda asignada, mientras la gerencia tiene visión 360° de toda la red.",
+        tag: "4. Proveedores, Compras y Multi-Divisa",
+        title: "Control Comercial Integral y Abastecimiento en Almacén",
+        desc: "Directorio centralizado de proveedores con validación de RUC, razón social y estado activo/inactivo. Cada compra incrementa automáticamente el stock de productos en el catálogo.",
+        callout: "Soporte Multi-Divisa por negocio: opera en Soles (PEN), Dólares (USD) o Euros (EUR) con total solidez contable y zona horaria local.",
         features: [
-          { icon: "bi-shop-window", title: "Locales y Series Propias", desc: "Cada sucursal emite con su propia serie correlativa de boleta y factura." },
-          { icon: "bi-arrow-left-right", title: "Reabastecimiento Ágil", desc: "Genera órdenes de compra a proveedores oficiales e ingresa stock con un clic." },
-          { icon: "bi-geo-alt-fill", title: "Directorio Geográfico", desc: "Monitorea la ubicación y actividad comercial de cada sucursal en vivo." }
+          { icon: "bi-truck", title: "Módulo de Proveedores", desc: "Ficha comercial completa con control de estado y búsqueda dinámica." },
+          { icon: "bi-arrow-left-right", title: "Abastecimiento Directo", desc: "Compras enlazadas directamente al inventario con actualización en tiempo real." },
+          { icon: "bi-cash-coin", title: "Multi-Divisa Automática", desc: "Autoselección de moneda (PEN, USD, EUR) según la empresa asignada." }
         ]
       },
       {
-        tag: "4. Ciberseguridad y Monitoreo de Sesiones",
+        tag: "5. Facturación Electrónica al Instante",
+        title: "Boletas y Facturas Electrónicas con Formato Oficial",
+        desc: "Genera comprobantes válidos con código QR y numeración correlativa en formato ticket para impresora térmica de 80mm o tamaño A4/PDF libre de menús de navegación.",
+        callout: "Ahorra papel y tiempo: comprobante limpio en PDF o ticketera térmica listo para entrega inmediata al cliente.",
+        features: [
+          { icon: "bi-receipt-cutoff", title: "Comprobantes Inmediatos", desc: "Emisión de Boleta de Venta o Factura con RUC y Razón Social validada." },
+          { icon: "bi-printer-fill", title: "Impresión Aislada A4 / Ticket", desc: "Solo se imprime el comprobante; la navegación, barra lateral y menús web quedan ocultos." },
+          { icon: "bi-qr-code", title: "Código QR y Hash", desc: "Cumplimiento con estándares tributarios y representación gráfica oficial." }
+        ]
+      },
+      {
+        tag: "6. Ciberseguridad y Monitoreo de Sesiones",
         title: "Auditoría en Tiempo Real y Cierre Remoto de Sesiones",
         desc: "Conoce en todo momento quién está conectado, desde qué dirección IP y en qué tienda. Protege tu negocio contra accesos sospechosos.",
         callout: "¿Detectaste un intruso o un cajero que olvidó cerrar sesión? Expúlsalo en un segundo con el botón 'Kill Session' remoto.",
@@ -1103,17 +1200,6 @@
           { icon: "bi-traffic-light-fill", title: "Semáforos de Conexión", desc: "Visualiza de un vistazo quién está Activo (verde) o Inactivo (amarillo)." },
           { icon: "bi-shield-x", title: "Kill Session Instantáneo", desc: "Invalida credenciales sospechosas sin reiniciar ni afectar a otros usuarios." },
           { icon: "bi-journal-check", title: "Bitácora Inalterable", desc: "Registro estricto de cada venta, modificación o anulación realizada." }
-        ]
-      },
-      {
-        tag: "5. Facturación Electrónica al Instante",
-        title: "Boletas y Facturas Electrónicas con Formato SUNAT",
-        desc: "Genera comprobantes válidos con código QR y numeración correlativa en formato ticket para impresora térmica o tamaño A4/PDF.",
-        callout: "Ahorra papel y tiempo: envía el comprobante por WhatsApp o correo electrónico al cliente con un solo clic.",
-        features: [
-          { icon: "bi-receipt-cutoff", title: "Comprobantes Inmediatos", desc: "Emisión de Boleta de Venta o Factura con RUC y Razón Social validada." },
-          { icon: "bi-printer-fill", title: "Compatibilidad Total", desc: "Impresoras térmicas de 80mm y 58mm, PDF de alta definición y exportación." },
-          { icon: "bi-qr-code", title: "Código QR y Hash", desc: "Cumplimiento con estándares tributarios y representación gráfica oficial." }
         ]
       }
     ];
@@ -1177,18 +1263,29 @@
     // CAMBIO DE VISTA PRINCIPAL
     function switchMainView(view) {
       document.getElementById('deckView').style.display = view === 'deck' ? 'block' : 'none';
-      document.getElementById('videoView').style.display = view === 'video' ? 'block' : 'none';
+      document.getElementById('videoView').style.display = (view === 'videoSpot' || view === 'videoSofia' || view === 'video') ? 'block' : 'none';
       document.getElementById('simulatorView').style.display = view === 'simulator' ? 'block' : 'none';
       document.getElementById('roiView').style.display = view === 'roi' ? 'block' : 'none';
 
+      if (view === 'videoSpot' || view === 'video') {
+        selectVideoSource('spot');
+      } else if (view === 'videoSofia') {
+        selectVideoSource('sofia');
+      }
+
       const tabs = document.querySelectorAll('.nav-tab');
       tabs.forEach((tab, i) => {
-        if ((view === 'deck' && i === 0) || (view === 'video' && i === 1) || (view === 'simulator' && i === 2) || (view === 'roi' && i === 3)) {
+        if ((view === 'deck' && i === 0) || 
+            ((view === 'videoSpot' || view === 'video') && i === 1) || 
+            (view === 'videoSofia' && i === 2) || 
+            (view === 'simulator' && i === 3) || 
+            (view === 'roi' && i === 4)) {
           tab.classList.add('active');
         } else {
           tab.classList.remove('active');
         }
       });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // SIMULADOR DE CARRITO POS
@@ -1247,11 +1344,13 @@
         `;
       }).join('');
 
-      const discountAmt = subtotal * discountPct;
-      const finalTotal = subtotal - discountAmt;
-      const igv = finalTotal * 0.18;
+      const discountAmt = +(subtotal * discountPct).toFixed(2);
+      const finalTotal = +(subtotal - discountAmt).toFixed(2);
+      // Regla Contable: Subtotal = Total - IGV
+      const baseSubtotal = +(finalTotal / 1.18).toFixed(2);
+      const igv = +(finalTotal - baseSubtotal).toFixed(2);
 
-      document.getElementById('txtSubtotal').innerText = `S/ ${subtotal.toFixed(2)}`;
+      document.getElementById('txtSubtotal').innerText = `S/ ${baseSubtotal.toFixed(2)}`;
       document.getElementById('txtDescuento').innerText = `- S/ ${discountAmt.toFixed(2)}`;
       document.getElementById('rowDescuento').style.display = discountPct > 0 ? 'flex' : 'none';
       document.getElementById('txtIgv').innerText = `S/ ${igv.toFixed(2)}`;
@@ -1273,23 +1372,140 @@
       pop.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // CALCULADORA DE ROI
+    // CALCULADORA DE ROI MULTI-DIVISA (PEN, USD, EUR)
+    let roiCurrency = 'PEN';
+    const currencyConfigs = {
+      PEN: { symbol: 'S/', rate: 1, locale: 'es-PE' },
+      USD: { symbol: '$', rate: 0.27, locale: 'en-US' },
+      EUR: { symbol: '€', rate: 0.25, locale: 'es-ES' }
+    };
+
+    function setRoiCurrency(curr) {
+      roiCurrency = curr;
+      ['PEN', 'USD', 'EUR'].forEach(c => {
+        const btn = document.getElementById(`btnCurr${c}`);
+        if (!btn) return;
+        if (c === curr) {
+          btn.style.background = '#0284c7';
+          btn.style.color = '#fff';
+          btn.style.border = 'none';
+        } else {
+          btn.style.background = 'var(--surface-subtle)';
+          btn.style.color = 'var(--text-muted)';
+          btn.style.border = '1px solid var(--card-border)';
+        }
+      });
+      calcRoi();
+    }
+
     function calcRoi() {
+      const conf = currencyConfigs[roiCurrency] || currencyConfigs.PEN;
       const stores = parseInt(document.getElementById('rngStores').value);
-      const sales = parseInt(document.getElementById('rngSales').value);
+      const rawSales = parseInt(document.getElementById('rngSales').value);
       const cashiers = parseInt(document.getElementById('rngCashiers').value);
 
+      const salesInCurr = Math.round(rawSales * conf.rate);
       document.getElementById('lblStores').innerText = `${stores} ${stores > 1 ? 'Tiendas' : 'Tienda'}`;
-      document.getElementById('lblSales').innerText = `S/ ${sales.toLocaleString('es-PE')}`;
+      document.getElementById('lblSales').innerText = `${conf.symbol} ${salesInCurr.toLocaleString(conf.locale)}`;
       document.getElementById('lblCashiers').innerText = `${cashiers} ${cashiers > 1 ? 'Personas' : 'Persona'}`;
 
-      // Estimación de ahorro: 4.5% de ahorro en mermas + 15 horas hombre mensuales por tienda
-      const ahorroMermas = (stores * sales) * 0.035;
-      const ahorroHoras = stores * cashiers * 250;
+      // Estimación de ahorro: 3.5% de ahorro en mermas + 15 horas hombre mensuales por tienda
+      const ahorroMermas = (stores * rawSales) * 0.035 * conf.rate;
+      const ahorroHoras = stores * cashiers * 250 * conf.rate;
       const ahorroTotal = Math.round(ahorroMermas + ahorroHoras);
 
-      document.getElementById('lblAhorro').innerText = `S/ ${ahorroTotal.toLocaleString('es-PE')}`;
+      document.getElementById('lblAhorro').innerText = `${conf.symbol} ${ahorroTotal.toLocaleString(conf.locale)}`;
+      const elMermas = document.getElementById('lblAhorroMermas');
+      if (elMermas) elMermas.innerText = `${conf.symbol} ${Math.round(ahorroMermas).toLocaleString(conf.locale)}`;
+      const elHoras = document.getElementById('lblAhorroHoras');
+      if (elHoras) elHoras.innerText = `${conf.symbol} ${Math.round(ahorroHoras).toLocaleString(conf.locale)}`;
     }
+
+    let currentVideoType = 'spot';
+
+    function selectVideoSource(type) {
+      currentVideoType = type;
+      const iframe = document.getElementById('promoVideoIframe');
+      const badge = document.getElementById('videoBadge');
+      const title = document.getElementById('videoTitle');
+      const desc = document.getElementById('videoDesc');
+      const fsLink = document.getElementById('btnVideoFullscreen');
+      const btnSofia = document.getElementById('btnVideoSofia');
+      const btnSpot = document.getElementById('btnVideoSpot');
+
+      if (type === 'sofia') {
+        iframe.src = 'video_demo_modulos_persona.html';
+        fsLink.href = 'video_demo_modulos_persona.html';
+        badge.style.background = 'rgba(236, 72, 153, 0.15)';
+        badge.style.color = '#ec4899';
+        badge.innerHTML = '<i class="bi bi-person-video3"></i> Presentadora Virtual &bull; Sofía (65 Segundos HD)';
+        title.innerText = 'Video 2: Demostración Guiada de Módulos (Sofía)';
+        desc.innerText = 'Recorrido animado con la presentadora virtual Sofía explicando los 6 módulos: Dashboard, POS Mayor/Menor con stock y cuadre contable, Proveedores y Compras, Arqueo de Caja y Ciberseguridad.';
+        btnSofia.style.background = '#ec4899';
+        btnSofia.style.color = '#fff';
+        btnSpot.style.background = 'transparent';
+        btnSpot.style.color = 'var(--text-muted)';
+      } else {
+        iframe.src = 'video_promocional_bevadmin.html';
+        fsLink.href = 'video_promocional_bevadmin.html';
+        badge.style.background = 'rgba(2, 132, 199, 0.15)';
+        badge.style.color = '#0284c7';
+        badge.innerHTML = '<i class="bi bi-camera-reels-fill"></i> Spot Comercial Oficial &bull; HyperFrames (50 Segundos HD)';
+        title.innerText = 'Video 1: Spot Publicitario Comercial (50s)';
+        desc.innerText = 'Producción audiovisual en movimiento con música sintetizada, animación de ventas POS de productos en general (abarrotes, bebidas, limpieza, snacks), control de stock y arqueo de caja sin descuadres.';
+        btnSpot.style.background = '#0284c7';
+        btnSpot.style.color = '#fff';
+        btnSofia.style.background = 'transparent';
+        btnSofia.style.color = 'var(--text-muted)';
+      }
+    }
+
+    function triggerCleanMp4Download(fileName) {
+      fetch(fileName)
+        .then(res => {
+          if (!res.ok) throw new Error('Fetch failed');
+          return res.blob();
+        })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'video/mp4' }));
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = blobUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }, 1500);
+        })
+        .catch(() => {
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = fileName;
+          a.setAttribute('download', fileName);
+          a.target = '_self';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+          }, 500);
+        });
+    }
+
+    function downloadMp4FromPortal() {
+      const file = currentVideoType === 'sofia' 
+        ? 'video_2_demo_sofia_cotic.mp4' 
+        : 'video_1_spot_comercial_cotic.mp4';
+      triggerCleanMp4Download(file);
+    }
+
+    // Receptor de evento para descargas solicitadas desde el reproductor dentro del iframe
+    window.addEventListener('message', event => {
+      if (event.data && event.data.type === 'DOWNLOAD_COTIC_MP4') {
+        triggerCleanMp4Download(event.data.file);
+      }
+    });
 
     // INICIALIZACIÓN
     renderSlide();

@@ -52,13 +52,28 @@ public class PurchasesRepository {
     }
 
     /**
+     * Genera el siguiente código correlativo de orden de compra si no se envía uno desde el cliente.
+     */
+    public String generateNextPurchaseCode() {
+        Integer max = jdbcClient.sql("""
+                SELECT COALESCE(MAX(CAST(SUBSTRING(codigo_compra FROM '[0-9]+$') AS INT)), 0) + 1
+                FROM compras
+                """)
+                .query(Integer.class)
+                .single();
+        return String.format("OC-2026-%03d", max != null ? max : 1);
+    }
+
+    /**
      * Inserta una nueva orden de compra en la tabla {@code compras} vinculada a la Sede Asignada del usuario.
      *
-     * @param req       DTO con los datos de la compra
-     * @param user      usuario comprador autenticado
-     * @param totalCost costo total calculado ({@code boxCost * boxesQty})
+     * @param purchaseCode código correlativo final
+     * @param req          DTO con los datos de la compra
+     * @param user         usuario comprador autenticado
+     * @param totalCost    costo total calculado ({@code boxCost * boxesQty})
      */
     public void insertPurchaseOrder(
+            String purchaseCode,
             RegisterPurchaseRequest req,
             AuthenticatedUserPrincipal user,
             BigDecimal totalCost) {
@@ -73,7 +88,7 @@ public class PurchasesRepository {
                     :boxCost, :totalCost, 'Recibido'
                 )
                 """)
-                .param("purchaseCode", req.purchaseCode())
+                .param("purchaseCode", purchaseCode)
                 .param("businessId", user.businessId())
                 .param("branchId", user.assignedBranchId())
                 .param("buyerUserId", user.userId())
@@ -84,5 +99,39 @@ public class PurchasesRepository {
                 .param("boxCost", req.boxCost())
                 .param("totalCost", totalCost)
                 .update();
+
+        // Increment stock in inventario.productos_bebidas
+        int updated = 0;
+        if (req.productSku() != null && !req.productSku().isBlank()) {
+            updated = jdbcClient.sql("""
+                    UPDATE inventario.productos_bebidas
+                    SET stock_cajas = stock_cajas + :boxesQty,
+                        stock_unidades = stock_unidades + (:boxesQty * 12),
+                        estado_stock = CASE WHEN (stock_cajas + :boxesQty) > 10 THEN 'En Stock' WHEN (stock_cajas + :boxesQty) > 0 THEN 'Stock Bajo' ELSE 'Agotado' END
+                    WHERE empresa_id = :businessId AND UPPER(codigo_sku) = UPPER(:sku)
+                    """)
+                    .param("boxesQty", req.boxesQty())
+                    .param("businessId", user.businessId())
+                    .param("sku", req.productSku().trim())
+                    .update();
+        }
+
+        if (updated == 0) {
+            jdbcClient.sql("""
+                    UPDATE inventario.productos_bebidas
+                    SET stock_cajas = stock_cajas + :boxesQty,
+                        stock_unidades = stock_unidades + (:boxesQty * 12),
+                        estado_stock = CASE WHEN (stock_cajas + :boxesQty) > 10 THEN 'En Stock' WHEN (stock_cajas + :boxesQty) > 0 THEN 'Stock Bajo' ELSE 'Agotado' END
+                    WHERE empresa_id = :businessId
+                      AND (
+                        (codigo_sku IS NOT NULL AND codigo_sku != '' AND :detail ILIKE '%' || codigo_sku || '%')
+                        OR :detail ILIKE '%' || nombre || '%'
+                      )
+                    """)
+                    .param("boxesQty", req.boxesQty())
+                    .param("businessId", user.businessId())
+                    .param("detail", req.productDetail())
+                    .update();
+        }
     }
 }

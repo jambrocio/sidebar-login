@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService, ActiveSessionDto } from '../../core/services/admin-api.service';
+import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
 
 /**
  * Componente Smart/Container para la Auditoría de Conexiones de Red y Sesiones (NOC).
@@ -9,6 +10,7 @@ import { AdminApiService, ActiveSessionDto } from '../../core/services/admin-api
  * @description Monitorea de forma semaforizada en tiempo real las IPs, navegadores, dispositivos
  * y ubicación geográfica de los usuarios conectados, permitiendo ejecutar terminación forzada
  * de tokens JWT (Kill Session) y bloqueo preventivo de cuentas sospechosas en PostgreSQL.
+ * Incluye paginación de 15 sesiones por página.
  *
  * @author Equipo de Arquitectura Frontend Senior
  * @version 2.0
@@ -16,7 +18,7 @@ import { AdminApiService, ActiveSessionDto } from '../../core/services/admin-api
 @Component({
   selector: 'app-active-sessions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TablePaginationComponent],
   templateUrl: './active-sessions.component.html',
   styleUrl: './active-sessions.component.scss',
 })
@@ -101,6 +103,12 @@ export class ActiveSessionsComponent implements OnInit, OnDestroy {
     this.sessions().filter(s => this.isSuspiciousSession(s)).length
   );
 
+  /** Tamaño de página estándar (15 registros) */
+  readonly pageSize = 15;
+
+  /** Página activa actual */
+  readonly currentPage = signal<number>(1);
+
   /** Lista filtrada según los criterios de búsqueda y semáforo */
   readonly filteredSessions = computed(() => {
     const query = this.searchFilter().toLowerCase().trim();
@@ -128,6 +136,12 @@ export class ActiveSessionsComponent implements OnInit, OnDestroy {
 
       return matchesStatus && matchesQuery;
     });
+  });
+
+  /** Subconjunto de sesiones paginadas a 15 por página */
+  readonly pagedSessions = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredSessions().slice(start, start + this.pageSize);
   });
 
   /** Sesiones disponibles para el visor de mapa según el filtro de tipo de conexión elegido en el modal */

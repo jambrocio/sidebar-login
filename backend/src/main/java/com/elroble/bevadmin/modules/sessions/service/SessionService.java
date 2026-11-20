@@ -19,6 +19,11 @@ public interface SessionService {
     List<ActiveSessionDto> listActiveSessions();
 
     /**
+     * Lista las sesiones activas de un negocio específico con indicadores semaforizados y geolocalización.
+     */
+    List<ActiveSessionDto> listActiveSessionsByBusiness(UUID businessId);
+
+    /**
      * Registra una nueva sesión activa con IP, User-Agent y ubicación tras un login exitoso.
      */
     void recordLoginSession(UUID userId, UUID branchId, String username, String token, HttpServletRequest request);

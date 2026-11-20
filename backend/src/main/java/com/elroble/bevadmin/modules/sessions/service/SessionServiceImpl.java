@@ -34,6 +34,11 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
+    public List<ActiveSessionDto> listActiveSessionsByBusiness(UUID businessId) {
+        return sessionRepository.findActiveSessionsByBusiness(businessId);
+    }
+
+    @Override
     @Transactional
     public void recordLoginSession(
             UUID userId,

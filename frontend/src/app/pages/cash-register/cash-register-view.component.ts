@@ -1,15 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
-import { CashRegisterAudit, FeedbackNotification } from '../../core/models/domain.models';
+import { CashRegisterAudit, FeedbackNotification, resolveCurrencySymbol } from '../../core/models/domain.models';
+import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
+import { AppDatePipe } from '../../shared/pipes/app-date.pipe';
+import { AppAmountPipe } from '../../shared/pipes/app-amount.pipe';
+import { formatAmount, formatCurrentDateTime } from '../../core/utils/formatters';
 
 /**
  * Componente Smart/Container dedicado al Arqueo y Cierre de Caja por Turno (`/dashboard/cash-register`).
  *
  * @description Permite a los cajeros y supervisores registrar el conteo físico de efectivo,
  * contrastarlo contra el saldo teórico esperado (apertura + ventas en efectivo - gastos de caja)
- * y persistir el acta de cierre con semaforización de diferencias (Cuadre Exacto, Sobrante o Faltante).
+ * y persistir el acta de cierre con semaforización de diferencias con paginación de 15 por página.
  *
  * @author Equipo de Arquitectura Frontend Senior
  * @version 2.0
@@ -17,11 +21,11 @@ import { CashRegisterAudit, FeedbackNotification } from '../../core/models/domai
 @Component({
   selector: 'app-cash-register-view',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TablePaginationComponent, AppDatePipe, AppAmountPipe],
   templateUrl: './cash-register-view.component.html',
   styleUrl: './cash-register-view.component.scss',
 })
-export class CashRegisterViewComponent {
+export class CashRegisterViewComponent implements OnInit {
   private readonly dummyData = inject(DummyDataService);
 
   readonly businessInfo = this.dummyData.businessInfo;
@@ -29,15 +33,72 @@ export class CashRegisterViewComponent {
   readonly currentSessionUser = this.dummyData.currentSessionUser;
   readonly cashAuditsList = this.dummyData.cashAuditsList;
   readonly feedbackMessage = signal<FeedbackNotification | null>(null);
+  readonly formSubmitted = signal<boolean>(false);
+
+  /** Moneda configurada por defecto para el negocio en sesión */
+  readonly defaultBusinessCurrency = computed<string>(() => {
+    return this.businessInfo().defaultCurrency || this.businessInfo().currency || 'PEN';
+  });
+
+  /** Monedas admitidas por el negocio en sesión */
+  readonly availableCurrencies = computed<string[]>(() => {
+    if (this.businessInfo().supportedCurrencies && this.businessInfo().supportedCurrencies!.length > 0) {
+      return this.businessInfo().supportedCurrencies!;
+    }
+    const def = this.defaultBusinessCurrency();
+    return [def, def === 'PEN' ? 'USD' : 'PEN'];
+  });
+
+  /** Moneda seleccionada para el arqueo */
+  readonly selectedAuditCurrency = signal<string>('PEN');
+
+  /** Símbolo monetario dinámico según la divisa del arqueo */
+  readonly currencySymbol = computed<string>(() => {
+    return resolveCurrencySymbol(this.selectedAuditCurrency());
+  });
+
+  constructor() {
+    effect(() => {
+      this.selectedAuditCurrency.set(this.defaultBusinessCurrency());
+    });
+  }
+
+  /** Tamaño de página estándar (15 registros) */
+  readonly pageSize = 15;
+
+  /** Página activa actual */
+  readonly currentPage = signal<number>(1);
+
+  /** Arqueos paginados a 15 por página */
+  readonly pagedCashAudits = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.cashAuditsList().slice(start, start + this.pageSize);
+  });
 
   newCashAudit = {
-    shift: 'Turno Tarde/Cierre (14:00 - 22:00)',
-    openingBalance: 300,
-    cashSales: 2450,
-    digitalSales: 1380,
-    expenses: 120,
-    countedCash: 2630,
+    shift: 'Turno Mañana (08:00 - 16:00)',
+    openingBalance: null as any,
+    cashSales: null as any,
+    digitalSales: null as any,
+    expenses: null as any,
+    countedCash: null as any,
   };
+
+  ngOnInit(): void {
+    this.resetAuditForm();
+  }
+
+  resetAuditForm(): void {
+    this.formSubmitted.set(false);
+    this.newCashAudit = {
+      shift: 'Turno Mañana (08:00 - 16:00)',
+      openingBalance: null as any,
+      cashSales: null as any,
+      digitalSales: null as any,
+      expenses: null as any,
+      countedCash: null as any,
+    };
+  }
 
   getExpectedCash(): number {
     return (
@@ -52,6 +113,22 @@ export class CashRegisterViewComponent {
   }
 
   registerCashRegisterClose(): void {
+    this.formSubmitted.set(true);
+
+    if (
+      this.newCashAudit.openingBalance === null ||
+      this.newCashAudit.openingBalance === undefined ||
+      this.newCashAudit.countedCash === null ||
+      this.newCashAudit.countedCash === undefined ||
+      !this.selectedAuditCurrency()
+    ) {
+      this.feedbackMessage.set({
+        text: 'Por favor, completa los campos obligatorios del arqueo marcados en rojo.',
+        type: 'warning',
+      });
+      return;
+    }
+
     const expected = this.getExpectedCash();
     const counted = Number(this.newCashAudit.countedCash) || 0;
     const diff = +(counted - expected).toFixed(2);
@@ -71,14 +148,15 @@ export class CashRegisterViewComponent {
       difference: diff,
       cashierUser: this.currentSessionUser(),
       status,
-      closedAt: 'Ahora mismo',
+      closedAt: formatCurrentDateTime(),
     };
 
     this.dummyData.closeCashRegister(auditData);
 
     this.feedbackMessage.set({
-      text: `Arqueo de Caja registrado para tu local (${this.assignedBranch()}) — Estado: ${status} (Diferencia: $${diff}).`,
+      text: `Arqueo de Caja registrado para tu local (${this.assignedBranch()}) — Estado: ${status} (Diferencia: ${this.currencySymbol()} ${formatAmount(diff)}).`,
       type: diff === 0 ? 'success' : 'warning',
     });
+    this.resetAuditForm();
   }
 }

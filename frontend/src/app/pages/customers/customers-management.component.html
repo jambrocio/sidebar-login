@@ -73,7 +73,7 @@
       <strong>{{ businessInfo().legalName }} ({{ currentUserProfile().assignedBusinessId }})</strong>.
     </div>
 
-    <form (ngSubmit)="saveCustomer()" class="grid-form">
+    <form (ngSubmit)="saveCustomer()" class="grid-form" [class.was-validated]="formSubmitted()" novalidate>
       <!-- 1. Selección de Negocio Matriz (Condicionado por Rol) -->
       <div class="form-group">
         <label>
@@ -115,6 +115,7 @@
           placeholder="Ej. 20601234567 o 45892147"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !customerForm.documentNumber.trim()"
         />
       </div>
 
@@ -128,6 +129,7 @@
           placeholder="Ej. Inversiones Gastronómicas San Martín S.A.C."
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !customerForm.legalName.trim()"
         />
       </div>
 
@@ -176,7 +178,7 @@
       </div>
 
       <!-- 9. Dirección Comercial -->
-      <div class="form-group">
+      <div class="form-group full-width">
         <label>9. Dirección Fiscal o de Entrega</label>
         <input
           type="text"
@@ -186,22 +188,40 @@
         />
       </div>
 
-      <!-- 10. Línea de Crédito -->
+      <!-- 10. Moneda de la Línea de Crédito -->
       <div class="form-group">
-        <label>10. Línea de Crédito Autorizada ($)</label>
+        <label>10. Moneda de la Línea de Crédito <span class="required-indicator">*</span></label>
+        <select
+          name="custCreditCurr"
+          [ngModel]="selectedCreditCurrency()"
+          (ngModelChange)="selectedCreditCurrency.set($event)"
+          required
+          class="required-input"
+        >
+          <option *ngFor="let c of availableCurrenciesForCustomerBusiness()" [value]="c">
+            {{ c === 'PEN' ? 'PEN (Soles — S/)' : (c === 'USD' ? 'USD (Dólares — $)' : 'EUR (Euros — €)') }}
+            {{ c === defaultCurrencyForCustomerBusiness() ? '— [Moneda por Defecto]' : '' }}
+          </option>
+        </select>
+        <small class="field-hint">Auto-seleccionada según la divisa configurada por defecto en el negocio</small>
+      </div>
+
+      <!-- 11. Línea de Crédito -->
+      <div class="form-group">
+        <label>11. Línea de Crédito Autorizada ({{ creditCurrencySymbol() }})</label>
         <input
           type="number"
           name="custCredit"
           [(ngModel)]="customerForm.creditLine"
           min="0"
-          step="500"
+          step="100"
         />
       </div>
 
       <div class="form-actions full-width">
-        <button type="submit" class="btn-primary">
-          <i class="bi bi-check2-circle"></i>
-          <span>Registrar Cliente en Negocio</span>
+        <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+          <i class="bi bi-person-check-fill" *ngIf="!isSubmitting()"></i>
+          <span>{{ isSubmitting() ? 'Registrando Cliente...' : 'Registrar Cliente en Negocio' }}</span>
         </button>
       </div>
     </form>
@@ -209,30 +229,34 @@
 
   <!-- Cartera de Clientes Registrados -->
   <div class="card">
-    <div class="toolbar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem">
-      <h2 class="section-title" style="margin: 0">
-        <i class="bi bi-people-fill" style="margin-right: 0.4rem; color: #2563eb"></i>
-        Cartera de Clientes Registrados ({{ filteredCustomers().length }})
-      </h2>
-      <div style="min-width: 280px">
+    <div class="toolbar customer-toolbar">
+      <div class="toolbar-left">
+        <h2 class="section-title" style="margin: 0">
+          <i class="bi bi-people-fill" style="color: #2563eb"></i>
+          Cartera de Clientes Registrados
+        </h2>
+        <span class="counter-badge">{{ filteredCustomers().length }} clientes</span>
+      </div>
+
+      <div class="search-box customer-search-box">
+        <i class="bi bi-search"></i>
         <input
           type="search"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
           placeholder="Buscar por RUC/DNI, razón social o negocio..."
-          style="width: 100%; padding: 0.5rem 0.85rem; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1)"
         />
       </div>
     </div>
 
-    <div class="table-responsive" style="margin-top: 1rem">
-      <table class="table">
+    <div class="table-responsive">
+      <table class="data-table customer-table">
         <thead>
           <tr>
             <th>Código</th>
             <th>Documento</th>
             <th>Cliente / Razón Social</th>
-            <th>Negocio Matriz</th>
+            <th *ngIf="isGeneralAdmin()">Negocio Matriz</th>
             <th>Clasificación</th>
             <th>Contacto</th>
             <th>Línea Crédito</th>
@@ -240,66 +264,100 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let c of filteredCustomers()">
+          <tr *ngFor="let c of pagedCustomers()" class="customer-row">
             <td>
-              <span style="font-family: monospace; font-weight: 700; color: #0284c7">
+              <span class="customer-code-pill">
                 {{ c.customerCode }}
               </span>
             </td>
             <td>
-              <div class="cell-doc">
-                <span class="doc-type">{{ c.documentType }}</span>
-                <span class="doc-num">{{ c.documentNumber }}</span>
+              <div class="doc-container">
+                <span class="doc-badge" [ngClass]="'doc-' + c.documentType.toLowerCase()">{{ c.documentType }}</span>
+                <span class="doc-number">{{ c.documentNumber }}</span>
               </div>
             </td>
             <td>
-              <div style="font-weight: 600">{{ c.legalName }}</div>
-              <div *ngIf="c.commercialName && c.commercialName !== c.legalName" style="font-size: 0.85rem; color: var(--text-muted, #64748b)">
-                {{ c.commercialName }}
+              <div class="customer-identity-cell">
+                <div class="customer-avatar" [ngClass]="'avatar-' + (c.customerType || '').split(' ')[0].toLowerCase()">
+                  {{ getInitials(c.legalName) }}
+                </div>
+                <div class="customer-names">
+                  <div class="legal-name">{{ c.legalName }}</div>
+                  <div class="commercial-name" *ngIf="c.commercialName && c.commercialName !== c.legalName">
+                    <i class="bi bi-shop"></i> {{ c.commercialName }}
+                  </div>
+                  <div class="customer-address" *ngIf="c.address">
+                    <i class="bi bi-geo-alt"></i> {{ c.address }}
+                  </div>
+                </div>
               </div>
             </td>
-            <td>
-              <span class="role-badge badge-biz">
-                {{ c.businessCode }} — {{ getBusinessName(c.businessCode) }}
+            <td *ngIf="isGeneralAdmin()">
+              <span class="badge badge-biz-tag">
+                <i class="bi bi-building"></i> {{ c.businessCode || 'BIZ-001' }}
               </span>
             </td>
             <td>
               <span
-                class="role-badge"
+                class="classification-badge"
                 [ngClass]="{
-                  'badge-vip': c.customerType === 'Mayorista VIP' || c.customerType === 'Corporativo',
-                  'badge-frecuente': c.customerType === 'Minorista Frecuente' || c.customerType === 'Distribuidor'
+                  'type-vip': c.customerType === 'Mayorista VIP',
+                  'type-distribuidor': c.customerType === 'Distribuidor',
+                  'type-corporativo': c.customerType === 'Corporativo',
+                  'type-minorista': c.customerType === 'Minorista Frecuente'
                 }"
               >
+                <i class="bi bi-star-fill" *ngIf="c.customerType === 'Mayorista VIP'"></i>
+                <i class="bi bi-truck" *ngIf="c.customerType === 'Distribuidor'"></i>
+                <i class="bi bi-building" *ngIf="c.customerType === 'Corporativo'"></i>
+                <i class="bi bi-bag-check" *ngIf="c.customerType === 'Minorista Frecuente'"></i>
                 {{ c.customerType }}
               </span>
             </td>
             <td>
-              <div class="cell-contact">
-                <span *ngIf="c.email"><i class="bi bi-envelope"></i> {{ c.email }}</span>
-                <span *ngIf="c.phone"><i class="bi bi-telephone"></i> {{ c.phone }}</span>
+              <div class="contact-card-cell">
+                <div class="contact-item" *ngIf="c.email" title="Correo Electrónico">
+                  <i class="bi bi-envelope-at text-muted"></i>
+                  <span>{{ c.email }}</span>
+                </div>
+                <div class="contact-item" *ngIf="c.phone" title="Teléfono">
+                  <i class="bi bi-telephone text-muted"></i>
+                  <span>{{ c.phone }}</span>
+                </div>
+                <span *ngIf="!c.email && !c.phone" class="text-muted">—</span>
               </div>
             </td>
             <td>
-              <span style="font-weight: 600">
-                ${{ (c.creditLine || 0) | number : '1.2-2' }}
-              </span>
+              <div class="credit-pill" [class.no-credit]="!c.creditLine || c.creditLine === 0">
+                <span class="credit-currency">{{ getCurrencySymbol(c.businessCode) }}</span>
+                <span class="credit-val">{{ c.creditLine | appAmount }}</span>
+              </div>
             </td>
             <td>
-              <span class="role-badge badge-status">
-                <i class="bi bi-check-circle-fill" style="margin-right: 0.25rem; font-size: 0.75rem"></i>
-                Activo
+              <span class="status-indicator-badge">
+                <span class="status-dot"></span>
+                <span>Activo</span>
               </span>
             </td>
           </tr>
           <tr *ngIf="filteredCustomers().length === 0">
-            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted, #64748b)">
-              <i class="bi bi-search" style="font-size: 2rem; display: block; margin-bottom: 0.5rem"></i>
-              No se encontraron clientes que coincidan con los criterios de búsqueda.
+            <td [attr.colspan]="isGeneralAdmin() ? 8 : 7" class="empty-state-cell">
+              <div class="empty-state-content">
+                <i class="bi bi-person-x"></i>
+                <p>No se encontraron clientes registrados que coincidan con la búsqueda.</p>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de 15 registros por página -->
+    <app-table-pagination
+      [totalItems]="filteredCustomers().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

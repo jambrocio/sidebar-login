@@ -4,6 +4,9 @@
       <h1>Líneas y Categorías de Productos</h1>
       <p class="subtitle">
         Negocio: <strong>{{ businessInfo().legalName }}</strong>
+        <span *ngIf="isGeneralAdmin()" class="role-badge" style="background-color: rgba(234, 179, 8, 0.15); color: #b45309; margin-left: 0.5rem; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600">
+          <i class="bi bi-shield-check"></i> Administrador General (Multi-Negocio)
+        </span>
       </p>
     </div>
 
@@ -15,12 +18,35 @@
     </div>
   </header>
 
+  <!-- Filtro de Negocio para Administrador General -->
+  <div class="card" *ngIf="isGeneralAdmin()" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem">
+    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap">
+      <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-color, #1e293b); display: flex; align-items: center; gap: 0.4rem">
+        <i class="bi bi-building"></i> Filtrar por Negocio Matriz:
+      </label>
+      <select
+        [ngModel]="filterBusinessCode()"
+        (ngModelChange)="filterBusinessCode.set($event)"
+        style="padding: 0.45rem 0.9rem; border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; font-size: 0.9rem; min-width: 260px; background-color: var(--input-bg, #fff); color: var(--text-color, #1e293b)"
+      >
+        <option value="ALL">-- Ver Todas las Categorías de Todos los Negocios --</option>
+        <option *ngFor="let b of businesses()" [value]="b.id">
+          {{ b.id }} — {{ b.commercialName || b.legalName }}
+        </option>
+      </select>
+      <span style="font-size: 0.85rem; color: #64748b">
+        Mostrando {{ filteredCategories().length }} de {{ categories().length }} categorías registradas
+      </span>
+    </div>
+  </div>
+
   <div class="card">
     <div class="table-responsive">
       <table class="data-table">
         <thead>
           <tr>
             <th>Código</th>
+            <th *ngIf="isGeneralAdmin()">Negocio Matriz</th>
             <th>Línea de Productos</th>
             <th>Slug</th>
             <th>Productos</th>
@@ -29,16 +55,35 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let cat of categories()">
+          <tr *ngFor="let cat of pagedCategories()">
             <td><code>{{ cat.code }}</code></td>
+            <td *ngIf="isGeneralAdmin()">
+              <span class="badge" style="background-color: rgba(2, 132, 199, 0.1); color: #0284c7; font-weight: 600">
+                {{ cat.businessCode || 'BIZ-001' }}
+              </span>
+            </td>
             <td><strong>{{ cat.name }}</strong></td>
             <td><code>/{{ cat.slug }}</code></td>
-            <td>{{ cat.totalProducts }} productos</td>
+            <td>{{ cat.totalProducts || 0 }} productos</td>
             <td>{{ cat.wholesaleMargin }}</td>
             <td><span class="badge badge-success">Activa</span></td>
+          </tr>
+          <tr *ngIf="filteredCategories().length === 0">
+            <td [attr.colspan]="isGeneralAdmin() ? 7 : 6" style="text-align: center; padding: 2rem; color: #64748b">
+              <i class="bi bi-inbox" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem"></i>
+              No se encontraron categorías registradas para este negocio.
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de 15 registros por página -->
+    <app-table-pagination
+      [totalItems]="filteredCategories().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

@@ -48,15 +48,23 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of recentActivities()">
+          <tr *ngFor="let item of pagedRecentActivities()">
             <td><strong>{{ item.user }}</strong></td>
             <td><code>{{ item.branch }}</code></td>
             <td>{{ item.action }}</td>
             <td><span class="badge badge-info">{{ item.badge }}</span></td>
-            <td class="text-muted">{{ item.time }}</td>
+            <td class="text-muted">{{ item.time | appDate }}</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de Bitácora de Auditoría (15 por página) -->
+    <app-table-pagination
+      [totalItems]="recentActivities().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

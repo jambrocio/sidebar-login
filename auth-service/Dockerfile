@@ -23,6 +23,11 @@ FROM eclipse-temurin:21-jre-alpine AS runner
 LABEL maintainer="Security Architecture Team <security@enterprise.internal>"
 LABEL description="Centralized Identity and Access Management (IAM / IdP) Service"
 
+# Configuración de zona horaria America/Lima (Perú)
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/America/Lima /etc/localtime && \
+    echo "America/Lima" > /etc/timezone
+
 RUN addgroup -S spring && adduser -S spring -G spring
 
 WORKDIR /app
@@ -35,7 +40,8 @@ USER spring:spring
 
 ENV PORT=8081 \
     SPRING_PROFILES_ACTIVE=prod \
-    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
+    TZ=America/Lima \
+    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom -Duser.timezone=America/Lima"
 
 EXPOSE 8081
 

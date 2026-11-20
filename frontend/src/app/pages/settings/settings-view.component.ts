@@ -43,6 +43,7 @@ export class SettingsViewComponent implements OnInit {
 
   /** Notificación de retroalimentación tras acciones */
   readonly feedbackMessage = signal<FeedbackNotification | null>(null);
+  readonly formSubmittedPassword = signal<boolean>(false);
 
   /** Modelo reactivo de configuración de empresa */
   settingsModel = {
@@ -79,13 +80,14 @@ export class SettingsViewComponent implements OnInit {
    * Valida coincidencia de contraseñas y actualiza el estado de expiración.
    */
   updateActiveUserPassword(): void {
+    this.formSubmittedPassword.set(true);
     if (
       !this.passwordForm.currentPassword ||
       !this.passwordForm.newPassword ||
       this.passwordForm.newPassword !== this.passwordForm.confirmPassword
     ) {
       this.feedbackMessage.set({
-        text: 'Por favor, verifica tu contraseña actual y asegúrate de que la nueva contraseña y su confirmación coincidan.',
+        text: 'Por favor, completa los campos obligatorios marcados en rojo y verifica que las contraseñas coincidan.',
         type: 'warning',
       });
       return;
@@ -102,6 +104,7 @@ export class SettingsViewComponent implements OnInit {
       type: result.success ? 'success' : 'warning',
     });
     if (result.success) {
+      this.formSubmittedPassword.set(false);
       this.passwordForm = {
         currentPassword: '',
         newPassword: '',

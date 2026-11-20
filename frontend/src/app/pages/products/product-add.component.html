@@ -54,7 +54,7 @@
       <strong>{{ businessInfo().legalName }} ({{ currentUserProfile().assignedBusinessId }})</strong>.
     </div>
 
-    <form (ngSubmit)="saveProduct()" class="grid-form">
+    <form (ngSubmit)="saveProduct()" class="grid-form" [class.was-validated]="formSubmitted()" novalidate>
       <!-- 1. Negocio Matriz Destino -->
       <div class="form-group">
         <label>
@@ -63,7 +63,8 @@
         </label>
         <select
           name="prodBusiness"
-          [(ngModel)]="newProduct.businessCode"
+          [ngModel]="selectedBusinessCode()"
+          (ngModelChange)="onBusinessChange($event)"
           [disabled]="!isGeneralAdmin()"
           [style.backgroundColor]="!isGeneralAdmin() ? 'var(--bg-hover, #f1f5f9)' : ''"
           required
@@ -75,10 +76,10 @@
         </select>
       </div>
 
-      <!-- 2. Código SKU -->
+      <!-- 2. Código SKU (Opcional) -->
       <div class="form-group">
-        <label>2. Código SKU Único <span class="required-indicator">*</span></label>
-        <input type="text" name="prodSku" [(ngModel)]="newProduct.sku" placeholder="Ej. PRD-101" required class="required-input" />
+        <label>2. Código SKU <span class="text-muted" style="font-weight: normal; font-size: 0.8rem">(Opcional · Único si se registra)</span></label>
+        <input type="text" name="prodSku" [(ngModel)]="newProduct.sku" placeholder="Ej. CER-105 (Dejar vacío si no aplica)" />
       </div>
 
       <!-- 3. Nombre Comercial del Producto -->
@@ -91,47 +92,105 @@
           placeholder="Ej. Cerveza Cusqueña Trigo 620ml o Whisky Johnnie Walker Black Label 750ml"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !newProduct.name.trim()"
         />
       </div>
 
-      <!-- 4. Categoría Comercial -->
+      <!-- 4. Categoría Comercial Creada para el Negocio -->
       <div class="form-group">
         <label>4. Categoría del Producto <span class="required-indicator">*</span></label>
-        <select name="prodCat" [(ngModel)]="newProduct.category" required class="required-input">
-          <option value="Licores">Licores y Destilados</option>
-          <option value="Cervezas">Cervezas</option>
-          <option value="Gaseosas">Gaseosas y Aguas</option>
-          <option value="Otros">Snacks, Accesorios y Otros</option>
+        <select
+          name="prodCat"
+          [(ngModel)]="newProduct.category"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !newProduct.category.trim()"
+          [disabled]="availableCategoriesForBusiness().length === 0"
+        >
+          <option value="" disabled [selected]="!newProduct.category">-- Selecciona una categoría del negocio --</option>
+          <option *ngFor="let cat of availableCategoriesForBusiness()" [value]="cat.name">
+            {{ cat.name }} ({{ cat.code }})
+          </option>
         </select>
+        <div *ngIf="availableCategoriesForBusiness().length === 0" style="margin-top: 0.4rem; font-size: 0.85rem; color: #b45309; background: rgba(234, 179, 8, 0.1); padding: 0.4rem 0.6rem; border-radius: 6px">
+          <i class="bi bi-exclamation-triangle-fill"></i> No hay categorías registradas para este negocio.
+          <a routerLink="/dashboard/categories/new" style="color: #0284c7; font-weight: 600; text-decoration: underline; margin-left: 0.25rem">
+            Registrar una categoría aquí
+          </a>
+        </div>
       </div>
 
-      <!-- 5. Presentación Mayorista -->
+      <!-- 5. Moneda de Comercialización del Producto (Multi-Moneda del Negocio con Auto-selección por Default) -->
       <div class="form-group">
-        <label>5. Formato / Presentación Mayorista</label>
+        <label>5. Moneda del Producto <span class="required-indicator">*</span></label>
+        <select
+          name="prodCurrency"
+          [ngModel]="selectedProductCurrency()"
+          (ngModelChange)="selectedProductCurrency.set($event)"
+          required
+          class="required-input"
+        >
+          <option *ngFor="let c of availableCurrenciesForBusiness()" [value]="c">
+            {{ c === 'PEN' ? 'PEN (Soles — S/)' : (c === 'USD' ? 'USD (Dólares — $)' : 'EUR (Euros — €)') }}
+            {{ c === defaultBusinessCurrency() ? '— [Moneda por Defecto]' : '' }}
+          </option>
+        </select>
+        <small class="field-hint">Auto-seleccionada según la divisa configurada por defecto en el negocio</small>
+      </div>
+
+      <!-- 6. Presentación Mayorista -->
+      <div class="form-group">
+        <label>6. Formato / Presentación Mayorista</label>
         <input type="text" name="prodPres" [(ngModel)]="newProduct.presentation" placeholder="Ej. Caja x 12 Unidades" />
-      </div>
-
-      <!-- 6. Precios -->
-      <div class="form-group">
-        <label>6. Precio por Menor — Unidad ($) <span class="required-indicator">*</span></label>
-        <input type="number" name="prodRetail" [(ngModel)]="newProduct.retailPrice" step="0.10" min="0" required class="required-input" />
-      </div>
-
-      <div class="form-group">
-        <label>7. Precio por Mayor — Caja / Pack ($) <span class="required-indicator">*</span></label>
-        <input type="number" name="prodWholesale" [(ngModel)]="newProduct.wholesalePrice" step="0.50" min="0" required class="required-input" />
       </div>
 
       <!-- 7. Stock Inicial -->
       <div class="form-group">
-        <label>8. Stock Inicial (Cajas)</label>
+        <label>7. Stock Inicial (Cajas)</label>
         <input type="number" name="prodBoxes" [(ngModel)]="newProduct.stockBoxes" min="0" />
       </div>
 
+      <!-- 8. Precios -->
+      <div class="form-group">
+        <label>8. Precio por Menor — Unidad ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <input
+          type="number"
+          name="prodRetail"
+          [(ngModel)]="newProduct.retailPrice"
+          step="0.10"
+          min="0.1"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && (!newProduct.retailPrice || newProduct.retailPrice <= 0)"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>9. Precio por Mayor — Caja / Pack ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <input
+          type="number"
+          name="prodWholesale"
+          [(ngModel)]="newProduct.wholesalePrice"
+          step="0.50"
+          min="0.1"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && (!newProduct.wholesalePrice || newProduct.wholesalePrice <= 0)"
+        />
+      </div>
+
+      <!-- 10. Estado Operativo del Producto -->
+      <div class="form-group full-width">
+        <label>10. Estado Operativo del Producto</label>
+        <select disabled style="background-color: var(--bg-hover, #f1f5f9); cursor: not-allowed">
+          <option selected>Habilitado para Venta Inmediata y POS en la moneda seleccionada ({{ currencySymbol() }})</option>
+        </select>
+      </div>
+
       <div class="form-actions full-width">
-        <button type="submit" class="btn-primary">
-          <i class="bi bi-check2-circle"></i>
-          <span>Registrar Producto en Catálogo</span>
+        <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+          <i class="bi" [ngClass]="isSubmitting() ? 'bi-hourglass-split' : 'bi-check2-circle'"></i>
+          <span>{{ isSubmitting() ? 'Registrando en Catálogo...' : 'Registrar Producto en Catálogo' }}</span>
         </button>
       </div>
     </form>

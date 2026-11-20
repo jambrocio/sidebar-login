@@ -157,7 +157,7 @@
             </td>
           </tr>
 
-          <tr *ngFor="let s of filteredSessions()" [class.row-revoked]="s.isRevoked" [class.row-suspicious]="s.ipAddress.startsWith('45.')">
+          <tr *ngFor="let s of pagedSessions()" [class.row-revoked]="s.isRevoked" [class.row-suspicious]="s.ipAddress.startsWith('45.')">
             
             <!-- SEMÁFORO -->
             <td>
@@ -186,11 +186,16 @@
               </div>
             </td>
 
-            <!-- SEDE -->
+            <!-- SEDE & NEGOCIO -->
             <td>
               <div class="branch-cell">
                 <i class="bi bi-building"></i>
-                <span>{{ s.branchName }}</span>
+                <div>
+                  <span>{{ s.branchName }}</span>
+                  <div *ngIf="s.businessName" class="business-sub" style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
+                    <i class="bi bi-briefcase" style="font-size: 0.72rem; color: #0284c7;"></i> {{ s.businessName }}
+                  </div>
+                </div>
               </div>
             </td>
 
@@ -279,6 +284,14 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de Sesiones Activas (15 por página) -->
+    <app-table-pagination
+      [totalItems]="filteredSessions().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 
   <!-- MODAL: CONFIRMACIÓN DE CIERRE REMOTO DE SESIÓN -->

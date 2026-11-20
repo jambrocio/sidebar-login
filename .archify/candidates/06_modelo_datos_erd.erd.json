@@ -28,9 +28,11 @@
           "productos_bebida",
           "ventas",
           "detalles_venta",
-          "arqueos_caja"
+          "arqueos_caja",
+          "compras",
+          "proveedores"
         ],
-        "note": "Persistencia de ventas mayor/menor, catálogo de bebidas y arqueo de turnos."
+        "note": "Persistencia de ventas mayor/menor, compras, proveedores, catálogo y arqueo."
       },
       {
         "id": "seguridad",
@@ -56,7 +58,7 @@
       "label": "empresas",
       "row": 0,
       "col": 0,
-      "width": 290,
+      "width": 275,
       "tag": "identidad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -71,7 +73,7 @@
       "label": "sedes",
       "row": 1,
       "col": 0,
-      "width": 290,
+      "width": 275,
       "tag": "identidad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -87,7 +89,7 @@
       "label": "usuarios",
       "row": 2,
       "col": 0,
-      "width": 290,
+      "width": 275,
       "tag": "identidad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -102,7 +104,7 @@
       "label": "roles",
       "row": 3,
       "col": 0,
-      "width": 290,
+      "width": 275,
       "tag": "identidad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -117,7 +119,7 @@
       "label": "usuarios_sedes",
       "row": 0,
       "col": 1,
-      "width": 290,
+      "width": 275,
       "tag": "seguridad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -132,7 +134,7 @@
       "label": "usuarios_roles",
       "row": 1,
       "col": 1,
-      "width": 290,
+      "width": 275,
       "tag": "seguridad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -146,7 +148,7 @@
       "label": "sesiones_activas",
       "row": 2,
       "col": 1,
-      "width": 290,
+      "width": 275,
       "tag": "seguridad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -162,7 +164,7 @@
       "label": "permisos_roles_menu",
       "row": 3,
       "col": 1,
-      "width": 290,
+      "width": 275,
       "tag": "seguridad",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -177,7 +179,7 @@
       "label": "categorias_bebida",
       "row": 0,
       "col": 2,
-      "width": 290,
+      "width": 275,
       "tag": "catalogo",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -192,7 +194,7 @@
       "label": "productos_bebida",
       "row": 1,
       "col": 2,
-      "width": 290,
+      "width": 275,
       "tag": "catalogo",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -208,7 +210,7 @@
       "label": "cupones_descuento",
       "row": 2,
       "col": 2,
-      "width": 290,
+      "width": 275,
       "tag": "catalogo",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -224,7 +226,7 @@
       "label": "opciones_menu",
       "row": 3,
       "col": 2,
-      "width": 290,
+      "width": 275,
       "tag": "catalogo",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -240,7 +242,7 @@
       "label": "arqueos_caja",
       "row": 0,
       "col": 3,
-      "width": 290,
+      "width": 275,
       "tag": "ventas",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -256,7 +258,7 @@
       "label": "ventas",
       "row": 1,
       "col": 3,
-      "width": 290,
+      "width": 275,
       "tag": "ventas",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -272,7 +274,7 @@
       "label": "detalles_venta",
       "row": 2,
       "col": 3,
-      "width": 290,
+      "width": 275,
       "tag": "ventas",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
@@ -288,15 +290,33 @@
       "label": "compras",
       "row": 3,
       "col": 3,
-      "width": 290,
+      "width": 275,
       "tag": "ventas",
       "attributes": [
         { "name": "id", "type": "uuid", "key": "pk" },
         { "name": "id_sede", "type": "uuid", "key": "fk", "references": "sedes.id" },
-        { "name": "numero_guia_factura", "type": "varchar(50)" },
-        { "name": "proveedor_razon_social", "type": "varchar(150)" },
+        { "name": "codigo_compra", "type": "varchar(30)", "key": "uk" },
+        { "name": "proveedor", "type": "varchar(200)" },
         { "name": "monto_total", "type": "numeric(12,2)" },
+        { "name": "moneda", "type": "varchar(10)" },
         { "name": "estado", "type": "varchar(20)" }
+      ]
+    },
+    {
+      "id": "proveedores",
+      "label": "proveedores",
+      "row": 4,
+      "col": 3,
+      "width": 275,
+      "tag": "ventas",
+      "attributes": [
+        { "name": "id", "type": "uuid", "key": "pk" },
+        { "name": "empresa_id", "type": "uuid", "key": "fk", "references": "empresas.id" },
+        { "name": "codigo_proveedor", "type": "varchar(30)", "key": "uk" },
+        { "name": "razon_social", "type": "varchar(200)" },
+        { "name": "numero_documento", "type": "varchar(30)", "key": "uk" },
+        { "name": "tipo_documento", "type": "varchar(20)" },
+        { "name": "activo", "type": "boolean" }
       ]
     }
   ],
@@ -377,6 +397,13 @@
       "to": "ventas",
       "fromCardinality": "one",
       "toCardinality": "many"
+    },
+    {
+      "id": "rel_compras_proveedores",
+      "from": "compras",
+      "to": "proveedores",
+      "fromCardinality": "many",
+      "toCardinality": "one"
     }
   ],
   "cards": [

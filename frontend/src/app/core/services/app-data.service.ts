@@ -3,6 +3,7 @@ import { NavItem } from '../../shared/sidebar/sidebar.component';
 import { NotificationItem, NotificationType } from '../../shared/navbar/notifications-sidebar.component';
 import { AdminApiService } from './admin-api.service';
 import { AuthApiService } from './auth-api.service';
+import { formatAppDate, formatAmount } from '../utils/formatters';
 import {
   AuditActivityItem,
   BeverageProduct,
@@ -12,6 +13,7 @@ import {
   BusinessProfile,
   CashRegisterAudit,
   CommercialCustomer,
+  CommercialSupplier,
   DiscountCoupon,
   DummyCategory,
   DummyReport,
@@ -92,12 +94,12 @@ export class AppDataService {
 
   /** Perfil del usuario autenticado */
   readonly currentUserProfile = signal({
-    name: 'Ana García López',
-    initials: 'AG',
+    name: 'Raúl Ambrocio Mendoza',
+    initials: 'RA',
     role: 'Administrador General',
-    email: 'ana.garcia@empresa.com',
-    username: 'agarcia',
-    sessionLabel: 'Ana García López (agarcia)',
+    email: 'rambrocio@empresa.com',
+    username: 'rambrocio',
+    sessionLabel: 'Raúl Ambrocio Mendoza (rambrocio)',
     assignedBusinessId: 'BIZ-001',
     assignedBranchCode: 'LOC-01',
     assignedBranch: 'Sede Central (Mayorista)',
@@ -145,6 +147,10 @@ export class AppDataService {
     const match = this.businesses().find(b => b.id?.toUpperCase() === businessId?.toUpperCase());
     if (match) {
       this.businessInfo.set(match);
+      this.currentUserProfile.update(current => ({
+        ...current,
+        assignedBusinessId: match.id,
+      }));
       const branches = this.getBranchesByBusiness(match.id);
       if (branches && branches.length > 0) {
         this.assignedBranch.set(branches[0].name);
@@ -188,6 +194,7 @@ export class AppDataService {
         { code: 'SALES_WHOLESALE_RETAIL', label: 'Ventas Mayor / Menor', icon: 'bi bi-receipt-cutoff', routerLink: '/dashboard/sales' },
         { code: 'SALES_HISTORY', label: 'Historial de Ventas Emitidas', icon: 'bi bi-clock-history', routerLink: '/dashboard/sales-history' },
         { code: 'PURCHASES_SUPPLIERS', label: 'Compras y Abastecimiento', icon: 'bi bi-truck', routerLink: '/dashboard/purchases' },
+        { code: 'MGMT_SUPPLIERS', label: 'Proveedores', icon: 'bi bi-building-gear', routerLink: '/dashboard/suppliers' },
         { code: 'DISCOUNT_COUPONS', label: 'Cupones de Descuento', icon: 'bi bi-ticket-perforated-fill', routerLink: '/dashboard/coupons' },
         { code: 'CASH_REGISTER_AUDIT', label: 'Arqueo de Caja (Turnos)', icon: 'bi bi-cash-coin', routerLink: '/dashboard/cash-register' },
       ],
@@ -195,7 +202,7 @@ export class AppDataService {
     {
       code: 'MOD_CATALOG',
       label: 'Catálogo de Productos',
-      icon: 'bi bi-cup-straw',
+      icon: 'bi bi-box-seam-fill',
       expanded: false,
       children: [
         {
@@ -275,6 +282,9 @@ export class AppDataService {
 
   /** Directorio de usuarios */
   readonly users = signal<SystemUser[]>([]);
+
+  /** Directorio independiente de Proveedores Comerciales (aislados por negocio) */
+  readonly suppliers = signal<CommercialSupplier[]>([]);
 
   /** Directorio independiente de Clientes Comerciales (aislados por negocio) */
   readonly customers = signal<CommercialCustomer[]>([
@@ -385,6 +395,7 @@ export class AppDataService {
     { code: 'SALES_WHOLESALE_RETAIL', label: '↳ Ventas Mayor / Menor', level: 2, routerLink: '/dashboard/sales', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'SALES_HISTORY', label: '↳ Historial de Ventas Emitidas', level: 2, routerLink: '/dashboard/sales-history', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'PURCHASES_SUPPLIERS', label: '↳ Compras y Abastecimiento', level: 2, routerLink: '/dashboard/purchases', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'MGMT_SUPPLIERS', label: '↳ Proveedores', level: 2, routerLink: '/dashboard/suppliers', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'DISCOUNT_COUPONS', label: '↳ Cupones de Descuento', level: 2, routerLink: '/dashboard/coupons', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'CASH_REGISTER_AUDIT', label: '↳ Arqueo de Caja (Turnos)', level: 2, routerLink: '/dashboard/cash-register', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MOD_CATALOG', label: 'Catálogo de Productos', level: 1, routerLink: '— (Módulo / Grupo)', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
@@ -512,8 +523,8 @@ export class AppDataService {
       activities.push({
         user: s.sellerUser,
         branch: s.branchName,
-        action: `Emitió ${s.documentType} (${s.id}) por S/ ${s.total.toFixed(2)} (${s.itemsSummary})`,
-        time: s.date || 'Hoy',
+        action: `Emitió ${s.documentType} (${s.id}) por S/ ${formatAmount(s.total)} (${s.itemsSummary})`,
+        time: formatAppDate(s.date) || 'Hoy',
         badge: 'Venta',
       });
     });
@@ -523,7 +534,7 @@ export class AppDataService {
         user: p.buyerUser,
         branch: p.branchName,
         action: `Recepcionó ${p.boxesQty} cajas de ${p.productDetail} de ${p.supplier}`,
-        time: p.date || 'Hoy',
+        time: formatAppDate(p.date) || 'Hoy',
         badge: 'Abastecimiento',
       });
     });
@@ -532,8 +543,8 @@ export class AppDataService {
       activities.push({
         user: c.cashierUser,
         branch: c.branchName,
-        action: `Cerró turno de caja: ${c.status} (Total contado: S/ ${c.countedCash.toFixed(2)})`,
-        time: c.closedAt || 'Hoy',
+        action: `Cerró turno de caja: ${c.status} (Total contado: S/ ${formatAmount(c.countedCash)})`,
+        time: formatAppDate(c.closedAt) || 'Hoy',
         badge: 'Cierre Caja',
       });
     });
@@ -600,6 +611,33 @@ export class AppDataService {
   }
 
   /**
+   * Normaliza y deserializa de forma robusta la colección de ítems de una venta,
+   * soportando arreglos nativos, JSON strings y estructuras PostgreSQL PGobject.
+   */
+  private parseSaleItemsPayload(raw: any): SaleCartItem[] {
+    if (Array.isArray(raw)) {
+      return raw;
+    }
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    if (raw && typeof raw === 'object' && typeof raw.value === 'string') {
+      try {
+        const parsed = JSON.parse(raw.value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  /**
    * Carga y sincroniza la totalidad de los datos desde el Backend Spring Boot 4 y PostgreSQL.
    */
   loadAllFromBackend(): void {
@@ -607,17 +645,30 @@ export class AppDataService {
     this.adminApi.getBusinesses().subscribe({
       next: (bizList) => {
         if (bizList && bizList.length > 0) {
-          const mapped: BusinessProfile[] = bizList.map(b => ({
-            id: b.code,
-            commercialName: b.commercialName,
-            legalName: b.legalName,
-            taxId: b.taxId,
-            fiscalAddress: b.fiscalAddress || 'Lima, Perú',
-            phone: b.phone || '+51 1 555-0199',
-            supportEmail: 'contacto@empresa.com',
-            timezone: 'America/Lima',
-            currency: b.currency || 'USD',
-          }));
+          const mapped: BusinessProfile[] = bizList.map(b => {
+            const defCurr = b.defaultCurrency || b.currency || 'PEN';
+            let supp = b.supportedCurrencies;
+            if (!supp || supp.length === 0) {
+              if (b.supportedCurrenciesRaw) {
+                supp = b.supportedCurrenciesRaw.split(',').map(s => s.trim()).filter(Boolean);
+              } else {
+                supp = [defCurr, defCurr === 'PEN' ? 'USD' : 'PEN'];
+              }
+            }
+            return {
+              id: b.code,
+              commercialName: b.commercialName,
+              legalName: b.legalName,
+              taxId: b.taxId,
+              fiscalAddress: b.fiscalAddress || 'Lima, Perú',
+              phone: b.phone || '+51 1 555-0199',
+              supportEmail: 'contacto@empresa.com',
+              timezone: 'America/Lima',
+              currency: defCurr,
+              defaultCurrency: defCurr,
+              supportedCurrencies: supp,
+            };
+          });
           this.businesses.set(mapped);
           const userBizId = this.currentUserProfile().assignedBusinessId;
           const userBiz = userBizId ? mapped.find(b => b.id?.toUpperCase() === userBizId.toUpperCase()) : null;
@@ -653,26 +704,7 @@ export class AppDataService {
     });
 
     // 3. Catálogo Maestro de Bebidas (beverage_products)
-    this.adminApi.getProducts().subscribe({
-      next: (prodList) => {
-        if (prodList) {
-          const mapped: BeverageProduct[] = prodList.map(p => ({
-            sku: p.sku,
-            name: p.name,
-            category: p.category,
-            presentation: p.presentation,
-            retailPrice: Number(p.retailPrice),
-            wholesalePrice: Number(p.wholesalePrice),
-            stockBoxes: Number(p.stockBoxes),
-            stockUnits: Number(p.stockUnits),
-            status: p.status,
-            registeredByUser: p.registeredBy || 'Sistema',
-          }));
-          this.products.set(mapped);
-        }
-      },
-      error: () => {},
-    });
+    this.loadProductsFromBackend();
 
     // 4. Categorías de Bebidas (beverage_categories)
     this.adminApi.getCategories().subscribe({
@@ -685,6 +717,8 @@ export class AppDataService {
             totalProducts: Number(c.totalProducts || c.products || 0),
             wholesaleMargin: c.wholesaleMargin || '15% - 20%',
             active: c.active !== undefined ? c.active : (c.status === 'Activo'),
+            businessCode: (c.businessCode || 'BIZ-001').toUpperCase(),
+            businessId: c.businessId,
           }));
           this.categories.set(mapped);
         }
@@ -731,7 +765,7 @@ export class AppDataService {
             totalCost: Number(p.totalCost),
             buyerUser: p.buyerUser,
             status: p.status || 'Recibido',
-            date: p.date,
+            date: formatAppDate(p.date),
           }));
           this.purchasesList.set(mapped);
         }
@@ -750,7 +784,7 @@ export class AppDataService {
             clientName: s.clientName,
             modality: s.modality,
             paymentMethod: s.paymentMethod,
-            items: s.items || [],
+            items: this.parseSaleItemsPayload(s.items),
             itemsSummary: s.itemsSummary,
             totalItemsCount: Number(s.totalItemsCount),
             subtotal: Number(s.subtotal),
@@ -759,7 +793,7 @@ export class AppDataService {
             taxIgv: Number(s.taxIgv),
             total: Number(s.total),
             sellerUser: s.sellerUser,
-            date: s.date,
+            date: formatAppDate(s.date),
           }));
           this.salesList.set(mapped);
         }
@@ -776,7 +810,7 @@ export class AppDataService {
                 clientName: s.clientName,
                 modality: s.modality,
                 paymentMethod: s.paymentMethod,
-                items: s.items || [],
+                items: this.parseSaleItemsPayload(s.items),
                 itemsSummary: s.itemsSummary,
                 totalItemsCount: Number(s.totalItemsCount),
                 subtotal: Number(s.subtotal),
@@ -785,7 +819,7 @@ export class AppDataService {
                 taxIgv: Number(s.taxIgv),
                 total: Number(s.total),
                 sellerUser: s.sellerUser,
-                date: s.date,
+                date: formatAppDate(s.date),
               }));
               this.salesList.set(mapped);
             }
@@ -854,6 +888,16 @@ export class AppDataService {
       next: (customersList) => {
         if (customersList && customersList.length > 0) {
           this.customers.set(customersList);
+        }
+      },
+      error: () => {},
+    });
+
+    // 9C. Directorio de Proveedores Comerciales (compras.proveedores)
+    this.adminApi.getSuppliers().subscribe({
+      next: (suppliersList) => {
+        if (suppliersList && suppliersList.length > 0) {
+          this.suppliers.set(suppliersList);
         }
       },
       error: () => {},
@@ -979,7 +1023,7 @@ export class AppDataService {
   /**
    * Registra un nuevo producto en el catálogo enviando el POST al Backend.
    */
-  addProduct(prod: BeverageProduct): void {
+  addProduct(prod: BeverageProduct, onSuccess?: () => void, onError?: (err: any) => void): void {
     const req = {
       sku: prod.sku,
       name: prod.name,
@@ -994,17 +1038,22 @@ export class AppDataService {
     this.adminApi.createProduct(req).subscribe({
       next: () => {
         this.products.update(list => [prod, ...list]);
+        if (onSuccess) onSuccess();
       },
-      error: () => {
-        this.products.update(list => [prod, ...list]);
+      error: (err) => {
+        if (onError) {
+          onError(err);
+        } else {
+          this.products.update(list => [prod, ...list]);
+        }
       },
     });
   }
 
   /**
-   * Registra un nuevo cliente comercial en PostgreSQL.
+   * Registra un nuevo cliente comercial en PostgreSQL evitando duplicidad en el estado reactivo.
    */
-  addCustomer(customer: CommercialCustomer): void {
+  addCustomer(customer: CommercialCustomer, onSuccess?: (created: CommercialCustomer) => void, onError?: (err: any) => void): void {
     const payload = {
       customerCode: customer.customerCode,
       documentType: customer.documentType,
@@ -1021,11 +1070,95 @@ export class AppDataService {
     this.adminApi.createCustomer(payload).subscribe({
       next: (resp) => {
         const assignedCode = resp?.customerCode || customer.customerCode;
-        const updated = { ...customer, customerCode: assignedCode };
-        this.customers.update(list => [updated, ...list]);
+        const updated: CommercialCustomer = { ...customer, customerCode: assignedCode };
+        this.customers.update(list => {
+          const withoutDupes = list.filter(c =>
+            !(c.documentNumber === customer.documentNumber && (!c.businessCode || c.businessCode === customer.businessCode)) &&
+            c.customerCode !== assignedCode
+          );
+          return [updated, ...withoutDupes];
+        });
+        if (onSuccess) onSuccess(updated);
       },
-      error: () => {
-        this.customers.update(list => [customer, ...list]);
+      error: (err) => {
+        if (onError) {
+          onError(err);
+        } else {
+          this.customers.update(list => {
+            const withoutDupes = list.filter(c =>
+              !(c.documentNumber === customer.documentNumber && (!c.businessCode || c.businessCode === customer.businessCode))
+            );
+            return [customer, ...withoutDupes];
+          });
+        }
+      },
+    });
+  }
+
+  /**
+   * Registra un nuevo proveedor comercial en PostgreSQL con actualización reactiva.
+   */
+  addSupplier(supplier: CommercialSupplier, onSuccess?: (created: CommercialSupplier) => void, onError?: (err: any) => void): void {
+    const payload = {
+      documentType: supplier.documentType,
+      documentNumber: supplier.documentNumber,
+      legalName: supplier.legalName,
+      commercialName: supplier.commercialName,
+      contactName: supplier.contactName,
+      email: supplier.email,
+      phone: supplier.phone,
+      address: supplier.address,
+      rubroCategory: supplier.rubroCategory,
+      businessCode: supplier.businessCode,
+    };
+    this.adminApi.createSupplier(payload).subscribe({
+      next: (resp: any) => {
+        const assignedCode = resp?.supplierCode || supplier.supplierCode;
+        const assignedId = resp?.id || supplier.id;
+        const updated: CommercialSupplier = {
+          ...supplier,
+          id: assignedId,
+          supplierCode: assignedCode,
+          active: true,
+        };
+        this.suppliers.update(list => {
+          const withoutDupes = list.filter(s =>
+            !(s.documentNumber === supplier.documentNumber && (!s.businessCode || s.businessCode === supplier.businessCode)) &&
+            s.supplierCode !== assignedCode
+          );
+          return [updated, ...withoutDupes];
+        });
+        if (onSuccess) onSuccess(updated);
+      },
+      error: (err) => {
+        if (onError) {
+          onError(err);
+        } else {
+          this.suppliers.update(list => {
+            const withoutDupes = list.filter(s =>
+              !(s.documentNumber === supplier.documentNumber && (!s.businessCode || s.businessCode === supplier.businessCode))
+            );
+            return [supplier, ...withoutDupes];
+          });
+        }
+      },
+    });
+  }
+
+  /**
+   * Modifica el estado operativo (Activo/Inactivo) de un proveedor en el Backend y estado reactivo.
+   */
+  toggleSupplierStatus(supplierId: string, currentStatus: boolean, onSuccess?: (newStatus: boolean) => void, onError?: (err: any) => void): void {
+    const targetStatus = !currentStatus;
+    this.adminApi.toggleSupplierStatus(supplierId, targetStatus).subscribe({
+      next: () => {
+        this.suppliers.update(list =>
+          list.map(s => s.id === supplierId ? { ...s, active: targetStatus } : s)
+        );
+        if (onSuccess) onSuccess(targetStatus);
+      },
+      error: (err) => {
+        if (onError) onError(err);
       },
     });
   }
@@ -1039,6 +1172,7 @@ export class AppDataService {
       name: category.name,
       slug: category.slug,
       wholesaleMargin: category.wholesaleMargin,
+      businessCode: category.businessCode || category.businessId,
     };
     this.adminApi.createCategory(req).subscribe({
       next: () => {
@@ -1051,22 +1185,88 @@ export class AppDataService {
   }
 
   /**
+   * Carga y sincroniza el Catálogo Maestro de Productos desde el Backend.
+   */
+  loadProductsFromBackend(): void {
+    this.adminApi.getProducts().subscribe({
+      next: (prodList) => {
+        if (prodList) {
+          const mapped: BeverageProduct[] = prodList.map(p => ({
+            sku: p.sku,
+            name: p.name,
+            category: p.category,
+            presentation: p.presentation,
+            retailPrice: Number(p.retailPrice),
+            wholesalePrice: Number(p.wholesalePrice),
+            stockBoxes: Number(p.stockBoxes),
+            stockUnits: Number(p.stockUnits),
+            status: p.status,
+            registeredByUser: p.registeredBy || 'Sistema',
+            businessCode: (p.businessCode || 'BIZ-001').toUpperCase(),
+            businessName: p.businessName || '',
+            businessId: p.businessId,
+          }));
+          this.products.set(mapped);
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  /**
    * Registra una orden de compra en el Backend.
    */
-  addPurchase(purchase: BeveragePurchase): void {
+  addPurchase(
+    purchase: BeveragePurchase,
+    onSuccess?: (p: BeveragePurchase) => void,
+    onError?: (err: any) => void
+  ): void {
+    const targetSku = (purchase as any).productSku || (purchase as any).sku;
     const req = {
+      purchaseCode: purchase.id && !purchase.id.startsWith('OC-2026-0') ? purchase.id : undefined,
       supplier: purchase.supplier,
       categoryName: purchase.category,
       productDetail: purchase.productDetail,
+      productSku: targetSku || undefined,
       boxesQty: purchase.boxesQty,
       boxCost: purchase.boxCost,
     };
     this.adminApi.createPurchase(req).subscribe({
-      next: () => {
+      next: (res) => {
+        if (res && (res.purchaseCode || res.id)) {
+          purchase.id = (res.purchaseCode as string) || (res.id as string) || purchase.id;
+        }
         this.purchasesList.update(list => [purchase, ...list]);
+
+        // Actualizar el stock de productos de manera reactiva e inmediata
+        if (targetSku) {
+          this.products.update(list =>
+            list.map(p => {
+              const matchSku = p.sku && p.sku.toUpperCase() === targetSku.toUpperCase();
+              const matchName = p.name && p.name.toUpperCase() === targetSku.toUpperCase();
+              if (matchSku || matchName) {
+                const newBoxes = (p.stockBoxes || 0) + purchase.boxesQty;
+                return {
+                  ...p,
+                  stockBoxes: newBoxes,
+                  stockUnits: newBoxes * 12,
+                  status: (newBoxes > 10 ? 'En Stock' : newBoxes > 0 ? 'Stock Bajo' : 'Agotado') as any,
+                };
+              }
+              return p;
+            })
+          );
+        }
+
+        // Sincronizar catálogo completo con el backend
+        this.loadProductsFromBackend();
+        if (onSuccess) onSuccess(purchase);
       },
-      error: () => {
-        this.purchasesList.update(list => [purchase, ...list]);
+      error: (err) => {
+        console.error('Error al registrar compra en backend:', err);
+        if (onError) {
+          onError(err);
+        }
       },
     });
   }
@@ -1117,36 +1317,73 @@ export class AppDataService {
   /**
    * Emite un comprobante de venta en el Backend y descuenta inventario.
    */
-  recordSale(sale: BeverageSale): void {
+  recordSale(
+    sale: BeverageSale,
+    onSuccess?: (s: BeverageSale) => void,
+    onError?: (err: any) => void
+  ): void {
+    const itemsPayload = (sale.items || []).map(item => ({
+      sku: item.sku,
+      productName: item.productName,
+      modality: item.modality,
+      unitLabel: item.unitLabel,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineSubtotal: item.lineSubtotal ?? Number((item.quantity * item.unitPrice).toFixed(2)),
+    }));
+
     const req = {
+      saleCode: sale.id && !sale.id.startsWith('VTA-') ? sale.id : undefined,
       clientName: sale.clientName,
       documentType: sale.documentType,
       modality: sale.modality,
       paymentMethod: sale.paymentMethod,
       couponCode: sale.couponCode || undefined,
-      cartItems: (sale.items || []).map(item => ({
-        sku: item.sku,
-        productName: item.productName,
-        modality: item.modality,
-        unitLabel: item.unitLabel,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-      })),
+      discountAmount: Number(sale.discountAmount) || 0,
+      items: itemsPayload,
+      cartItems: itemsPayload,
     };
 
     this.adminApi.emitSale(req).subscribe({
       next: (res) => {
-        if (res && res.saleCode) {
-          sale.id = res.saleCode;
+        if (res && (res.saleCode || res.id)) {
+          sale.id = (res.saleCode as string) || (res.id as string) || sale.id;
         }
         this.salesList.update(list => [sale, ...list]);
-        // Refrescar inventario de productos
-        this.adminApi.getProducts().subscribe(p => {
-          if (p) this.products.set(p as any);
-        });
+        // Refrescar inventario de productos de forma reactiva inmediata y sincronizada
+        if (sale.items && sale.items.length > 0) {
+          this.products.update(prods =>
+            prods.map(p => {
+              const matchedItem = sale.items.find(
+                it => (it.sku && p.sku && it.sku.toUpperCase() === p.sku.toUpperCase()) ||
+                      (it.productName && p.name && it.productName.toUpperCase() === p.name.toUpperCase())
+              );
+              if (!matchedItem) return p;
+              const isWholesale = matchedItem.modality === 'Por Mayor';
+              const newBoxes = isWholesale
+                ? Math.max(0, p.stockBoxes - matchedItem.quantity)
+                : Math.max(0, Math.floor((p.stockUnits - matchedItem.quantity) / 12));
+              const newUnits = isWholesale
+                ? Math.max(0, p.stockUnits - (matchedItem.quantity * 12))
+                : Math.max(0, p.stockUnits - matchedItem.quantity);
+              const newStatus = newBoxes > 10 ? 'En Stock' : newBoxes > 0 ? 'Stock Bajo' : 'Agotado';
+              return {
+                ...p,
+                stockBoxes: newBoxes,
+                stockUnits: newUnits,
+                status: newStatus as any,
+              };
+            })
+          );
+        }
+        this.loadProductsFromBackend();
+        if (onSuccess) onSuccess(sale);
       },
-      error: () => {
-        this.salesList.update(list => [sale, ...list]);
+      error: (err) => {
+        console.error('Error al registrar venta en backend:', err);
+        if (onError) {
+          onError(err);
+        }
       },
     });
   }

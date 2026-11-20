@@ -49,6 +49,7 @@
         <thead>
           <tr>
             <th>SKU</th>
+            <th *ngIf="isGeneralAdmin()">Negocio</th>
             <th>Producto</th>
             <th>Línea</th>
             <th>Formato Mayorista</th>
@@ -57,16 +58,25 @@
             <th>Stock Cajas</th>
             <th>Registrado Por</th>
             <th>Estado</th>
+            <th style="text-align: center;">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let prod of filteredProducts()">
-            <td><code>{{ prod.sku }}</code></td>
+          <tr *ngFor="let prod of pagedProducts()">
+            <td>
+              <code *ngIf="prod.sku">{{ prod.sku }}</code>
+              <span *ngIf="!prod.sku" class="text-muted">—</span>
+            </td>
+            <td *ngIf="isGeneralAdmin()">
+              <span class="badge" style="background-color: rgba(2, 132, 199, 0.1); color: #0284c7; font-weight: 600">
+                {{ prod.businessCode || 'BIZ-001' }}
+              </span>
+            </td>
             <td><strong>{{ prod.name }}</strong></td>
             <td><span class="badge badge-info">{{ prod.category }}</span></td>
             <td>{{ prod.presentation }}</td>
-            <td>\${{ prod.retailPrice.toFixed(2) }}</td>
-            <td><strong>\${{ prod.wholesalePrice.toFixed(2) }}</strong></td>
+            <td>{{ getCurrencySymbol(prod.businessCode) }} {{ prod.retailPrice | appAmount }}</td>
+            <td><strong>{{ getCurrencySymbol(prod.businessCode) }} {{ prod.wholesalePrice | appAmount }}</strong></td>
             <td>{{ prod.stockBoxes }} cajas ({{ prod.stockUnits }} und.)</td>
             <td><code>{{ prod.registeredByUser }}</code></td>
             <td>
@@ -79,9 +89,217 @@
                 {{ prod.status }}
               </span>
             </td>
+            <td style="text-align: center;">
+              <button
+                type="button"
+                class="btn-history"
+                (click)="openProductHistory(prod)"
+                title="Ver Histórico de Compras y Ventas"
+              >
+                <i class="bi bi-clock-history"></i>
+                <span>Histórico</span>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredProducts().length === 0">
+            <td [attr.colspan]="isGeneralAdmin() ? 11 : 10" style="text-align: center; padding: 2rem; color: #64748b">
+              <i class="bi bi-inbox" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem"></i>
+              No se encontraron productos registrados para este negocio en el catálogo maestro.
+            </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Paginación de 15 registros por página -->
+    <app-table-pagination
+      [totalItems]="filteredProducts().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
+  </div>
+
+  <!-- MODAL DE HISTÓRICO DE COMPRAS Y VENTAS POR PRODUCTO -->
+  <div class="modal-backdrop" *ngIf="selectedProductForHistory()" (click)="closeProductHistory()">
+    <div class="modal-dialog modal-xl" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <div class="modal-icon-badge">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #0f172a;">
+              Histórico de Movimientos: {{ selectedProductForHistory()?.name }}
+            </h3>
+            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: #64748b;">
+              SKU: <strong>{{ selectedProductForHistory()?.sku || 'Sin SKU' }}</strong> &bull;
+              Categoría: <strong>{{ selectedProductForHistory()?.category }}</strong> &bull;
+              Negocio: <strong>{{ selectedProductForHistory()?.businessCode }}</strong>
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeProductHistory()" title="Cerrar ventana">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <!-- Tarjetas de Resumen KPI -->
+        <div class="kpi-history-grid">
+          <div class="kpi-history-card">
+            <div class="kpi-history-label"><i class="bi bi-box-seam" style="color: #0284c7;"></i> Stock Actual en Inventario</div>
+            <div class="kpi-history-value" style="color: #0284c7;">
+              {{ selectedProductForHistory()?.stockBoxes }} cajas
+            </div>
+            <div class="kpi-history-sub">{{ selectedProductForHistory()?.stockUnits }} unidades disponibles</div>
+          </div>
+
+          <div class="kpi-history-card">
+            <div class="kpi-history-label"><i class="bi bi-truck" style="color: #059669;"></i> Total Compras (Entradas)</div>
+            <div class="kpi-history-value" style="color: #059669;">
+              +{{ totalPurchasedBoxes() }} cajas
+            </div>
+            <div class="kpi-history-sub">
+              {{ productPurchases().length }} órdenes de abastecimiento ({{ getCurrencySymbol(selectedProductForHistory()?.businessCode) }} {{ totalPurchasedCost() | appAmount }})
+            </div>
+          </div>
+
+          <div class="kpi-history-card">
+            <div class="kpi-history-label"><i class="bi bi-cart-check" style="color: #4f46e5;"></i> Total Ventas (Salidas)</div>
+            <div class="kpi-history-value" style="color: #4f46e5;">
+              -{{ totalSoldBoxes() }} cajas
+            </div>
+            <div class="kpi-history-sub">
+              {{ totalSoldUnits() }} unidades en {{ productSales().length }} ventas ({{ getCurrencySymbol(selectedProductForHistory()?.businessCode) }} {{ totalSalesIncome() | appAmount }})
+            </div>
+          </div>
+        </div>
+
+        <!-- Pestañas de Filtrado del Histórico -->
+        <div class="history-tabs">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="historyActiveTab() === 'all'"
+            (click)="historyActiveTab.set('all')"
+          >
+            <i class="bi bi-collection"></i> Todos los Movimientos ({{ productPurchases().length + productSales().length }})
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="historyActiveTab() === 'purchases'"
+            (click)="historyActiveTab.set('purchases')"
+          >
+            <i class="bi bi-truck"></i> Compras / Entradas ({{ productPurchases().length }})
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="historyActiveTab() === 'sales'"
+            (click)="historyActiveTab.set('sales')"
+          >
+            <i class="bi bi-receipt"></i> Ventas / Salidas ({{ productSales().length }})
+          </button>
+        </div>
+
+        <!-- TABLA DE COMPRAS (ENTRADAS) -->
+        <div class="history-section" *ngIf="historyActiveTab() === 'all' || historyActiveTab() === 'purchases'">
+          <h4 class="history-section-title text-emerald-700">
+            <i class="bi bi-box-arrow-in-down"></i> Historial de Compras y Abastecimiento (Entradas a Inventario)
+          </h4>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Compra</th>
+                  <th>Fecha y Hora</th>
+                  <th>Proveedor</th>
+                  <th>Local Receptor</th>
+                  <th>Cantidad Cajas</th>
+                  <th>Costo x Caja</th>
+                  <th>Total Compra</th>
+                  <th>Comprador</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of productPurchases()">
+                  <td><code>{{ p.id }}</code></td>
+                  <td>{{ p.date }}</td>
+                  <td><strong>{{ p.supplier }}</strong></td>
+                  <td>{{ p.branchName || 'Sede Principal' }}</td>
+                  <td><span class="badge badge-success">+{{ p.boxesQty }} cajas</span></td>
+                  <td>{{ getCurrencySymbol(selectedProductForHistory()?.businessCode) }} {{ p.boxCost | appAmount }}</td>
+                  <td><strong>{{ getCurrencySymbol(selectedProductForHistory()?.businessCode) }} {{ p.totalCost | appAmount }}</strong></td>
+                  <td><code>{{ p.buyerUser }}</code></td>
+                  <td><span class="badge badge-info">{{ p.status }}</span></td>
+                </tr>
+                <tr *ngIf="productPurchases().length === 0">
+                  <td colspan="9" style="text-align: center; padding: 1.5rem; color: #64748b;">
+                    No se registran órdenes de compra para este producto.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TABLA DE VENTAS (SALIDAS) -->
+        <div class="history-section" *ngIf="historyActiveTab() === 'all' || historyActiveTab() === 'sales'" style="margin-top: 1.5rem;">
+          <h4 class="history-section-title text-indigo-700">
+            <i class="bi bi-box-arrow-up-right"></i> Historial de Ventas Emitidas (Salidas de Inventario)
+          </h4>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Comprobante</th>
+                  <th>Fecha y Hora</th>
+                  <th>Tipo Comprobante</th>
+                  <th>Cliente</th>
+                  <th>Modalidad</th>
+                  <th>Cantidad Vendida</th>
+                  <th>Precio Unitario</th>
+                  <th>Subtotal</th>
+                  <th>Vendedor</th>
+                  <th>Medio Pago</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of productSales()">
+                  <td><code>{{ s.saleId }}</code></td>
+                  <td>{{ s.date }}</td>
+                  <td><span class="badge badge-secondary">{{ s.documentType }}</span></td>
+                  <td><strong>{{ s.clientName }}</strong></td>
+                  <td>
+                    <span class="badge" [class.badge-warning]="s.modality === 'Por Mayor'" [class.badge-info]="s.modality !== 'Por Mayor'">
+                      {{ s.modality }}
+                    </span>
+                  </td>
+                  <td><span class="badge badge-danger">-{{ s.quantity }} {{ s.modality === 'Por Mayor' ? 'cajas' : 'und.' }}</span></td>
+                  <td>{{ getCurrencySymbol(selectedProductForHistory()?.businessCode) }} {{ s.unitPrice | appAmount }}</td>
+                  <td><strong>{{ getCurrencySymbol(selectedProductForHistory()?.businessCode) }} {{ s.subtotal | appAmount }}</strong></td>
+                  <td><code>{{ s.sellerUser }}</code></td>
+                  <td><span class="badge badge-light">{{ s.paymentMethod }}</span></td>
+                </tr>
+                <tr *ngIf="productSales().length === 0">
+                  <td colspan="10" style="text-align: center; padding: 1.5rem; color: #64748b;">
+                    No se registran ventas para este producto.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn-modal-close" (click)="closeProductHistory()">
+          Cerrar Histórico
+        </button>
+      </footer>
     </div>
   </div>
 </section>

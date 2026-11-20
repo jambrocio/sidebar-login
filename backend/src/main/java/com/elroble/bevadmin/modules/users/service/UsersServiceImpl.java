@@ -1,5 +1,6 @@
 package com.elroble.bevadmin.modules.users.service;
 
+import com.elroble.bevadmin.common.exception.BusinessRuleException;
 import com.elroble.bevadmin.common.exception.ResourceNotFoundException;
 import com.elroble.bevadmin.modules.users.dto.CreateUserWithBranchesRequest;
 import com.elroble.bevadmin.modules.users.dto.UpdateUserWithBranchesRequest;
@@ -153,5 +154,45 @@ public class UsersServiceImpl implements UsersService {
                 "status", "Actualizado",
                 "role", request.roleCode()
         );
+    }
+
+    /** Contraseña institucional estándar por default para reseteo. */
+    public static final String DEFAULT_STANDARD_PASSWORD = "Cotic2026#";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public Map<String, Object> resetPasswordToDefault(String identifier) {
+        UUID userId = usersRepository.findUserIdByIdentifier(identifier)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", identifier));
+
+        String encodedPassword = passwordEncoder.encode(DEFAULT_STANDARD_PASSWORD);
+        usersRepository.resetUserPassword(userId, encodedPassword);
+
+        String username = usersRepository.findUsernameById(userId).orElse(identifier);
+
+        return Map.of(
+                "success", true,
+                "userId", userId,
+                "username", username,
+                "defaultPassword", DEFAULT_STANDARD_PASSWORD,
+                "message", "La contraseña del usuario @" + username + " fue restablecida exitosamente a la clave estándar por default: " + DEFAULT_STANDARD_PASSWORD
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public void validateUserBelongsToBusiness(String identifier, UUID businessId) {
+        UUID userId = usersRepository.findUserIdByIdentifier(identifier)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", identifier));
+        UUID userBizId = usersRepository.findBusinessIdByUserId(userId);
+        if (businessId != null && !businessId.equals(userBizId)) {
+            throw new BusinessRuleException("No tiene permisos para modificar o resetear usuarios de otra empresa.");
+        }
     }
 }

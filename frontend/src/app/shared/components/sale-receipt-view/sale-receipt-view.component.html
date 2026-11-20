@@ -7,14 +7,39 @@
       </h2>
     </div>
     <div class="form-actions">
+      <!-- Botón de Impresión de Ticket Térmico 80mm -->
       <button
         type="button"
         class="btn-primary"
-        (click)="printRequested.emit(receipt.id)"
+        (click)="printThermalTicket()"
+        title="Imprimir formato ticket para impresora térmica de 80mm"
+      >
+        <i class="bi bi-receipt"></i>
+        <span>Imprimir Ticket (Ticketera 80mm)</span>
+      </button>
+
+      <!-- Botón de Previsualización del Ticket -->
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="toggleTicketPreview()"
+        [title]="showTicketPreview ? 'Cerrar previsualización de ticket' : 'Ver cómo lucirá en la ticketera'"
+      >
+        <i class="bi" [class.bi-eye-slash-fill]="showTicketPreview" [class.bi-eye-fill]="!showTicketPreview"></i>
+        <span>{{ showTicketPreview ? 'Ocultar Ticket' : 'Ver Ticket' }}</span>
+      </button>
+
+      <!-- Botón de Impresión Estándar / PDF -->
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="printFullReceipt()"
+        title="Imprimir formato estándar de página completa A4 o exportar PDF"
       >
         <i class="bi bi-printer-fill"></i>
-        <span>Imprimir / Descargar PDF</span>
+        <span>Imprimir A4 / PDF</span>
       </button>
+
       <a
         *ngIf="showHistoryShortcut"
         routerLink="/dashboard/sales-history"
@@ -23,6 +48,7 @@
         <i class="bi bi-clock-history"></i>
         <span>Ir a Mi Historial de Ventas</span>
       </a>
+
       <button
         type="button"
         class="btn-secondary"
@@ -34,7 +60,112 @@
     </div>
   </div>
 
-  <!-- Cabecera del Comprobante Electrónico con Datos del Negocio y del Local Emisor -->
+  <!-- Vista previa interactiva de Ticket Térmico en pantalla -->
+  <div
+    class="thermal-ticket-container"
+    [id]="'thermal-ticket-' + receipt.id"
+    [class.preview-active]="showTicketPreview"
+  >
+    <div class="ticket-header">
+      <div class="ticket-title">{{ business.legalName }}</div>
+      <div
+        class="ticket-subtitle"
+        *ngIf="business.commercialName && business.commercialName !== business.legalName"
+      >
+        {{ business.commercialName }}
+      </div>
+      <div class="ticket-subtitle">R.U.C. N° {{ business.taxId }}</div>
+      <div class="ticket-subtitle">LOCAL: {{ receipt.branchName }}</div>
+    </div>
+
+    <div class="ticket-double-separator"></div>
+
+    <div class="ticket-header">
+      <div class="ticket-title" style="font-size: 12px">{{ receipt.documentType | uppercase }}</div>
+      <div class="ticket-title" style="font-size: 12px">N° {{ receipt.id }}</div>
+    </div>
+
+    <div class="ticket-separator"></div>
+
+    <div class="ticket-info-row">
+      <span>FECHA EMISIÓN:</span>
+      <span>{{ receipt.date | appDate }}</span>
+    </div>
+    <div class="ticket-info-row">
+      <span>VENDEDOR / CAJERO:</span>
+      <span>{{ receipt.sellerUser }}</span>
+    </div>
+    <div class="ticket-info-row">
+      <span>CLIENTE:</span>
+      <span><strong>{{ receipt.clientName }}</strong></span>
+    </div>
+    <div class="ticket-info-row">
+      <span>MEDIO DE PAGO:</span>
+      <span>{{ receipt.paymentMethod }}</span>
+    </div>
+    <div class="ticket-info-row" *ngIf="receipt.couponCode">
+      <span>CUPÓN:</span>
+      <span>{{ receipt.couponCode }}</span>
+    </div>
+
+    <div class="ticket-separator"></div>
+
+    <table class="ticket-table">
+      <thead>
+        <tr>
+          <th class="ticket-item-qty">CANT</th>
+          <th class="ticket-item-desc">DESCRIPCIÓN</th>
+          <th class="ticket-item-price">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of receiptItems">
+          <td class="ticket-item-qty">{{ item.quantity }}</td>
+          <td class="ticket-item-desc">
+            {{ item.productName }}
+            <div style="font-size: 9px; opacity: 0.85">({{ item.unitLabel }} - {{ item.modality }})</div>
+          </td>
+          <td class="ticket-item-price">{{ currencySymbol }} {{ item.lineSubtotal | appAmount }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ticket-separator"></div>
+
+    <div class="ticket-totals">
+      <div class="ticket-total-row">
+        <span>SUBTOTAL (TOTAL - IGV):</span>
+        <span>{{ currencySymbol }} {{ receiptSubtotal | appAmount }}</span>
+      </div>
+      <div class="ticket-total-row" *ngIf="receipt.discountAmount > 0">
+        <span>DESCUENTO:</span>
+        <span>-{{ currencySymbol }} {{ receipt.discountAmount | appAmount }}</span>
+      </div>
+      <div class="ticket-total-row">
+        <span>I.G.V. (18%):</span>
+        <span>{{ currencySymbol }} {{ receipt.taxIgv | appAmount }}</span>
+      </div>
+      <div class="ticket-double-separator"></div>
+      <div class="ticket-total-row ticket-grand-total">
+        <span>IMPORTE TOTAL:</span>
+        <span>{{ currencySymbol }} {{ receipt.total | appAmount }}</span>
+      </div>
+      <div class="ticket-info-row" style="margin-top: 4px">
+        <span>TOTAL ÍTEMS:</span>
+        <span>{{ receipt.totalItemsCount }} unidades/cajas</span>
+      </div>
+    </div>
+
+    <div class="ticket-separator"></div>
+
+    <div class="ticket-footer">
+      <div>¡GRACIAS POR SU COMPRA!</div>
+      <div style="font-size: 9px; margin-top: 2px">Conserve su comprobante</div>
+      <div style="font-size: 8px; margin-top: 2px">Sistema de Gestión El Roble</div>
+    </div>
+  </div>
+
+  <!-- Cabecera del Comprobante Electrónico con Datos del Negocio y del Local Emisor (Vista A4 / Pantalla) -->
   <div class="kpi-grid" style="margin-bottom: 1.2rem">
     <div class="card" style="padding: 1rem">
       <span class="text-muted">NEGOCIO EMISOR / SUCURSAL</span>
@@ -52,7 +183,7 @@
       <div style="margin-top: 0.3rem">
         <strong>{{ receipt.clientName }}</strong>
         <div>Medio de Pago: {{ receipt.paymentMethod }}</div>
-        <div class="text-muted">Fecha Emisión: {{ receipt.date }}</div>
+        <div class="text-muted">Fecha Emisión: {{ receipt.date | appDate }}</div>
       </div>
     </div>
 
@@ -85,7 +216,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let line of receipt.items">
+        <tr *ngFor="let line of receiptItems">
           <td><code>{{ line.sku }}</code></td>
           <td><strong>{{ line.productName }}</strong></td>
           <td>
@@ -99,17 +230,17 @@
           </td>
           <td>{{ line.unitLabel }}</td>
           <td><strong>{{ line.quantity }}</strong></td>
-          <td>\${{ line.unitPrice.toFixed(2) }}</td>
-          <td><strong>\${{ line.lineSubtotal.toFixed(2) }}</strong></td>
+          <td>{{ currencySymbol }} {{ line.unitPrice | appAmount }}</td>
+          <td><strong>{{ currencySymbol }} {{ line.lineSubtotal | appAmount }}</strong></td>
         </tr>
       </tbody>
       <tfoot>
         <tr>
           <td colspan="4" style="text-align: right">
-            <strong>Subtotal de Productos Agregados ({{ receipt.totalItemsCount }} ítems):</strong>
+            <strong>Subtotal (Importe Total - IGV):</strong>
           </td>
           <td colspan="3">
-            <strong>\${{ receipt.subtotal.toFixed(2) }}</strong>
+            <strong>{{ currencySymbol }} {{ receiptSubtotal | appAmount }}</strong>
           </td>
         </tr>
         <tr *ngIf="receipt.discountAmount > 0">
@@ -117,15 +248,15 @@
             <strong>Descuento por Cupón ({{ receipt.couponCode }}):</strong>
           </td>
           <td colspan="3">
-            <span class="badge badge-success">-\${{ receipt.discountAmount.toFixed(2) }}</span>
+            <span class="badge badge-success">-{{ currencySymbol }} {{ receipt.discountAmount | appAmount }}</span>
           </td>
         </tr>
         <tr>
           <td colspan="4" style="text-align: right">
-            <span class="text-muted">IGV Incluido (18% Referencial):</span>
+            <span class="text-muted">IGV Incluido (18% SUNAT):</span>
           </td>
           <td colspan="3" class="text-muted">
-            \${{ receipt.taxIgv.toFixed(2) }}
+            {{ currencySymbol }} {{ receipt.taxIgv | appAmount }}
           </td>
         </tr>
         <tr>
@@ -133,7 +264,7 @@
             <strong>IMPORTE TOTAL DEL COMPROBANTE:</strong>
           </td>
           <td colspan="3" style="font-size: 1.1rem">
-            <strong>\${{ receipt.total.toFixed(2) }} USD</strong>
+            <strong>{{ currencySymbol }} {{ receipt.total | appAmount }} {{ business.defaultCurrency || business.currency || 'PEN' }}</strong>
           </td>
         </tr>
       </tfoot>

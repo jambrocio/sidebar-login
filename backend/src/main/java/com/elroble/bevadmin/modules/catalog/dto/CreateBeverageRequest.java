@@ -21,13 +21,13 @@ import java.math.BigDecimal;
  */
 @Schema(description = "Ficha técnica para registrar un nuevo producto en el catálogo maestro ('productos_bebidas')")
 public record CreateBeverageRequest(
-        @Schema(description = "Código SKU único", example = "CER-105")
-        @NotBlank String sku,
+        @Schema(description = "Código SKU único opcional del producto (si se especifica, debe ser único)", example = "CER-105")
+        String sku,
 
         @Schema(description = "Nombre comercial del producto", example = "Cerveza Cusqueña Dorada 620ml")
         @NotBlank String name,
 
-        @Schema(description = "Categoría del producto", example = "Cervezas", allowableValues = {"Licores", "Cervezas", "Gaseosas", "Otros"})
+        @Schema(description = "Categoría o línea comercial del producto", example = "Cervezas")
         @NotBlank String categoryName,
 
         @Schema(description = "Presentación de venta al por mayor", example = "Caja x 12 Botellas")

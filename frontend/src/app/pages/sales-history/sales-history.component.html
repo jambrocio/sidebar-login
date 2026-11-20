@@ -76,7 +76,7 @@
         </div>
         <div class="kpi-info">
           <span class="kpi-label">Total Facturado por tu Usuario</span>
-          <strong class="kpi-value">\${{ mySalesTotalAmount().toFixed(2) }}</strong>
+          <strong class="kpi-value">{{ currencySymbol() }} {{ mySalesTotalAmount() | appAmount }}</strong>
           <span class="kpi-trend">Acumulado neto</span>
         </div>
       </div>
@@ -115,19 +115,19 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let sale of filteredMySalesHistory()">
+            <tr *ngFor="let sale of pagedMySalesHistory()">
               <td><code>{{ sale.id }}</code></td>
               <td><span class="badge badge-info">{{ sale.documentType }}</span></td>
               <td>{{ sale.branchName }}</td>
               <td><strong>{{ sale.clientName }}</strong></td>
               <td>{{ sale.itemsSummary }}</td>
               <td>
-                <code *ngIf="sale.couponCode">{{ sale.couponCode }} (-\${{ sale.discountAmount }})</code>
+                <code *ngIf="sale.couponCode">{{ sale.couponCode }} (-{{ currencySymbol() }} {{ sale.discountAmount | appAmount }})</code>
                 <span *ngIf="!sale.couponCode" class="text-muted">-</span>
               </td>
-              <td><strong>\${{ sale.total.toFixed(2) }}</strong></td>
+              <td><strong>{{ currencySymbol() }} {{ sale.total | appAmount }}</strong></td>
               <td><code>{{ sale.sellerUser }}</code></td>
-              <td class="text-muted">{{ sale.date }}</td>
+              <td class="text-muted">{{ sale.date | appDate }}</td>
               <td>
                 <button
                   type="button"
@@ -142,6 +142,14 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Paginación de Ventas (15 por página) -->
+      <app-table-pagination
+        [totalItems]="filteredMySalesHistory().length"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage()"
+        (pageChange)="currentPage.set($event)"
+      ></app-table-pagination>
     </div>
   </ng-container>
 </section>

@@ -168,4 +168,33 @@ public class UsersController {
         }
         return usersService.updateUserWithBusinessAndBranches(userId, resolved);
     }
+
+    /**
+     * Restablece la contraseña de un usuario a la clave estándar por default ('Cotic2026#').
+     *
+     * @param userId         identificador del usuario (UUID, código USR-xxx o username)
+     * @param authentication credenciales del usuario en sesión
+     * @return confirmación del reseteo de contraseña
+     */
+    @PostMapping("/{userId}/reset-password")
+    @PreAuthorize("@menuPermissionEvaluator.hasAccess(authentication, 'MGMT_USERS', 'EDIT')")
+    @Auditable(module = "Seguridad", eventType = "PASSWORD_RESET")
+    @Operation(
+            summary = "Restablecer contraseña a la clave estándar por default",
+            description = "Asigna la contraseña institucional por defecto ('Cotic2026#') con BCrypt, desbloquea la cuenta y resetea los intentos fallidos."
+    )
+    @ApiResponse(responseCode = "200", description = "Contraseña restablecida exitosamente.")
+    public Map<String, Object> resetUserPasswordToDefault(
+            @Parameter(description = "UUID, código de usuario (ej. USR-431) o username (ej. rambrocio)", example = "rambrocio")
+            @PathVariable String userId,
+            Authentication authentication) {
+
+        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
+            if (!user.isSuperAdmin()) {
+                usersService.validateUserBelongsToBusiness(userId, user.businessId());
+            }
+        }
+
+        return usersService.resetPasswordToDefault(userId);
+    }
 }

@@ -44,10 +44,14 @@ public class PurchasesServiceImpl implements PurchasesService {
     @Transactional
     public Map<String, Object> registerPurchaseOrder(RegisterPurchaseRequest request, AuthenticatedUserPrincipal user) {
         BigDecimal totalCost = request.boxCost().multiply(BigDecimal.valueOf(request.boxesQty()));
-        purchasesRepository.insertPurchaseOrder(request, user, totalCost);
+        String code = (request.purchaseCode() != null && !request.purchaseCode().isBlank())
+                ? request.purchaseCode().trim()
+                : purchasesRepository.generateNextPurchaseCode();
+
+        purchasesRepository.insertPurchaseOrder(code, request, user, totalCost);
 
         return Map.of(
-                "purchaseCode", request.purchaseCode(),
+                "purchaseCode", code,
                 "branch", user.assignedBranchName(),
                 "totalCost", totalCost,
                 "status", "Recibido"

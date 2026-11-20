@@ -13,10 +13,10 @@
   transition: width 0.25s ease, background-color 0.25s ease;
 }
 
-/* Cabecera con insignia idéntica a la tarjeta de Login */
+/* Cabecera Institucional Permanente: COTIC - SISTEMA POS & GESTIÓN DE PRODUCTOS */
 .sidebar-header {
-  height: 60px;
-  padding: 0 1rem;
+  min-height: 70px;
+  padding: 0.65rem 0.85rem;
   border-bottom: 1px solid var(--sidebar-border);
   display: flex;
   align-items: center;
@@ -24,34 +24,69 @@
   box-sizing: border-box;
 
   .brand-badge {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: rgba(var(--primary-rgb, 0, 123, 255), 0.12);
-    color: var(--primary-color);
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.35rem;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.28);
   }
 
   .brand-text {
     overflow: hidden;
     white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
 
-    h2 {
+    .system-title {
       margin: 0;
       color: var(--sidebar-text);
-      font-size: 0.98rem;
-      font-weight: 700;
-      line-height: 1.2;
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      line-height: 1.1;
     }
 
-    span {
+    .system-subtitle {
       display: block;
-      font-size: 0.74rem;
+      font-size: 0.61rem;
+      font-weight: 800;
+      color: var(--primary-color, #0284c7);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      line-height: 1.2;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .business-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
       color: var(--sidebar-muted-text);
+      margin-top: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      i {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+        color: var(--sidebar-muted-text);
+      }
+
+      .business-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
   }
 }

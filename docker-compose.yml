@@ -12,6 +12,8 @@ services:
       POSTGRES_DB: ${DB_NAME:-admin_dashboard_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      TZ: ${TZ:-America/Lima}
+      PGTZ: ${TZ:-America/Lima}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docs/sql:/docker-entrypoint-initdb.d:ro
@@ -39,6 +41,7 @@ services:
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - TZ=${TZ:-America/Lima}
     depends_on:
       dev-postgres:
         condition: service_healthy
@@ -67,6 +70,7 @@ services:
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - TZ=${TZ:-America/Lima}
       - SPRING_FLYWAY_BASELINE_ON_MIGRATE=true
       - SPRING_FLYWAY_BASELINE_VERSION=7
       - JWT_SECRET=${JWT_SECRET:-ElRobleBebidasMayorYMenorClaveSecretaCorporativa2026SpringSecurity7Key}
@@ -93,6 +97,8 @@ services:
     image: dev-frontend
     container_name: dev-frontend
     restart: unless-stopped
+    environment:
+      - TZ=${TZ:-America/Lima}
     ports:
       - "${FRONTEND_PORT_MAPPING:-4200:80}"
     depends_on:

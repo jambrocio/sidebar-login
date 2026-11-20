@@ -183,6 +183,17 @@ export class AuthApiService {
     const { user, passwordStatus, daysUntilExpiration, passwordExpiresAt, mustChangePassword } = response;
     const roleName = user.roles && user.roles.length > 0 ? user.roles[0] : 'ANALYST';
 
+    let userRole = 'Cajero / Vendedor (Mayor/Menor)';
+    if (roleName === 'ADMIN' || roleName === 'ROLE_ADMIN') {
+      userRole = 'Administrador General';
+    } else if (roleName === 'ADMIN_NEGOCIO' || roleName === 'ROLE_ADMIN_NEGOCIO') {
+      userRole = 'Administrador de Negocio';
+    } else if (roleName === 'SUPERVISOR' || roleName === 'ROLE_SUPERVISOR') {
+      userRole = 'Jefe de Tienda y Compras';
+    } else if (roleName === 'AUDITOR' || roleName === 'ROLE_AUDITOR') {
+      userRole = 'Auditor de Caja e Inventario';
+    }
+
     let defaultBizName = 'Distribuidora de Licores y Bebidas El Roble S.A.C.';
     if (user.businessCode === 'BIZ-003') {
       defaultBizName = 'COTIC S.A.C.';
@@ -195,7 +206,7 @@ export class AuthApiService {
       name: user.fullName || user.username,
       username: user.username,
       email: `${user.username}@empresa.com`,
-      role: roleName === 'ADMIN' ? 'Administrador General' : 'Cajero / Vendedor (Mayor/Menor)',
+      role: userRole,
       businessId: user.businessCode || 'BIZ-001',
       businessName: user.businessName || defaultBizName,
       assignedBranch: user.assignedBranchName || 'Sede Central',

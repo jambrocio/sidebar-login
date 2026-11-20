@@ -329,4 +329,34 @@ public class UsersRepository {
                 .param("userId", userId)
                 .update();
     }
+
+    /**
+     * Obtiene el nombre de usuario (login) a partir de su identificador UUID.
+     */
+    public Optional<String> findUsernameById(UUID userId) {
+        return jdbcClient.sql("SELECT nombre_usuario FROM usuarios WHERE id = :userId")
+                .param("userId", userId)
+                .query(String.class)
+                .optional();
+    }
+
+    /**
+     * Restablece la contraseña cifrada del usuario, resetea los intentos fallidos a 0
+     * y desbloquea la cuenta si estuviera bloqueada.
+     */
+    public void resetUserPassword(UUID userId, String encodedPassword) {
+        String sql = """
+            UPDATE auth.usuarios
+            SET hash_contrasena = :passwordHash,
+                intentos_fallidos_login = 0,
+                estado = CASE WHEN estado = 'LOCKED' THEN 'ACTIVE' ELSE estado END,
+                debe_cambiar_contrasena = false,
+                fecha_actualizacion = now()
+            WHERE id = :userId
+        """;
+        jdbcClient.sql(sql)
+                .param("passwordHash", encodedPassword)
+                .param("userId", userId)
+                .update();
+    }
 }

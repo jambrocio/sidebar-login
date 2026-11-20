@@ -2,11 +2,333 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=../docs/presentacion/video_c4_segmentacion_redes.html" />
-  <title>Redirigiendo a Video Animado C4...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COTIC — SISTEMA POS & GESTIÓN DE PRODUCTOS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #2563eb;
+      --success: #059669;
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at 50% 10%, #1e293b 0%, #0f172a 100%);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .main-card {
+      width: 100%;
+      max-width: 960px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 3rem 2.5rem;
+      box-shadow: 0 25px 70px -15px rgba(0, 0, 0, 0.6), 0 0 40px rgba(2, 132, 199, 0.15);
+      backdrop-filter: blur(16px);
+      text-align: center;
+    }
+
+    .badge-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(2, 132, 199, 0.18);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      padding: 0.45rem 1.35rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.6rem;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #38bdf8, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle-system {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    p.lead {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.6;
+    }
+
+    .grid-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+      text-align: left;
+    }
+
+    .action-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+    }
+
+    .action-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 12px 30px -8px rgba(2, 132, 199, 0.35);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .action-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .action-card h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+      color: #ffffff;
+    }
+
+    .action-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .action-link-text {
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .primary-btn-row {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-main {
+      padding: 0.85rem 1.85rem;
+      border-radius: 9999px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-main.blue {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(2, 132, 199, 0.4);
+    }
+
+    .btn-main.pink {
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
+    }
+
+    .btn-main.green {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-main:hover {
+      transform: scale(1.04);
+    }
+  </style>
 </head>
-<body style="background:#070b14; color:#fff; font-family:sans-serif; text-align:center; padding:3rem;">
-  <h2>Cargando Video Animado C4: Segmentación de Redes...</h2>
-  <p>Si no eres redirigido automáticamente, <a href="../docs/presentacion/video_c4_segmentacion_redes.html" style="color:#38bdf8;">haz clic aquí para abrir el video</a>.</p>
+<body>
+
+  <div class="main-card">
+    <div class="badge-top">
+      <i class="bi bi-box-seam-fill"></i> COTIC &bull; SISTEMA POS & GESTIÓN DE PRODUCTOS
+    </div>
+
+    <h1>COTIC: <span>SISTEMA POS & GESTIÓN DE PRODUCTOS</span></h1>
+    <div class="subtitle-system">Suite Integral Multirubro &bull; Facturación Electrónica &bull; Control Total de Inventario</div>
+    
+    <p class="lead">
+      Portal oficial con presentaciones interactivas, spot publicitario en video HD, recorridos animados con locución en español, simulador POS en tiempo real y diagramas técnicos de arquitectura de software.
+    </p>
+
+    <div class="grid-actions">
+      <!-- Opción 1: Spot Video HyperFrames -->
+      <a class="action-card" href="../docs/presentacion/video_promocional_bevadmin.html">
+        <div>
+          <div class="action-icon" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8;">
+            <i class="bi bi-camera-reels-fill"></i>
+          </div>
+          <h3>Opción 1: Spot Comercial Oficial (50s)</h3>
+          <p>Video animado en código (HyperFrames) con música sintetizada, animación de ventas POS de productos en general (abarrotes, limpieza, snacks, bebidas), control de stock y arqueo de caja sin descuadres.</p>
+        </div>
+        <span class="action-link-text" style="color: #38bdf8;">
+          Reproducir Opción 1 <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
+
+      <!-- Opción 2: Video Guiado con Presentadora Sofía -->
+      <a class="action-card" href="../docs/presentacion/video_demo_modulos_persona.html">
+        <div>
+          <div class="action-icon" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">
+            <i class="bi bi-person-video3"></i>
+          </div>
+          <h3>Opción 2: Demo con Sofía (65s)</h3>
+          <p>Video interactivo guiado por la presentadora virtual Sofía detallando los 6 módulos: Dashboard, POS Mayor/Menor con stock y cuadre contable, Histórico de Producto, Proveedores y Compras, Arqueo de Caja y Ciberseguridad.</p>
+        </div>
+        <span class="action-link-text" style="color: #f472b6;">
+          Reproducir Opción 2 <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
+
+      <!-- Pitch Deck Interactivo -->
+      <a class="action-card" href="../docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html">
+        <div>
+          <div class="action-icon" style="background: rgba(124, 58, 237, 0.2); color: #c084fc;">
+            <i class="bi bi-laptop"></i>
+          </div>
+          <h3>Presentación Interactiva</h3>
+          <p>Guía comercial paso a paso con simulador táctil de ventas POS, cálculo contable exacto, histórico de inventario y calculadora de ROI multi-divisa (PEN, USD, EUR).</p>
+        </div>
+        <span class="action-link-text" style="color: #c084fc;">
+          Abrir Presentación <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
+
+      <!-- Visor Central de Diagramas -->
+      <a class="action-card" href="../docs/diagrams/index.html">
+        <div>
+          <div class="action-icon" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">
+            <i class="bi bi-diagram-3-fill"></i>
+          </div>
+          <h3>Diagramas de Arquitectura</h3>
+          <p>Visor unificado Archify: Secuencias de emisión POS, modelo relacional ERD con 19 tablas normalizadas y C4 Contenedores.</p>
+        </div>
+        <span class="action-link-text" style="color: #fbbf24;">
+          Ver Diagramas <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
+
+      <!-- Manual Oficial de Usuario -->
+      <a class="action-card" href="../docs/manual/index.html">
+        <div>
+          <div class="action-icon" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8;">
+            <i class="bi bi-book-half"></i>
+          </div>
+          <h3>Manual de Usuario Oficial</h3>
+          <p>Guía paso a paso con 16 capturas reales de alta definición del sistema operado por Raúl Ambrocio Mendoza (rambrocio).</p>
+        </div>
+        <span class="action-link-text" style="color: #38bdf8;">
+          Abrir Manual <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
+    </div>
+
+    <div class="primary-btn-row">
+      <a class="btn-main blue" href="../docs/presentacion/video_promocional_bevadmin.html">
+        <i class="bi bi-camera-reels-fill"></i> Video 1: Spot Comercial (50s)
+      </a>
+      <a class="btn-main pink" href="../docs/presentacion/video_demo_modulos_persona.html">
+        <i class="bi bi-person-video3"></i> Video 2: Demo con Sofía (65s)
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function downloadClean(e, file) {
+      if (e) e.preventDefault();
+      fetch(file)
+        .then(r => {
+          if (!r.ok) throw new Error('Fetch failed');
+          return r.blob();
+        })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'video/mp4' }));
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = blobUrl;
+          a.download = file;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }, 1500);
+        })
+        .catch(() => {
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = file;
+          a.setAttribute('download', file);
+          a.target = '_self';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+          }, 500);
+        });
+    }
+  </script>
 </body>
 </html>

@@ -1,14 +1,19 @@
 package com.elroble.bevadmin.modules.sales.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.elroble.bevadmin.modules.sales.dto.EmitSaleRequest;
 import com.elroble.bevadmin.modules.sales.dto.SaleCartItemRequest;
 import com.elroble.bevadmin.modules.sales.repository.SalesRepository;
 import com.elroble.bevadmin.security.AuthenticatedUserPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,8 +27,13 @@ import java.util.UUID;
 @Service
 public class SalesServiceImpl implements SalesService {
 
+    private static final Logger log = LoggerFactory.getLogger(SalesServiceImpl.class);
+
     /** Repositorio síncrono de ventas y detalle de comprobantes. */
     private final SalesRepository salesRepository;
+
+    /** Mapeador Jackson para normalizar campos JSON/JSONB de PostgreSQL a colecciones nativas. */
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Constructor con inyección de dependencias.
@@ -40,13 +50,51 @@ public class SalesServiceImpl implements SalesService {
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getMySalesHistory(AuthenticatedUserPrincipal user) {
-        return salesRepository.findSalesHistoryBySellerUserId(user.userId());
+        List<Map<String, Object>> rows = salesRepository.findSalesHistoryBySellerUserId(user.userId());
+        return normalizeSalesItems(rows);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getAllSales(AuthenticatedUserPrincipal user) {
-        return salesRepository.findAllSalesByBusinessId(user.businessId());
+        List<Map<String, Object>> rows = salesRepository.findAllSalesByBusinessId(user.businessId());
+        return normalizeSalesItems(rows);
+    }
+
+    /**
+     * Normaliza el campo {@code items} (tipo JSONB en PostgreSQL) para que Jackson lo serialice
+     * como un arreglo JSON nativo en lugar de una estructura envolvente {@code PGobject}.
+     */
+    private List<Map<String, Object>> normalizeSalesItems(List<Map<String, Object>> rows) {
+        return rows.stream().map(row -> {
+            Map<String, Object> copy = new HashMap<>(row);
+            Object rawItems = copy.get("items");
+            if (rawItems != null) {
+                try {
+                    String jsonStr;
+                    if (rawItems instanceof String s) {
+                        jsonStr = s;
+                    } else {
+                        try {
+                            jsonStr = (String) rawItems.getClass().getMethod("getValue").invoke(rawItems);
+                        } catch (Exception ignored) {
+                            jsonStr = rawItems.toString();
+                        }
+                    }
+                    if (jsonStr != null && !jsonStr.isBlank()) {
+                        copy.put("items", objectMapper.readValue(jsonStr, new TypeReference<List<Map<String, Object>>>() {}));
+                    } else {
+                        copy.put("items", List.of());
+                    }
+                } catch (Exception e) {
+                    log.warn("Error al deserializar items de venta {}: {}", copy.get("id"), e.getMessage());
+                    copy.put("items", List.of());
+                }
+            } else {
+                copy.put("items", List.of());
+            }
+            return copy;
+        }).toList();
     }
 
     /**
@@ -55,15 +103,19 @@ public class SalesServiceImpl implements SalesService {
     @Override
     @Transactional
     public Map<String, Object> emitSaleReceipt(EmitSaleRequest request, AuthenticatedUserPrincipal user) {
-        // 1. Cálculo síncrono del Subtotal sumando cada ítem del carrito
-        BigDecimal subtotal = request.items().stream()
+        // 1. Cálculo síncrono del Importe Total bruto sumando cada ítem del carrito
+        BigDecimal grossTotal = request.items().stream()
                 .map(item -> item.unitPrice().multiply(BigDecimal.valueOf(item.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 2. Aplicación de descuento por cupón y cálculo de IGV (18%) y Total Neto
+        // 2. Aplicación de descuento por cupón para determinar el Importe Total a cobrar
         BigDecimal discount = request.discountAmount() != null ? request.discountAmount() : BigDecimal.ZERO;
-        BigDecimal total = subtotal.subtract(discount).max(BigDecimal.ZERO);
-        BigDecimal taxIgv = total.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = grossTotal.subtract(discount).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+
+        // 3. Desglose contable SUNAT: Subtotal = Importe Total - IGV (donde Base Imponible = Total / 1.18)
+        BigDecimal baseImponible = total.divide(new BigDecimal("1.18"), 2, RoundingMode.HALF_UP);
+        BigDecimal taxIgv = total.subtract(baseImponible).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal subtotal = total.subtract(taxIgv).setScale(2, RoundingMode.HALF_UP);
 
         // 3. Construcción del resumen de ítems y determinación de modalidad consolidada
         String itemsSummary = String.join(" + ",
@@ -78,13 +130,20 @@ public class SalesServiceImpl implements SalesService {
 
         // 4. Persistencia transaccional de cabecera y líneas en PostgreSQL
         UUID saleId = UUID.randomUUID();
+        String finalSaleCode = (request.saleCode() != null && !request.saleCode().isBlank())
+                ? request.saleCode().trim()
+                : salesRepository.generateNextSaleCode();
+
         salesRepository.insertSaleHeader(
-                saleId, request, user, consolidatedModality, itemsSummary, subtotal, discount, taxIgv, total
+                saleId, finalSaleCode, request, user, consolidatedModality, itemsSummary, subtotal, discount, taxIgv, total
         );
 
         for (SaleCartItemRequest item : request.items()) {
             BigDecimal lineSubtotal = item.unitPrice().multiply(BigDecimal.valueOf(item.quantity()));
             salesRepository.insertSaleItem(saleId, item, lineSubtotal);
+            log.info("Descontando stock tras venta - SKU={}, Producto={}, Modalidad={}, Cantidad={}, Negocio={}",
+                    item.sku(), item.productName(), item.modality(), item.quantity(), user.businessId());
+            salesRepository.decrementProductStock(user.businessId(), item.sku(), item.productName(), item.modality(), item.quantity());
         }
 
         // 5. Actualización de uso del cupón si aplica
@@ -94,7 +153,7 @@ public class SalesServiceImpl implements SalesService {
 
         return Map.of(
                 "saleId", saleId,
-                "saleCode", request.saleCode(),
+                "saleCode", finalSaleCode,
                 "branch", user.assignedBranchName(),
                 "sellerUser", user.fullName() + " (" + user.username() + ")",
                 "total", total

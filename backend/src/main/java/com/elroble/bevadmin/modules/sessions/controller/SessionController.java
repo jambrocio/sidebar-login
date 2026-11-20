@@ -45,15 +45,28 @@ public class SessionController {
 
     /**
      * Lista todas las sesiones activas y auditadas con semáforos e IPs.
+     * Si el usuario es Superadmin ve todos los negocios; si no, ve únicamente los de su negocio matriz.
      */
     @GetMapping("/api/v1/admin/sessions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR', 'ADMIN_NEGOCIO')")
     @Operation(
             summary = "Listar sesiones activas con semaforización y geolocalización",
-            description = "Devuelve la lista de sesiones desde 'vw_user_active_sessions' con IP, navegador, dispositivo, ubicación, semáforo (🟢 Online, 🟡 Ausente, 🔴 Desconectado) y banderas de revocación."
+            description = "Devuelve la lista de sesiones desde 'vw_user_active_sessions'. Si el usuario es Superadmin puede ver todas las sesiones de todos los negocios; si es usuario de negocio, lista exclusivamente las de su negocio matriz."
     )
     @ApiResponse(responseCode = "200", description = "Lista de sesiones obtenida correctamente.")
-    public List<ActiveSessionDto> listSessions() {
+    public List<ActiveSessionDto> listSessions(
+            @AuthenticationPrincipal AuthenticatedUserPrincipal currentUser,
+            @Parameter(description = "UUID opcional del negocio matriz para filtrar (solo Superadmin)")
+            @org.springframework.web.bind.annotation.RequestParam(required = false) UUID businessId) {
+
+        UUID effectiveBusinessId = businessId;
+        if (currentUser != null && !currentUser.isSuperAdmin()) {
+            effectiveBusinessId = currentUser.businessId();
+        }
+
+        if (effectiveBusinessId != null) {
+            return sessionService.listActiveSessionsByBusiness(effectiveBusinessId);
+        }
         return sessionService.listActiveSessions();
     }
 
@@ -61,7 +74,7 @@ public class SessionController {
      * Cierra remotamente la sesión de un usuario (Kill Session).
      */
     @PostMapping("/api/v1/admin/sessions/{sessionId}/revoke")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_NEGOCIO')")
     @Auditable(module = "Seguridad", eventType = "SESSION_REVOKED")
     @Operation(
             summary = "Cerrar sesión remotamente a un usuario (Kill Session)",
@@ -85,7 +98,7 @@ public class SessionController {
      * Bloquea la cuenta de un usuario infiltrado y revoca todas sus sesiones activas de golpe.
      */
     @PostMapping("/api/v1/admin/sessions/users/{userId}/lock")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_NEGOCIO')")
     @Auditable(module = "Seguridad", eventType = "USER_LOCKED")
     @Operation(
             summary = "Bloquear cuenta de usuario infiltrado y revocar todas sus sesiones",

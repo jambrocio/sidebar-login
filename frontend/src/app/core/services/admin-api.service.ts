@@ -9,6 +9,7 @@ import {
   BeverageSale,
   CashRegisterAudit,
   CommercialCustomer,
+  CommercialSupplier,
   DiscountCoupon,
 } from '../models/domain.models';
 
@@ -30,6 +31,12 @@ export interface BackendBusinessDto {
   phone?: string;
   /** Moneda operativa (ej. PEN, USD) */
   currency?: string;
+  /** Moneda predeterminada configurada por defecto */
+  defaultCurrency?: string;
+  /** Lista de monedas autorizadas para el negocio */
+  supportedCurrencies?: string[];
+  /** Cadena raw de monedas admitidas */
+  supportedCurrenciesRaw?: string;
   /** Estado de activación del negocio */
   active?: boolean;
 }
@@ -52,8 +59,12 @@ export interface CreateBusinessRequestDto {
   phone?: string;
   /** Correo de soporte corporativo */
   supportEmail?: string;
-  /** Moneda principal */
+  /** Moneda principal / legacy */
   currency?: string;
+  /** Moneda configurada por defecto */
+  defaultCurrency?: string;
+  /** Monedas admitidas por la empresa */
+  supportedCurrencies?: string[];
 }
 
 /**
@@ -318,6 +329,7 @@ export interface GenericMutationResponse {
   branchCode?: string;
   customerCode?: string;
   saleCode?: string;
+  purchaseCode?: string;
   auditCode?: string;
   /** Estado de la transacción */
   status?: string;
@@ -483,6 +495,20 @@ export class AdminApiService {
     });
   }
 
+  /**
+   * Restablece la contraseña de un usuario a la clave estándar por default ('Cotic2026#').
+   *
+   * @param userId Identificador UUID, código de usuario o username.
+   * @returns Observable con la confirmación y la clave por defecto asignada.
+   */
+  resetUserPassword(userId: string): Observable<{ success: boolean; message: string; defaultPassword: string; userId: string; username: string }> {
+    return this.http.post<{ success: boolean; message: string; defaultPassword: string; userId: string; username: string }>(
+      `${this.baseUrl}/users/${encodeURIComponent(userId)}/reset-password`,
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
+
   // =========================================================================
   // 2B. CLIENTES COMERCIALES (Multi-Tenant por Negocio)
   // =========================================================================
@@ -512,6 +538,52 @@ export class AdminApiService {
    */
   createCustomer(data: Partial<CommercialCustomer>): Observable<GenericMutationResponse> {
     return this.http.post<GenericMutationResponse>(`${this.baseUrl}/customers`, data, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  // =========================================================================
+  // 2B. PROVEEDORES COMERCIALES (compras.proveedores)
+  // =========================================================================
+
+  /**
+   * Obtiene el listado de proveedores comerciales con aislamiento multi-tenant.
+   *
+   * @param businessCode Código de negocio matriz opcional para filtro de Superusuario.
+   * @returns Observable con la lista de proveedores {@link CommercialSupplier}.
+   */
+  getSuppliers(businessCode?: string): Observable<CommercialSupplier[]> {
+    let params = new HttpParams();
+    if (businessCode && businessCode !== 'ALL') {
+      params = params.set('businessCode', businessCode);
+    }
+    return this.http.get<CommercialSupplier[]>(`${this.baseUrl}/suppliers`, {
+      headers: this.getHeaders(),
+      params,
+    });
+  }
+
+  /**
+   * Registra un nuevo proveedor comercial en el negocio correspondiente.
+   *
+   * @param data DTO con los datos del proveedor a persistir.
+   * @returns Observable con la confirmación de alta del proveedor.
+   */
+  createSupplier(data: Partial<CommercialSupplier>): Observable<GenericMutationResponse> {
+    return this.http.post<GenericMutationResponse>(`${this.baseUrl}/suppliers`, data, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  /**
+   * Modifica el estado operativo (Activo/Inactivo) de un proveedor.
+   *
+   * @param supplierId Identificador UUID del proveedor.
+   * @param active Nuevo estado operativo.
+   * @returns Observable con la respuesta de la mutación.
+   */
+  toggleSupplierStatus(supplierId: string, active: boolean): Observable<GenericMutationResponse> {
+    return this.http.patch<GenericMutationResponse>(`${this.baseUrl}/suppliers/${supplierId}/status`, { active }, {
       headers: this.getHeaders(),
     });
   }
@@ -716,7 +788,7 @@ export class AdminApiService {
    * @param purchase Datos de la orden de compra.
    * @returns Observable con la confirmación de guardado.
    */
-  createPurchase(purchase: Partial<BeveragePurchase>): Observable<GenericMutationResponse> {
+  createPurchase(purchase: Record<string, unknown> | Partial<BeveragePurchase>): Observable<GenericMutationResponse> {
     return this.http.post<GenericMutationResponse>(`${this.baseUrl}/purchases`, purchase, {
       headers: this.getHeaders(),
     });
@@ -773,7 +845,7 @@ export class AdminApiService {
    * @param sale Datos de la venta, ítems y forma de pago.
    * @returns Observable con el comprobante electrónico generado.
    */
-  emitSale(sale: Partial<BeverageSale>): Observable<GenericMutationResponse> {
+  emitSale(sale: Record<string, unknown> | Partial<BeverageSale>): Observable<GenericMutationResponse> {
     return this.http.post<GenericMutationResponse>(`${this.baseUrl}/sales`, sale, {
       headers: this.getHeaders(),
     });

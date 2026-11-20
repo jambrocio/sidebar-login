@@ -42,49 +42,91 @@
       </button>
     </div>
 
-    <form (ngSubmit)="saveDiscountCoupon()" class="grid-form">
+    <form (ngSubmit)="saveDiscountCoupon()" class="grid-form" [class.was-validated]="formSubmitted()" novalidate>
       <div class="form-group">
         <label>Código del Cupón <span class="required-indicator">*</span></label>
-        <input type="text" name="cpCode" [(ngModel)]="newCoupon.code" required class="required-input" />
+        <input
+          type="text"
+          name="cpCode"
+          [(ngModel)]="newCoupon.code"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !newCoupon.code.trim()"
+        />
       </div>
       <div class="form-group">
-        <label>Tipo de Descuento</label>
-        <select name="cpType" [(ngModel)]="newCoupon.discountType">
+        <label>Tipo de Descuento <span class="required-indicator">*</span></label>
+        <select name="cpType" [(ngModel)]="newCoupon.discountType" required class="required-input">
           <option value="PERCENT">Porcentaje de Descuento (%)</option>
-          <option value="FIXED">Monto Fijo de Descuento ($)</option>
+          <option value="FIXED">Monto Fijo de Descuento ({{ currencySymbol() }})</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Valor ({{ newCoupon.discountType === 'PERCENT' ? '%' : '$' }})</label>
-        <input type="number" name="cpVal" [(ngModel)]="newCoupon.discountValue" min="1" />
+        <label>Valor ({{ newCoupon.discountType === 'PERCENT' ? '%' : currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <input
+          type="number"
+          name="cpVal"
+          [(ngModel)]="newCoupon.discountValue"
+          min="1"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && (!newCoupon.discountValue || newCoupon.discountValue <= 0)"
+        />
       </div>
+
+      <!-- Título requerido: Cliente -->
       <div class="form-group">
-        <label>Cliente o Segmento Beneficiario</label>
-        <select name="cpClient" [(ngModel)]="newCoupon.assignedClient">
-          <option value="Licorería El Brindis S.A.C.">Licorería El Brindis S.A.C.</option>
-          <option value="Restaurante & Bar La Esquina">Restaurante & Bar La Esquina</option>
-          <option value="Bodega Mayorista Don Pepe">Bodega Mayorista Don Pepe</option>
-          <option value="Todos los Clientes Mayoristas VIP">Todos los Clientes Mayoristas VIP</option>
-          <option value="Todos los Clientes Minoristas">Todos los Clientes Minoristas</option>
+        <label>Cliente <span class="required-indicator">*</span></label>
+        <select
+          name="cpClient"
+          [(ngModel)]="newCoupon.assignedClient"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !newCoupon.assignedClient.trim()"
+        >
+          <option value="" disabled>-- Selecciona un cliente beneficiario --</option>
+          <option value="Todos los Clientes del Negocio">🏢 Todos los Clientes del Negocio</option>
+          <option *ngFor="let c of availableCustomersForBusiness()" [value]="c.commercialName || c.legalName">
+            {{ c.commercialName || c.legalName }} ({{ c.documentType }}: {{ c.documentNumber }})
+          </option>
         </select>
+        <small class="field-hint">Clientes registrados para el negocio {{ businessInfo().id }}</small>
       </div>
+
       <div class="form-group">
-        <label>Modalidad Aplicable</label>
-        <select name="cpModality" [(ngModel)]="newCoupon.targetModality">
+        <label>Modalidad Aplicable <span class="required-indicator">*</span></label>
+        <select name="cpModality" [(ngModel)]="newCoupon.targetModality" required class="required-input">
           <option value="Mayorista">Exclusivo Venta por Mayor (Cajas)</option>
           <option value="Minorista">Exclusivo Venta por Menor (Unidades)</option>
           <option value="Mayor y Menor">Aplica a Mayor y Menor (Ambos)</option>
         </select>
       </div>
+
+      <!-- Categorías: Registradas para el negocio o Todas -->
       <div class="form-group">
-        <label>Categoría Permitida</label>
-        <select name="cpCat" [(ngModel)]="newCoupon.targetCategory">
-          <option value="Todas">Todos los Productos</option>
-          <option value="Licores">Solo Licores</option>
-          <option value="Cervezas">Solo Cervezas</option>
-          <option value="Gaseosas">Solo Gaseosas</option>
+        <label>Categoría Permitida <span class="required-indicator">*</span></label>
+        <select name="cpCat" [(ngModel)]="newCoupon.targetCategory" required class="required-input">
+          <option value="Todas las Categorías">🌟 Todas las Categorías del Negocio</option>
+          <option *ngFor="let cat of availableCategoriesForBusiness()" [value]="cat">
+            {{ cat }}
+          </option>
+          <option *ngIf="availableCategoriesForBusiness().length === 0" value="Todas las Categorías">
+            Todas las Categorías
+          </option>
         </select>
+        <small class="field-hint">Filtradas por las categorías activas del negocio {{ businessInfo().id }}</small>
       </div>
+
+      <div class="form-group">
+        <label>Compra Mínima Requerida ({{ currencySymbol() }})</label>
+        <input type="number" name="cpMin" [(ngModel)]="newCoupon.minPurchase" min="0" step="10" />
+      </div>
+
+      <div class="form-group">
+        <label>Límite Máximo de Canjes / Usos</label>
+        <input type="number" name="cpMax" [(ngModel)]="newCoupon.maxUses" min="1" />
+      </div>
+
       <div class="form-actions full-width">
         <button type="submit" class="btn-primary">
           <i class="bi bi-ticket-perforated-fill"></i>
@@ -102,20 +144,20 @@
           <tr>
             <th>Código</th>
             <th>Beneficio</th>
-            <th>Cliente Asignado</th>
+            <th>Cliente</th>
             <th>Modalidad</th>
-            <th>Línea</th>
+            <th>Categoría</th>
             <th>Canjes</th>
             <th>Generado Por (Auditoría)</th>
             <th>Estado</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let cp of couponsList()">
+          <tr *ngFor="let cp of pagedCoupons()">
             <td><code>{{ cp.code }}</code></td>
             <td>
               <span class="badge badge-success">
-                {{ cp.discountType === 'PERCENT' ? cp.discountValue + '% OFF' : '-$' + cp.discountValue }}
+                {{ cp.discountType === 'PERCENT' ? cp.discountValue + '% OFF' : '-' + currencySymbol() + ' ' + (cp.discountValue | appAmount) }}
               </span>
             </td>
             <td><strong>{{ cp.assignedClient }}</strong></td>
@@ -136,5 +178,13 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de Cupones (15 por página) -->
+    <app-table-pagination
+      [totalItems]="couponsList().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

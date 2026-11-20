@@ -1,0 +1,40 @@
+<div class="pagination-container" *ngIf="totalItems > 0">
+  <div class="pagination-info">
+    Mostrando <span class="highlight">{{ startItem }}</span> – <span class="highlight">{{ endItem }}</span> de <span class="highlight">{{ totalItems }}</span> registros
+  </div>
+
+  <nav class="pagination-nav" aria-label="Navegación de páginas">
+    <button
+      type="button"
+      class="page-btn nav-btn"
+      [disabled]="!canPrev"
+      (click)="onPrev()"
+      aria-label="Página anterior"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <ng-container *ngFor="let p of pages">
+      <span *ngIf="p === '...'" class="page-ellipsis">…</span>
+      <button
+        *ngIf="p !== '...'"
+        type="button"
+        class="page-btn"
+        [class.active]="p === currentPage"
+        (click)="onSelectPage(p)"
+      >
+        {{ p }}
+      </button>
+    </ng-container>
+
+    <button
+      type="button"
+      class="page-btn nav-btn"
+      [disabled]="!canNext"
+      (click)="onNext()"
+      aria-label="Página siguiente"
+    >
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </nav>
+</div>

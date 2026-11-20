@@ -13,33 +13,34 @@
     { "id": "api", "type": "backend", "label": "Sales API", "sublabel": "Spring Boot 4" },
     { "id": "guard", "type": "security", "label": "Branch Guard", "sublabel": "Aislamiento Sede" },
     { "id": "coupons", "type": "database", "label": "Cupones", "sublabel": "cupones_descuento" },
-    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "ventas / detalles" }
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "ventas / detalles / stock" }
   ],
   "segments": [
     { "from": 150, "to": 280, "label": "Preparación y Validación de Sede" },
-    { "from": 290, "to": 420, "label": "Verificación de Cupón y Persistencia Transaccional" },
-    { "from": 430, "to": 560, "label": "Confirmación y Emisión de Comprobante" }
+    { "from": 294, "to": 435, "label": "Verificación de Cupón, Descuento de Stock y Persistencia Transaccional" },
+    { "from": 440, "to": 580, "label": "Confirmación y Emisión Dual (Ticketera 80mm / A4 PDF)" }
   ],
   "messages": [
-    { "id": "m1", "from": "cajero", "to": "pos", "y": 160, "label": "Selecciona productos y aplica cupón", "variant": "default" },
-    { "id": "m2", "from": "pos", "to": "api", "y": 195, "label": "POST /api/v1/sales (Payload Venta)", "variant": "emphasis" },
-    { "id": "m3", "from": "api", "to": "guard", "y": 230, "label": "Validar sede asignada del operador", "variant": "security" },
+    { "id": "m1", "from": "cajero", "to": "pos", "y": 160, "label": "Búsqueda ágil de producto y ajuste de cantidad", "variant": "default" },
+    { "id": "m2", "from": "pos", "to": "api", "y": 195, "label": "POST /api/v1/sales (Payload Venta y Cuadre IGV)", "variant": "emphasis" },
+    { "id": "m3", "from": "api", "to": "guard", "y": 230, "label": "Validar sede asignada del operador en token JWT", "variant": "security" },
     { "id": "m4", "from": "guard", "to": "api", "y": 265, "label": "Sede autorizada (LOC-01)", "variant": "return" },
     { "id": "m5", "from": "api", "to": "coupons", "y": 300, "label": "Validar cupón activo y monto mínimo", "variant": "default" },
-    { "id": "m6", "from": "coupons", "to": "api", "y": 335, "label": "Cupón válido (% de descuento calculado)", "variant": "return" },
-    { "id": "m7", "from": "api", "to": "db", "y": 370, "label": "INSERT INTO ventas (cabecera comprobante)", "variant": "emphasis" },
-    { "id": "m8", "from": "api", "to": "db", "y": 405, "label": "INSERT INTO detalles_venta (líneas del carrito)", "variant": "emphasis" },
-    { "id": "m9", "from": "db", "to": "api", "y": 440, "label": "Transacción confirmada (COMMIT)", "variant": "return" },
-    { "id": "m10", "from": "api", "to": "coupons", "y": 475, "label": "Incrementar usos_actuales del cupón", "variant": "dashed" },
-    { "id": "m11", "from": "api", "to": "pos", "y": 510, "label": "201 Created (Comprobante emitido)", "variant": "return" },
-    { "id": "m12", "from": "pos", "to": "cajero", "y": 545, "label": "Visualiza Factura/Boleta e imprime PDF", "variant": "return" }
+    { "id": "m6", "from": "coupons", "to": "api", "y": 330, "label": "Cupón válido (% de descuento calculado)", "variant": "return" },
+    { "id": "m7", "from": "api", "to": "db", "y": 360, "label": "INSERT INTO ventas (cabecera: Subtotal = Total - IGV)", "variant": "emphasis" },
+    { "id": "m8", "from": "api", "to": "db", "y": 390, "label": "INSERT INTO detalles_venta (líneas del comprobante)", "variant": "emphasis" },
+    { "id": "m8b", "from": "api", "to": "db", "y": 420, "label": "UPDATE inventario.productos_bebidas (descontar cajas/und)", "variant": "emphasis" },
+    { "id": "m9", "from": "db", "to": "api", "y": 450, "label": "Transacción confirmada (COMMIT ACID)", "variant": "return" },
+    { "id": "m10", "from": "api", "to": "coupons", "y": 480, "label": "Incrementar usos_actuales del cupón", "variant": "dashed" },
+    { "id": "m11", "from": "api", "to": "pos", "y": 510, "label": "201 Created (Comprobante emitido con items JSON)", "variant": "return" },
+    { "id": "m12", "from": "pos", "to": "cajero", "y": 545, "label": "Impresión dual: Ticketera 80mm o A4/PDF", "variant": "return" }
   ],
   "activations": [
     { "participant": "pos", "from": 160, "to": 550, "type": "frontend" },
     { "participant": "api", "from": 195, "to": 515, "type": "backend" },
     { "participant": "guard", "from": 230, "to": 270, "type": "security" },
-    { "participant": "coupons", "from": 300, "to": 340, "type": "database" },
-    { "participant": "db", "from": 370, "to": 445, "type": "database" }
+    { "participant": "coupons", "from": 300, "to": 335, "type": "database" },
+    { "participant": "db", "from": 360, "to": 455, "type": "database" }
   ],
   "cards": [
     {
@@ -52,10 +53,18 @@
     },
     {
       "dot": "cyan",
-      "title": "Consistencia Transaccional",
+      "title": "Consistencia Transaccional y Stock",
       "items": [
-        "Cabecera (ventas) y detalle (detalles_venta) se registran en una sola transacción ACID",
+        "Cabecera (ventas), detalle (detalles_venta) y stock (productos_bebidas) se actualizan en una sola transacción ACID",
         "Si falla cualquier línea, se ejecuta ROLLBACK automático sin inconsistencias"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cuadre SUNAT e Impresión Dual",
+      "items": [
+        "Subtotal = Importe Total - IGV, cumpliendo Subtotal + IGV = Importe Total exacto al centavo",
+        "Impresión directa en ticketeras térmicas de 80mm o descarga en PDF formato A4"
       ]
     }
   ]

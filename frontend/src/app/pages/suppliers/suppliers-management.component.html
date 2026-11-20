@@ -1,0 +1,320 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Directorio de Proveedores Oficiales</h1>
+      <p class="subtitle">
+        Negocio Activo: <strong>{{ businessInfo().legalName }}</strong>
+        — Usuario: <strong>{{ currentSessionUser() }}</strong>
+        <span *ngIf="isGeneralAdmin()" class="role-badge badge-vip" style="margin-left: 0.5rem">
+          <i class="bi bi-shield-check" style="margin-right: 0.25rem"></i> Administrador General (Multi-Negocio)
+        </span>
+      </p>
+    </div>
+
+    <!-- Filtro de Negocio para el Administrador General -->
+    <div class="header-actions" *ngIf="isGeneralAdmin()">
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted, #64748b)">Filtrar Negocio:</label>
+        <select
+          [ngModel]="filterBusinessCode()"
+          (ngModelChange)="onFilterBusinessChange($event)"
+          style="padding: 0.45rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1)"
+        >
+          <option value="ALL">🏢 Todos los Negocios</option>
+          <option *ngFor="let b of businesses()" [value]="b.id">
+            {{ b.id }} — {{ b.commercialName || b.legalName }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mensajes de Feedback y Validación -->
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-banner" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Formulario de Registro de Proveedor -->
+  <div class="card" style="margin-bottom: 2rem">
+    <div class="toolbar">
+      <h2 class="section-title" style="margin: 0">
+        <i class="bi bi-building-add" style="margin-right: 0.4rem; color: var(--primary, #0284c7)"></i>
+        Registrar Nuevo Proveedor Comercial
+      </h2>
+    </div>
+
+    <div class="admin-callout" *ngIf="isGeneralAdmin()">
+      <i class="bi bi-info-circle-fill"></i>
+      <strong>Privilegio de Administrador General:</strong> Puedes seleccionar el Negocio Matriz al cual vincular este proveedor. El RUC/documento debe ser único dentro del negocio seleccionado.
+    </div>
+
+    <div class="admin-callout" *ngIf="!isGeneralAdmin()">
+      <i class="bi bi-shield-lock-fill"></i>
+      <strong>Aislamiento Multi-Tenant:</strong> El proveedor será registrado exclusivamente para tu negocio asignado:
+      <strong>{{ businessInfo().legalName }} ({{ currentUserProfile().assignedBusinessId }})</strong>.
+    </div>
+
+    <form (ngSubmit)="saveSupplier()" class="grid-form" [class.was-validated]="formSubmitted()" novalidate>
+      <!-- 1. Selección de Negocio Matriz (Condicionado por Rol) -->
+      <div class="form-group">
+        <label>
+          1. Negocio Matriz Asignado <span class="required-indicator">*</span>
+          <span *ngIf="!isGeneralAdmin()" style="font-size: 0.75rem; color: #0284c7">(Por default)</span>
+        </label>
+        <select
+          name="suppBusiness"
+          [(ngModel)]="supplierForm.businessCode"
+          [disabled]="!isGeneralAdmin()"
+          [class.business-selector-locked]="!isGeneralAdmin()"
+          required
+          class="required-input"
+        >
+          <option *ngFor="let b of availableBusinesses()" [value]="b.id">
+            {{ b.id }} — {{ b.commercialName || b.legalName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 2. Tipo de Documento -->
+      <div class="form-group">
+        <label>2. Tipo de Documento <span class="required-indicator">*</span></label>
+        <select name="suppDocType" [(ngModel)]="supplierForm.documentType" required class="required-input">
+          <option value="RUC">RUC (Registro Único de Contribuyente)</option>
+          <option value="DNI">DNI (Documento Nacional de Identidad)</option>
+          <option value="OTRO">Otro Documento Tributario</option>
+        </select>
+      </div>
+
+      <!-- 3. Número de Documento (Único por Negocio) -->
+      <div class="form-group">
+        <label>3. Número de RUC / Documento <span class="required-indicator">*</span></label>
+        <input
+          type="text"
+          name="suppDocNum"
+          [(ngModel)]="supplierForm.documentNumber"
+          placeholder="Ej. 20100113610"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !supplierForm.documentNumber.trim()"
+        />
+      </div>
+
+      <!-- 4. Razón Social Oficial -->
+      <div class="form-group">
+        <label>4. Razón Social Oficial <span class="required-indicator">*</span></label>
+        <input
+          type="text"
+          name="suppLegalName"
+          [(ngModel)]="supplierForm.legalName"
+          placeholder="Ej. Unión de Cervecerías Peruanas Backus y Johnston S.A.A."
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !supplierForm.legalName.trim()"
+        />
+      </div>
+
+      <!-- 5. Nombre Comercial / Marca -->
+      <div class="form-group">
+        <label>5. Nombre Comercial / Marca Comercial</label>
+        <input
+          type="text"
+          name="suppCommName"
+          [(ngModel)]="supplierForm.commercialName"
+          placeholder="Ej. Backus / Lindley / Diageo"
+        />
+      </div>
+
+      <!-- 6. Rubro / Categoría Principal -->
+      <div class="form-group">
+        <label>6. Rubro o Categoría Principal de Abastecimiento</label>
+        <select name="suppRubro" [(ngModel)]="supplierForm.rubroCategory">
+          <option value="Cervezas y Aguas">Cervezas y Aguas</option>
+          <option value="Licores y Destilados">Licores y Destilados</option>
+          <option value="Gaseosas y Bebidas">Gaseosas y Bebidas</option>
+          <option value="Vinos de Exportacion">Vinos de Exportacion</option>
+          <option value="Bebidas Alcoholicas">Bebidas Alcoholicas</option>
+          <option value="Insumos y Embalajes">Insumos y Embalajes</option>
+          <option value="Otros">Otros</option>
+        </select>
+      </div>
+
+      <!-- 7. Persona de Contacto -->
+      <div class="form-group">
+        <label>7. Ejecutivo / Persona de Contacto Comercial</label>
+        <input
+          type="text"
+          name="suppContact"
+          [(ngModel)]="supplierForm.contactName"
+          placeholder="Ej. Carlos Mendoza Ramos"
+        />
+      </div>
+
+      <!-- 8. Teléfono / Celular -->
+      <div class="form-group">
+        <label>8. Teléfono de Pedidos / WhatsApp</label>
+        <input
+          type="text"
+          name="suppPhone"
+          [(ngModel)]="supplierForm.phone"
+          placeholder="Ej. +51 1 311-3000 o 998765432"
+        />
+      </div>
+
+      <!-- 9. Correo Electrónico -->
+      <div class="form-group">
+        <label>9. Correo Electrónico para Órdenes de Compra</label>
+        <input
+          type="email"
+          name="suppEmail"
+          [(ngModel)]="supplierForm.email"
+          placeholder="Ej. pedidos@proveedor.com.pe"
+        />
+      </div>
+
+      <!-- 10. Dirección Fiscal / Despacho -->
+      <div class="form-group">
+        <label>10. Dirección Fiscal o Centro de Distribución</label>
+        <input
+          type="text"
+          name="suppAddress"
+          [(ngModel)]="supplierForm.address"
+          placeholder="Ej. Av. Nicolás Ayllón 3986, Ate, Lima"
+        />
+      </div>
+
+      <!-- Acciones del Formulario -->
+      <div class="form-actions full-width">
+        <button type="button" class="btn-secondary" (click)="resetSupplierForm()">
+          <i class="bi bi-arrow-counterclockwise"></i> Limpiar Formulario
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+          <i class="bi bi-building-check"></i>
+          <span>{{ isSubmitting() ? 'Guardando en Base de Datos...' : 'Registrar Proveedor Oficial' }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Directorio de Proveedores Registrados -->
+  <div class="card">
+    <div class="customer-toolbar" style="margin-bottom: 1rem">
+      <div class="toolbar-left">
+        <h2 class="section-title" style="margin: 0">
+          <i class="bi bi-truck" style="margin-right: 0.4rem; color: var(--primary, #0284c7)"></i>
+          Directorio de Proveedores por Negocio
+        </h2>
+        <span class="counter-badge">
+          {{ filteredSuppliers().length }} proveedores encontrados
+        </span>
+      </div>
+
+      <!-- Caja de Búsqueda Reactiva -->
+      <div class="customer-search-box">
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Buscar por RUC, razón social, contacto, rubro..."
+          class="search-input"
+        />
+      </div>
+    </div>
+
+    <!-- Tabla de Proveedores con Paginación -->
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th *ngIf="isGeneralAdmin()">Negocio Matriz</th>
+            <th>Documento / RUC</th>
+            <th>Proveedor / Marca</th>
+            <th>Contacto y Teléfono</th>
+            <th>Rubro</th>
+            <th>Estado</th>
+            <th style="text-align: center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="pagedSuppliers().length === 0">
+            <td [attr.colspan]="isGeneralAdmin() ? 8 : 7" style="text-align: center; padding: 2rem; color: #64748b">
+              <i class="bi bi-inbox" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem"></i>
+              No se encontraron proveedores registrados para los criterios seleccionados.
+            </td>
+          </tr>
+          <tr *ngFor="let s of pagedSuppliers()">
+            <td><code>{{ s.supplierCode }}</code></td>
+            <td *ngIf="isGeneralAdmin()">
+              <span class="business-tag">{{ s.businessCode || 'BIZ-001' }}</span>
+              <small style="display: block; color: #64748b">{{ s.businessName || getBusinessName(s.businessCode) }}</small>
+            </td>
+            <td>
+              <strong>{{ s.documentType }}: {{ s.documentNumber }}</strong>
+            </td>
+            <td>
+              <div style="font-weight: 600">{{ s.legalName }}</div>
+              <small *ngIf="s.commercialName && s.commercialName !== s.legalName" style="color: #0284c7">
+                {{ s.commercialName }}
+              </small>
+            </td>
+            <td>
+              <div>{{ s.contactName || '—' }}</div>
+              <small style="color: #64748b" *ngIf="s.phone || s.email">
+                {{ s.phone }} {{ s.email ? '· ' + s.email : '' }}
+              </small>
+            </td>
+            <td>
+              <span class="rubro-badge">{{ s.rubroCategory || 'Bebidas' }}</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="s.active ? 'badge-success' : 'badge-danger'">
+                <i class="bi" [ngClass]="s.active ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                {{ s.active ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td style="text-align: center">
+              <button
+                type="button"
+                class="btn-action"
+                [ngClass]="s.active ? 'btn-action-deactivate' : 'btn-action-activate'"
+                (click)="toggleSupplierStatus(s)"
+                [disabled]="isToggling() === s.id"
+                [title]="s.active ? 'Desactivar proveedor' : 'Activar proveedor'"
+              >
+                <i class="bi" [ngClass]="s.active ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+                <span>{{ s.active ? 'Desactivar' : 'Activar' }}</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación Estándar de 15 Registros por Página -->
+    <app-table-pagination
+      [totalItems]="filteredSuppliers().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
+  </div>
+</section>

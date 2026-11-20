@@ -32,7 +32,7 @@
     <h2 class="section-title">
       Ejecutar Arqueo de Caja de tu Local Asignado ({{ assignedBranch() }})
     </h2>
-    <form (ngSubmit)="registerCashRegisterClose()" class="grid-form">
+    <form (ngSubmit)="registerCashRegisterClose()" class="grid-form" [class.was-validated]="formSubmitted()">
       <div class="form-group">
         <label>Local / Tienda Asignado (Bloqueado)</label>
         <input type="text" [value]="assignedBranch()" readonly />
@@ -46,35 +46,84 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Fondo Inicial de Apertura ($)</label>
-        <input type="number" name="cashOpen" [(ngModel)]="newCashAudit.openingBalance" />
+        <label>Moneda del Arqueo <span class="required-indicator">*</span></label>
+        <select
+          name="cashCurrency"
+          [ngModel]="selectedAuditCurrency()"
+          (ngModelChange)="selectedAuditCurrency.set($event)"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !selectedAuditCurrency()"
+        >
+          <option *ngFor="let c of availableCurrencies()" [value]="c">
+            {{ c === 'PEN' ? 'PEN (Soles — S/)' : (c === 'USD' ? 'USD (Dólares — $)' : 'EUR (Euros — €)') }}
+            {{ c === defaultBusinessCurrency() ? '— [Moneda por Defecto]' : '' }}
+          </option>
+        </select>
+        <small class="field-hint">Auto-seleccionada según la divisa default del negocio</small>
       </div>
+
       <div class="form-group">
-        <label>Ventas en Efectivo del Turno ($)</label>
+        <label>Fondo Inicial de Apertura ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <input
+          type="number"
+          name="cashOpen"
+          [(ngModel)]="newCashAudit.openingBalance"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && (newCashAudit.openingBalance === null || newCashAudit.openingBalance === undefined)"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Ventas en Efectivo del Turno ({{ currencySymbol() }})</label>
         <input type="number" name="cashSales" [(ngModel)]="newCashAudit.cashSales" />
       </div>
+
       <div class="form-group">
-        <label>Cobros Digitales (Yape / POS) ($)</label>
+        <label>Cobros Digitales (Yape / POS) ({{ currencySymbol() }})</label>
         <input type="number" name="digSales" [(ngModel)]="newCashAudit.digitalSales" />
       </div>
+
       <div class="form-group">
-        <label>Egresos / Gastos Menores ($)</label>
+        <label>Egresos / Gastos Menores ({{ currencySymbol() }})</label>
         <input type="number" name="cashExp" [(ngModel)]="newCashAudit.expenses" />
       </div>
+
       <div class="form-group">
-        <label>Efectivo Esperado en Sistema ($)</label>
-        <input type="text" [value]="'$' + getExpectedCash().toFixed(2)" readonly />
+        <label>Efectivo Físico Contado ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <input
+          type="number"
+          name="cashCounted"
+          [(ngModel)]="newCashAudit.countedCash"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && (newCashAudit.countedCash === null || newCashAudit.countedCash === undefined)"
+        />
       </div>
+
       <div class="form-group">
-        <label>Efectivo Físico Contado ($)</label>
-        <input type="number" name="cashCounted" [(ngModel)]="newCashAudit.countedCash" />
+        <label>Efectivo Esperado en Sistema ({{ currencySymbol() }})</label>
+        <input type="text" [value]="currencySymbol() + ' ' + (getExpectedCash() | appAmount)" readonly />
       </div>
+
       <div class="form-group">
-        <label>Diferencia de Arqueo ($)</label>
+        <label>Diferencia de Arqueo ({{ currencySymbol() }})</label>
         <input
           type="text"
-          [value]="(getCashDifference() >= 0 ? '+' : '') + '$' + getCashDifference().toFixed(2)"
+          [value]="(getCashDifference() >= 0 ? '+' : '') + currencySymbol() + ' ' + (getCashDifference() | appAmount)"
           readonly
+        />
+      </div>
+
+      <div class="form-group full-width">
+        <label>Estado de Conciliación</label>
+        <input
+          type="text"
+          [value]="getCashDifference() === 0 ? 'Cuadre Exacto (Sin diferencias)' : (getCashDifference() > 0 ? 'Sobrante de Efectivo' : 'Faltante de Efectivo')"
+          readonly
+          [style.color]="getCashDifference() === 0 ? '#16a34a' : (getCashDifference() > 0 ? '#2563eb' : '#dc2626')"
+          style="font-weight: 600"
         />
       </div>
       <div class="form-actions full-width">
@@ -103,12 +152,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let arq of cashAuditsList()">
+          <tr *ngFor="let arq of pagedCashAudits()">
             <td><code>{{ arq.id }}</code></td>
             <td><strong>{{ arq.branchName }}</strong></td>
             <td>{{ arq.shift }}</td>
-            <td><strong>\${{ arq.expectedCash.toFixed(2) }}</strong></td>
-            <td><strong>\${{ arq.countedCash.toFixed(2) }}</strong></td>
+            <td><strong>{{ currencySymbol() }} {{ arq.expectedCash | appAmount }}</strong></td>
+            <td><strong>{{ currencySymbol() }} {{ arq.countedCash | appAmount }}</strong></td>
             <td>
               <span
                 class="badge"
@@ -116,14 +165,22 @@
                 [class.badge-info]="arq.status === 'Sobrante'"
                 [class.badge-danger]="arq.status === 'Faltante'"
               >
-                {{ arq.status }} ({{ arq.difference >= 0 ? '+' : '' }}\${{ arq.difference }})
+                {{ arq.status }} ({{ arq.difference >= 0 ? '+' : '' }}{{ currencySymbol() }} {{ arq.difference | appAmount }})
               </span>
             </td>
             <td><code>{{ arq.cashierUser }}</code></td>
-            <td class="text-muted">{{ arq.closedAt }}</td>
+            <td class="text-muted">{{ arq.closedAt | appDate }}</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de Arqueos (15 por página) -->
+    <app-table-pagination
+      [totalItems]="cashAuditsList().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

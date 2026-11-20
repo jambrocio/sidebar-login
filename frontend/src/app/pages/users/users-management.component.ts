@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AdminApiService } from '../../core/services/admin-api.service';
+import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
+import { AppDatePipe } from '../../shared/pipes/app-date.pipe';
 import {
   BusinessBranch,
   FeedbackNotification,
@@ -15,7 +17,7 @@ import {
  *
  * @description Gestiona el ciclo de vida de usuarios del sistema, la asignación a su Negocio Matriz,
  * la habilitación de sedes y locales autorizados, la asignación de roles RBAC y el control de vigencia
- * y expiración de contraseñas contra PostgreSQL.
+ * y expiración de contraseñas contra PostgreSQL con paginación de 15 registros por página.
  *
  * @author Equipo de Arquitectura Frontend Senior
  * @version 2.0
@@ -23,7 +25,7 @@ import {
 @Component({
   selector: 'app-users-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TablePaginationComponent, AppDatePipe],
   templateUrl: './users-management.component.html',
   styleUrl: './users-management.component.scss',
 })
@@ -68,6 +70,7 @@ export class UsersManagementComponent implements OnInit {
   readonly filterBusinessCode = signal<string>('ALL');
   readonly feedbackMessage = signal<FeedbackNotification | null>(null);
   readonly editingUserId = signal<string | null>(null);
+  readonly formSubmitted = signal<boolean>(false);
 
   /** Negocio seleccionado actualmente en el formulario de usuario */
   readonly selectedFormBusinessId = signal<string>('BIZ-001');
@@ -201,18 +204,25 @@ export class UsersManagementComponent implements OnInit {
     name: '',
     username: '',
     email: '',
-    password: 'Temporal2026*',
-    role: 'Cajero / Vendedor (Mayor/Menor)',
+    password: '',
+    role: '',
     businessId: 'BIZ-001',
-    assignedBranch: 'Sede Central (Mayorista)',
+    assignedBranch: '',
     passwordStatus: 'Clave Temporal' as PasswordExpirationStatus,
     status: 'Activo' as 'Activo' | 'Inactivo' | 'Pendiente',
   };
 
   onFilterBusinessChange(businessCode: string): void {
     this.filterBusinessCode.set(businessCode);
+    this.currentPage.set(1);
     this.loadUsersFromBackend();
   }
+
+  /** Tamaño de página estándar (15 registros) */
+  readonly pageSize = 15;
+
+  /** Página activa actual */
+  readonly currentPage = signal<number>(1);
 
   readonly filteredUsers = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
@@ -236,6 +246,12 @@ export class UsersManagementComponent implements OnInit {
         u.assignedBranch.toLowerCase().includes(q) ||
         u.passwordStatus.toLowerCase().includes(q)
     );
+  });
+
+  /** Subconjunto de usuarios paginados a 15 registros por página */
+  readonly pagedUsers = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredUsers().slice(start, start + this.pageSize);
   });
 
   onBusinessChange(businessId: string): void {
@@ -277,13 +293,18 @@ export class UsersManagementComponent implements OnInit {
   }
 
   saveUserWithBusinessAndBranches(): void {
+    this.formSubmitted.set(true);
     if (
       !this.userForm.name.trim() ||
       !this.userForm.username.trim() ||
-      !this.userForm.email.trim()
+      !this.userForm.email.trim() ||
+      (!this.editingUserId() && !this.userForm.password.trim()) ||
+      !this.userForm.role ||
+      !this.userForm.businessId ||
+      !this.userForm.assignedBranch
     ) {
       this.feedbackMessage.set({
-        text: 'Por favor, completa el nombre completo, el usuario de acceso (login) y el correo electrónico del usuario.',
+        text: 'Por favor, completa todos los campos obligatorios del usuario marcados en rojo.',
         type: 'warning',
       });
       return;
@@ -473,6 +494,45 @@ export class UsersManagementComponent implements OnInit {
     });
   }
 
+  /**
+   * Restablece la contraseña del usuario a la clave estándar por default ('Cotic2026#').
+   */
+  resetUserPasswordToDefault(user: SystemUser): void {
+    if (!user) return;
+
+    const confirmed = window.confirm(
+      `¿Desea restablecer la contraseña del usuario @${user.username} (${user.name})?\n\n` +
+      `Se le asignará la clave estándar institucional por default: Cotic2026#\n` +
+      `La cuenta quedará activa y se resetearán los intentos fallidos.`
+    );
+
+    if (!confirmed) return;
+
+    const identifier = user.id || user.username;
+    this.adminApi.resetUserPassword(identifier).subscribe({
+      next: (res) => {
+        this.users.update(list =>
+          list.map(u =>
+            (u.id === user.id || u.username === user.username)
+              ? { ...u, passwordStatus: 'Vigente' as PasswordExpirationStatus, status: 'Activo' }
+              : u
+          )
+        );
+        this.feedbackMessage.set({
+          text: `✅ Contraseña de @${user.username} restablecida con éxito a la clave estándar: ${res.defaultPassword || 'Cotic2026#'}`,
+          type: 'success',
+        });
+        setTimeout(() => this.feedbackMessage.set(null), 8000);
+      },
+      error: (err) => {
+        this.feedbackMessage.set({
+          text: `Error al restablecer contraseña: ${err.error?.detail || err.message || 'Error del servidor'}`,
+          type: 'error',
+        });
+      },
+    });
+  }
+
   toggleUserStatus(user: SystemUser): void {
     this.users.update(list =>
       list.map(u =>
@@ -484,20 +544,24 @@ export class UsersManagementComponent implements OnInit {
   }
 
   resetUserForm(): void {
+    this.formSubmitted.set(false);
     this.editingUserId.set(null);
-    this.selectedFormBusinessId.set('BIZ-001');
+    const defaultBiz = (!this.isGeneralAdmin())
+      ? (this.currentUserProfile().assignedBusinessId || 'BIZ-001')
+      : 'BIZ-001';
+    this.selectedFormBusinessId.set(defaultBiz);
     this.userForm = {
       name: '',
       username: '',
       email: '',
-      password: 'Temporal2026*',
-      role: 'Cajero / Vendedor (Mayor/Menor)',
-      businessId: 'BIZ-001',
-      assignedBranch: 'Sede Central (Mayorista)',
+      password: '',
+      role: '',
+      businessId: defaultBiz,
+      assignedBranch: '',
       passwordStatus: 'Clave Temporal',
       status: 'Activo',
     };
-    this.selectedAuthorizedBranches.set(['Sede Central (Mayorista)']);
+    this.selectedAuthorizedBranches.set([]);
   }
 
   private resolveExpirationMetadata(status: PasswordExpirationStatus): {

@@ -4,16 +4,22 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+import java.util.List;
+
 /**
  * DTO de entrada para el alta de un nuevo Negocio Matriz en la tabla {@code businesses}.
+ * Soporta parametrización multi-moneda con divisa por defecto.
  *
- * @param code           código corto único del negocio (ej. {@code BIZ-003})
- * @param commercialName nombre comercial o marca
- * @param legalName      razón social legal inscrita en SUNAT
- * @param taxId          número de RUC de 11 dígitos
- * @param fiscalAddress  domicilio fiscal legal
- * @param phone          teléfono central corporativo
- * @param supportEmail   correo electrónico de soporte
+ * @param code                código corto único del negocio (ej. {@code BIZ-003})
+ * @param commercialName      nombre comercial o marca
+ * @param legalName           razón social legal inscrita en SUNAT
+ * @param taxId               número de RUC de 11 dígitos
+ * @param fiscalAddress       domicilio fiscal legal
+ * @param phone               teléfono central corporativo
+ * @param supportEmail        correo electrónico de soporte
+ * @param currency            moneda legacy (compatibilidad retroactiva)
+ * @param defaultCurrency     moneda configurada por defecto
+ * @param supportedCurrencies lista de monedas admitidas por la empresa
  */
 @Schema(description = "Datos requeridos para registrar un nuevo Negocio Matriz en la tabla 'businesses'")
 public record CreateBusinessRequest(
@@ -38,6 +44,12 @@ public record CreateBusinessRequest(
         @Schema(description = "Correo de soporte y facturación", example = "contacto@bebidasnorte.pe")
         String supportEmail,
 
-        @Schema(description = "Moneda principal de operaciones", example = "PEN")
-        String currency
+        @Schema(description = "Moneda principal / legacy", example = "PEN")
+        String currency,
+
+        @Schema(description = "Moneda predeterminada por defecto en formularios", example = "PEN")
+        String defaultCurrency,
+
+        @Schema(description = "Lista de monedas autorizadas para el negocio", example = "[\"PEN\", \"USD\"]")
+        List<String> supportedCurrencies
 ) {}

@@ -86,17 +86,41 @@ public class CatalogRepository {
     }
 
     /**
-     * Inserta una nueva bebida (SKU) en la tabla {@code productos_bebidas}.
+     * Comprueba si ya existe un producto con el código SKU en el negocio indicado.
+     *
+     * @param businessId UUID del negocio matriz
+     * @param sku        código SKU a verificar
+     * @return true si ya existe un producto registrado con ese SKU en el negocio, false si está disponible
+     */
+    public boolean existsProductBySku(UUID businessId, String sku) {
+        if (sku == null || sku.isBlank()) {
+            return false;
+        }
+        Integer count = jdbcClient.sql("""
+                SELECT COUNT(*) FROM productos_bebidas
+                WHERE empresa_id = :businessId AND UPPER(TRIM(codigo_sku)) = UPPER(TRIM(:sku))
+                """)
+                .param("businessId", businessId)
+                .param("sku", sku.trim())
+                .query(Integer.class)
+                .single();
+        return count != null && count > 0;
+    }
+
+    /**
+     * Inserta una nueva bebida (producto) en la tabla {@code productos_bebidas}.
      *
      * @param businessId  UUID del negocio matriz
      * @param userId      UUID del usuario registrador
      * @param req         DTO con los datos de la bebida
+     * @param sku         código SKU saneado o null si no se especificó (opcional)
      * @param stockStatus estado de stock calculado ({@code En Stock}, {@code Stock Bajo}, {@code Agotado})
      */
     public void insertBeverageProduct(
             UUID businessId,
             UUID userId,
             CreateBeverageRequest req,
+            String sku,
             String stockStatus) {
         jdbcClient.sql("""
                 INSERT INTO productos_bebidas (
@@ -110,7 +134,7 @@ public class CatalogRepository {
                 )
                 """)
                 .param("businessId", businessId)
-                .param("sku", req.sku().toUpperCase())
+                .param("sku", sku)
                 .param("name", req.name())
                 .param("categoryName", req.categoryName())
                 .param("presentation", req.presentation())
@@ -130,10 +154,10 @@ public class CatalogRepository {
      */
     public List<Map<String, Object>> findAllCategories() {
         return jdbcClient.sql("""
-                SELECT c.codigo AS id, c.nombre AS name, c.slug, c.total_productos AS products,
+                SELECT c.codigo AS id, c.codigo AS code, c.nombre AS name, c.slug, c.total_productos AS products,
                        c.margen_mayorista AS "wholesaleMargin",
                        CASE WHEN c.activo THEN 'Activo' ELSE 'Inactivo' END AS status,
-                       e.codigo AS "businessCode"
+                       e.codigo AS "businessCode", e.id AS "businessId"
                 FROM categorias_bebidas c
                 INNER JOIN empresas e ON e.id = c.empresa_id
                 ORDER BY c.codigo ASC
@@ -150,10 +174,10 @@ public class CatalogRepository {
      */
     public List<Map<String, Object>> findCategoriesByBusinessId(UUID businessId) {
         return jdbcClient.sql("""
-                SELECT c.codigo AS id, c.nombre AS name, c.slug, c.total_productos AS products,
+                SELECT c.codigo AS id, c.codigo AS code, c.nombre AS name, c.slug, c.total_productos AS products,
                        c.margen_mayorista AS "wholesaleMargin",
                        CASE WHEN c.activo THEN 'Activo' ELSE 'Inactivo' END AS status,
-                       e.codigo AS "businessCode"
+                       e.codigo AS "businessCode", e.id AS "businessId"
                 FROM categorias_bebidas c
                 INNER JOIN empresas e ON e.id = c.empresa_id
                 WHERE c.empresa_id = :businessId
@@ -162,6 +186,28 @@ public class CatalogRepository {
                 .param("businessId", businessId)
                 .query()
                 .listOfRows();
+    }
+
+    /**
+     * Comprueba si ya existe una categoría con el mismo nombre o código para el negocio dado.
+     *
+     * @param businessId UUID del negocio matriz
+     * @param code       código mnemotécnico de la categoría
+     * @param name       nombre de la categoría
+     * @return true si ya existe en el negocio, false si está disponible
+     */
+    public boolean existsCategoryByNameOrCode(UUID businessId, String code, String name) {
+        Integer count = jdbcClient.sql("""
+                SELECT COUNT(*) FROM categorias_bebidas
+                WHERE empresa_id = :businessId
+                  AND (UPPER(TRIM(codigo)) = UPPER(TRIM(:code)) OR UPPER(TRIM(nombre)) = UPPER(TRIM(:name)))
+                """)
+                .param("businessId", businessId)
+                .param("code", code)
+                .param("name", name)
+                .query(Integer.class)
+                .single();
+        return count != null && count > 0;
     }
 
     /**

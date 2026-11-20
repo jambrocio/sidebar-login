@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demostración Guiada de Módulos — COTIC (SISTEMA POS & GESTIÓN DE PRODUCTOS)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --accent: #2563eb;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --purple: #7c3aed;
+      --text-dark: #0f172a;
+      --text-muted: #475569;
+      --surface: #ffffff;
+      --card-border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0b1329;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 1.5rem;
+    }
+
+    /* CONTENEDOR PRINCIPAL DEL VIDEO (16:9 HD ESTUDIO PROFESIONAL) */
+    .video-viewport-frame {
+      width: 100%;
+      max-width: 1100px;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border-radius: 26px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6), 0 0 50px rgba(2, 132, 199, 0.25);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* COMPOSITION ROOT */
+    [data-composition-id] {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 60% 20%, #f0f7ff 0%, #e2e8f0 70%, #cbd5e1 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* CANVAS DE FONDO CINEMÁTICO */
+    .canvas-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* LAYOUT DEL ESTUDIO: PRESENTADOR A LA IZQUIERDA, MÓDULO A LA DERECHA */
+    .studio-stage {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      align-items: center;
+      padding: 2.2rem 2.5rem;
+      gap: 2rem;
+      z-index: 2;
+    }
+
+    /* =========================================================================
+       AVATAR / PERSONA PRESENTADORA (SOFÍA - CONSULTORA SENIOR DE PRODUCTO)
+       ========================================================================= */
+    .presenter-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      height: 100%;
+      justify-content: flex-end;
+      padding-bottom: 0.5rem;
+    }
+
+    .presenter-avatar-box {
+      width: 320px;
+      height: 420px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      filter: drop-shadow(0 15px 30px rgba(2, 132, 199, 0.3));
+    }
+
+    /* SVG Character Styling */
+    .char-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .body-group {
+      transform-origin: 160px 400px;
+      animation: presenterBreathe 4s ease-in-out infinite;
+    }
+
+    @keyframes presenterBreathe {
+      0%, 100% { transform: translateY(0) scaleY(1); }
+      50% { transform: translateY(-2px) scaleY(1.008); }
+    }
+
+    .head-group {
+      transform-origin: 160px 145px;
+      animation: headMotion 4s ease-in-out infinite;
+    }
+
+    @keyframes headMotion {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-3px) rotate(1.2deg); }
+    }
+
+    .eye-blink {
+      transform-origin: 160px 145px;
+      animation: blink 4s infinite;
+    }
+
+    @keyframes blink {
+      0%, 94%, 100% { transform: scaleY(1); }
+      96% { transform: scaleY(0.1); }
+    }
+
+    .mouth-talk {
+      transform-origin: 160px 180px;
+    }
+
+    .mouth-talk.talking {
+      animation: talkMouth 0.26s infinite alternate ease-in-out;
+    }
+
+    @keyframes talkMouth {
+      0% { transform: scaleY(0.4) scaleX(0.95); }
+      100% { transform: scaleY(1.4) scaleX(1.1); }
+    }
+
+    .hand-gesture {
+      transform-origin: 220px 270px;
+      animation: pointGesture 3.5s ease-in-out infinite;
+    }
+
+    @keyframes pointGesture {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-5deg) translateY(-5px); }
+    }
+
+    /* Lower-Third Badge del Presentador */
+    .presenter-badge {
+      background: #ffffff;
+      border: 1px solid #bae6fd;
+      border-radius: 9999px;
+      padding: 0.5rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.18);
+      margin-top: 0.5rem;
+      z-index: 5;
+    }
+
+    .presenter-badge .dot-live {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulseDot 1.5s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    .presenter-badge-name {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .presenter-badge-role {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #0284c7;
+    }
+
+    /* =========================================================================
+       COLUMNA DERECHA: PANTALLA DINÁMICA DE MÓDULOS DEL SISTEMA
+       ========================================================================= */
+    .module-display-column {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .scene-slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(25px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .scene-slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .module-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.85rem;
+      align-self: flex-start;
+    }
+
+    .scene-headline {
+      font-size: 2.25rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .scene-headline span.highlight {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .scene-paragraph {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Tarjeta Mockup del Módulo */
+    .module-mockup-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mockup-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.75rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748b;
+    }
+
+    /* CONTROLES DEL REPRODUCTOR */
+    .player-controls {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 0.85rem 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      z-index: 10;
+    }
+
+    .btn-circle {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-circle:hover { transform: scale(1.08); }
+
+    .scrubber-track {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .scrubber-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #10b981);
+      border-radius: 9999px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .timer-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #475569;
+      min-width: 95px;
+    }
+
+    .btn-tool-icon {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: 1.15rem;
+      cursor: pointer;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-tool-icon:hover { background: #e2e8f0; }
+    .btn-tool-icon.active { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+
+    .music-waves {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 18px;
+    }
+
+    .wave-bar {
+      width: 3px;
+      height: 100%;
+      background: #0284c7;
+      border-radius: 2px;
+      animation: waveAnim 0.8s infinite ease-in-out alternate;
+    }
+
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+
+    @keyframes waveAnim {
+      0% { height: 20%; }
+      100% { height: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- VISOR DEL VIDEO (ESTUDIO CON PRESENTADOR VIRTUAL) -->
+  <div class="video-viewport-frame" id="videoContainer" style="position: relative;">
+    
+    <!-- BOTÓN DE PLAY CENTRAL INTERACTIVO -->
+    <div id="centerPlayOverlay" onclick="togglePlay()" style="position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); cursor: pointer; transition: all 0.25s ease;">
+      <div style="background: linear-gradient(135deg, #ec4899, #8b5cf6); width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 50px rgba(236, 72, 153, 0.7); border: 3px solid #ffffff; transition: transform 0.2s ease;">
+        <i class="bi bi-play-fill" style="font-size: 3.5rem; color: #ffffff; margin-left: 6px;"></i>
+      </div>
+      <span style="color: #ffffff; font-weight: 800; font-size: 1.1rem; margin-top: 1rem; text-shadow: 0 2px 10px rgba(0,0,0,0.6); letter-spacing: 0.02em;">
+        Ver Demo Guiada con Sofía (65s)
+      </span>
+    </div>
+    
+    <div data-composition-id="bevadmin-modules-presenter" 
+         data-width="1920" 
+         data-height="1080" 
+         data-duration="65" 
+         data-fps="30">
+
+      <canvas class="canvas-bg" id="studioCanvas"></canvas>
+
+      <div class="studio-stage">
+        
+        <!-- =================================================================== -->
+        <!-- PERSONAJE PRESENTADORA (SOFÍA - ESPECIALISTA EN GESTIÓN COMERCIAL)  -->
+        <!-- =================================================================== -->
+        <div class="presenter-column">
+          <div class="presenter-avatar-box">
+            <svg class="char-svg" viewBox="0 0 320 420">
+              <defs>
+                <linearGradient id="skinGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ffedd5" />
+                  <stop offset="60%" stop-color="#fed7aa" />
+                  <stop offset="100%" stop-color="#fba872" />
+                </linearGradient>
+                <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#334155" />
+                  <stop offset="50%" stop-color="#1e293b" />
+                  <stop offset="100%" stop-color="#0f172a" />
+                </linearGradient>
+                <linearGradient id="blazerGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#1e293b" />
+                  <stop offset="60%" stop-color="#0f172a" />
+                  <stop offset="100%" stop-color="#02132b" />
+                </linearGradient>
+                <linearGradient id="lapelGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0284c7" />
+                  <stop offset="100%" stop-color="#0369a1" />
+                </linearGradient>
+                <linearGradient id="lanyardGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="100%" stop-color="#0284c7" />
+                </linearGradient>
+                <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0284c7" flood-opacity="0.25"/>
+                </filter>
+              </defs>
+
+              <!-- Cabello Posterior (Volumen y caída elegante sobre hombros) -->
+              <g id="backHair">
+                <path d="M 105 130 C 85 80 235 80 215 130 C 235 190 240 260 210 290 C 180 300 140 300 110 290 C 80 260 85 190 105 130 Z" fill="url(#hairGrad)" />
+                <path d="M 85 180 C 80 240 95 285 115 295 C 105 250 105 190 115 160 Z" fill="#0f172a" />
+                <path d="M 235 180 C 240 240 225 285 205 295 C 215 250 215 190 205 160 Z" fill="#0f172a" />
+              </g>
+
+              <!-- Torso y Traje Ejecutivo Femenino Estilizado -->
+              <g id="bodyGroup" class="body-group">
+                <!-- Sombra / Silueta Base del Blazer -->
+                <path d="M 68 420 C 72 350 82 295 104 262 C 120 252 142 248 160 248 C 178 248 200 252 216 262 C 238 295 248 350 252 420 Z" fill="url(#blazerGrad)" filter="url(#softShadow)" />
+                
+                <!-- Hombro Izquierdo y Brazo Relajado en Reposo -->
+                <path d="M 104 262 C 92 275 80 320 74 380 C 86 385 102 385 108 380 C 112 330 118 290 126 268 Z" fill="#1e293b" />
+                
+                <!-- Blusa Interior Blanca de Cuello en V -->
+                <path d="M 136 248 L 160 325 L 184 248 C 172 244 148 244 136 248 Z" fill="#ffffff" />
+                <path d="M 154 260 L 160 325 L 166 260 Z" fill="#f1f5f9" />
+
+                <!-- Solapas Azules del Traje Ejecutivo -->
+                <path d="M 104 262 L 140 338 L 160 375 L 126 420 L 78 420 C 74 360 84 305 104 262 Z" fill="#0369a1" />
+                <path d="M 216 262 L 180 338 L 160 375 L 194 420 L 242 420 C 246 360 236 305 216 262 Z" fill="#0369a1" />
+                <!-- Ribetes de Solapa con Acabado Brillante -->
+                <path d="M 126 254 L 148 344 L 160 344 L 140 254 Z" fill="url(#lapelGrad)" />
+                <path d="M 194 254 L 172 344 L 160 344 L 180 254 Z" fill="url(#lapelGrad)" />
+
+                <!-- Credencial Corporativa / Lanyard BevAdmin Pro -->
+                <line x1="154" y1="245" x2="157" y2="330" stroke="url(#lanyardGrad)" stroke-width="2.5" />
+                <line x1="166" y1="245" x2="163" y2="330" stroke="url(#lanyardGrad)" stroke-width="2.5" />
+                <rect x="148" y="328" width="24" height="34" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1.5" />
+                <rect x="151" y="331" width="18" height="9" rx="2" fill="#0284c7" />
+                <line x1="152" y1="345" x2="168" y2="345" stroke="#94a3b8" stroke-width="1.5" />
+                <line x1="152" y1="350" x2="164" y2="350" stroke="#cbd5e1" stroke-width="1.5" />
+              </g>
+
+              <!-- Brazo Derecho y Mano Señalando con Elegancia al Módulo -->
+              <g id="armRight" class="hand-gesture">
+                <!-- Brazo Levantado: Bíceps y Codo Ergonómico -->
+                <path d="M 216 262 C 238 270 262 288 272 316 C 262 322 248 324 228 302 Z" fill="url(#blazerGrad)" />
+                <!-- Antebrazo extendiéndose hacia la pantalla del sistema -->
+                <path d="M 272 316 C 282 284 294 252 300 228 C 288 222 278 232 258 308 Z" fill="#0369a1" />
+                <!-- Puño de camisa blanca -->
+                <path d="M 292 232 L 302 227 L 305 233 L 295 238 Z" fill="#ffffff" />
+                <!-- Mano modelada con dedos señalando -->
+                <ellipse cx="304" cy="222" rx="9" ry="7" fill="url(#skinGrad)" transform="rotate(-25 304 222)" />
+                <!-- Dedo índice señalando con precisión hacia el módulo -->
+                <path d="M 308 217 C 314 213 322 208 326 206 C 327 208 325 212 317 216 L 309 220 Z" fill="url(#skinGrad)" />
+                <path d="M 306 222 C 314 220 320 219 321 222 C 319 225 311 226 305 225 Z" fill="url(#skinGrad)" />
+                <path d="M 300 214 C 302 209 306 206 308 208 C 307 212 304 215 301 217 Z" fill="url(#skinGrad)" />
+              </g>
+
+              <!-- Cabeza, Rostro, Headset de Presentadora y Expresiones -->
+              <g id="headGroup" class="head-group">
+                <!-- Cuello Esbelto con Sombra Natural -->
+                <path d="M 144 195 C 144 218 141 242 136 254 C 152 258 168 258 184 254 C 179 242 176 218 176 195 Z" fill="url(#skinGrad)" />
+                <path d="M 148 244 Q 160 252 172 244" stroke="#fba872" stroke-width="2" fill="none" opacity="0.6" />
+
+                <!-- Silueta del Rostro Ovalado y Mandíbula Femenina -->
+                <path d="M 124 138 C 124 186 140 216 160 216 C 180 216 196 186 196 138 C 196 90 124 90 124 138 Z" fill="url(#skinGrad)" />
+                
+                <!-- Rubor Suave en Mejillas -->
+                <ellipse cx="136" cy="164" rx="8" ry="4.5" fill="#f43f5e" opacity="0.18" />
+                <ellipse cx="184" cy="164" rx="8" ry="4.5" fill="#f43f5e" opacity="0.18" />
+
+                <!-- Ojos Profesionales y Expresivos con Pestañas y Parpadeo -->
+                <g class="eye-blink">
+                  <!-- Ojo Izquierdo -->
+                  <path d="M 135 146 C 140 141 149 141 154 146 C 149 151 140 151 135 146 Z" fill="#ffffff" />
+                  <circle cx="145" cy="146" r="3.8" fill="#0f172a" />
+                  <circle cx="146.5" cy="144.5" r="1.3" fill="#ffffff" />
+                  <path d="M 134 146 C 140 140 149 140 155 145" stroke="#1e293b" stroke-width="2" fill="none" stroke-linecap="round" />
+                  <path d="M 133 137 C 139 132 148 132 154 136" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round" />
+
+                  <!-- Ojo Derecho -->
+                  <path d="M 166 146 C 171 141 180 141 185 146 C 180 151 171 151 166 146 Z" fill="#ffffff" />
+                  <circle cx="175" cy="146" r="3.8" fill="#0f172a" />
+                  <circle cx="176.5" cy="144.5" r="1.3" fill="#ffffff" />
+                  <path d="M 165 146 C 171 140 180 140 186 145" stroke="#1e293b" stroke-width="2" fill="none" stroke-linecap="round" />
+                  <path d="M 166 136 C 172 132 181 132 187 137" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round" />
+                </g>
+
+                <!-- Nariz Delicada y Sutil -->
+                <path d="M 159 150 L 158 165 L 163 165" stroke="#fba872" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+
+                <!-- Labios y Boca Sincronizada con el Habla -->
+                <g id="mouthWrapper" class="mouth-talk">
+                  <!-- Labio Superior con Arco de Cupido -->
+                  <path d="M 149 178 C 154 176 166 176 171 178 C 166 181 154 181 149 178 Z" fill="#e11d48" />
+                  <!-- Cavidad bucal y Labio Inferior animado -->
+                  <path id="mouthPath" d="M 150 179 C 155 186 165 186 170 179 Z" fill="#f43f5e" />
+                </g>
+
+                <!-- Diadema / Headset Inalámbrico de Presentadora Ejecutiva -->
+                <path d="M 124 125 C 130 84 180 82 196 118" stroke="#0284c7" stroke-width="2.5" fill="none" />
+                <rect x="120" y="133" width="6" height="16" rx="3" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+                <!-- Micrófono Slim curvado hacia la comisura de la boca -->
+                <path d="M 123 146 C 130 174 140 180 151 180" stroke="#0284c7" stroke-width="2" fill="none" />
+                <circle cx="151" cy="180" r="3" fill="#0f172a" />
+                <circle cx="151" cy="180" r="1.5" fill="#38bdf8" />
+
+                <!-- Peinado Frontal Elegante con Flequillo Estilizado y Brillo -->
+                <path d="M 116 135 C 114 75 206 75 204 135 C 196 102 166 98 134 108 C 124 114 118 124 116 135 Z" fill="url(#hairGrad)" />
+                <path d="M 118 130 C 112 165 110 200 118 225 C 122 195 126 155 134 132 Z" fill="url(#hairGrad)" />
+                <!-- Mechón con Reflejo de Luz de Estudio -->
+                <path d="M 136 94 C 152 88 176 88 186 94" stroke="#64748b" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.6" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="presenter-badge">
+            <span class="dot-live"></span>
+            <div>
+              <div class="presenter-badge-name">Sofía Ambrocio</div>
+              <div class="presenter-badge-role">Especialista Comercial COTIC</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PANTALLA DINÁMICA DE MÓDULOS DEL SISTEMA                            -->
+        <!-- =================================================================== -->
+        <div class="module-display-column">
+
+          <!-- SLIDE 1: BIENVENIDA & VISIÓN GENERAL (0s - 10s) -->
+          <div class="scene-slide active" id="slide1">
+            <div class="module-tag" style="background: #e0f2fe; color: #0284c7;">
+              <i class="bi bi-stars"></i> Plataforma Universal de Gestión Comercial
+            </div>
+            <h2 class="scene-headline">
+              Gestión Integral de <span class="highlight">Productos en General</span>
+            </h2>
+            <p class="scene-paragraph">
+              Hola, soy Sofía. Te presentaré cómo COTIC (SISTEMA POS & GESTIÓN DE PRODUCTOS) optimiza las ventas mayoristas y minoristas de abarrotes, bebidas, golosinas y consumo masivo en todas tus tiendas.
+            </p>
+            <div class="module-mockup-card">
+              <div class="mockup-header-bar">
+                <span><i class="bi bi-speedometer2"></i> Dashboard Ejecutivo en Vivo</span>
+                <span class="badge" style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 9999px;">● Sincronizado</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div style="background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                  <div style="font-size: 0.8rem; color: #64748b; font-weight: 700;">Ventas del Día</div>
+                  <div style="font-size: 1.4rem; font-weight: 900; color: #0284c7; font-family: 'JetBrains Mono', monospace;">S/ 18,450.80</div>
+                </div>
+                <div style="background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                  <div style="font-size: 0.8rem; color: #64748b; font-weight: 700;">Productos en Stock</div>
+                  <div style="font-size: 1.4rem; font-weight: 900; color: #059669; font-family: 'JetBrains Mono', monospace;">1,420 Ítems</div>
+                </div>
+                <div style="background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                  <div style="font-size: 0.8rem; color: #64748b; font-weight: 700;">Sucursales Activas</div>
+                  <div style="font-size: 1.4rem; font-weight: 900; color: #7c3aed; font-family: 'JetBrains Mono', monospace;">4 Sedes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SLIDE 2: MÓDULO POS (10s - 22s) -->
+          <div class="scene-slide" id="slide2">
+            <div class="module-tag" style="background: #dcfce7; color: #166534;">
+              <i class="bi bi-cart-check-fill"></i> Módulo de Ventas POS Mayor / Menor
+            </div>
+            <h2 class="scene-headline">
+              Cobro en 5 Segundos y <span class="highlight">Cuadre Contable</span>
+            </h2>
+            <p class="scene-paragraph">
+              Busca productos por nombre o código de barra con stock en tiempo real. Ajusta cantidades y emite boletas o facturas con impresión en ticketera de 80mm o formato A4.
+            </p>
+            <div class="module-mockup-card">
+              <div class="mockup-header-bar">
+                <span><i class="bi bi-receipt"></i> Emisión Express de Comprobantes</span>
+                <span style="color: #0284c7;"><i class="bi bi-check-all"></i> Subtotal = Total - IGV</span>
+              </div>
+              <div style="font-size: 0.9rem; border-bottom: 1px dashed #e2e8f0; padding: 0.4rem 0; display: flex; justify-content: space-between;">
+                <span>3 x Arroz Costeño Extra (Saco 50kg)</span>
+                <strong>S/ 495.00</strong>
+              </div>
+              <div style="font-size: 0.9rem; border-bottom: 1px dashed #e2e8f0; padding: 0.4rem 0; display: flex; justify-content: space-between;">
+                <span>2 x Aceite Vegetal Primor 1L (Caja x 12)</span>
+                <strong>S/ 144.00</strong>
+              </div>
+              <div style="font-size: 0.9rem; padding: 0.4rem 0; display: flex; justify-content: space-between; color: #059669;">
+                <span>Cupón PROMO10 (-10%)</span>
+                <strong>- S/ 63.90</strong>
+              </div>
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.5rem 0.85rem; margin-top: 0.5rem; display: flex; justify-content: space-between; font-weight: 800; color: #166534;">
+                <span>Total a Cobrar:</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.15rem;">S/ 575.10</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SLIDE 3: MÓDULO PROVEEDORES & COMPRAS (22s - 34s) -->
+          <div class="scene-slide" id="slide3">
+            <div class="module-tag" style="background: #fef3c7; color: #b45309;">
+              <i class="bi bi-truck"></i> Proveedores y Abastecimiento Directo
+            </div>
+            <h2 class="scene-headline">
+              Compras Conectadas al <span class="highlight">Stock de Inventario</span>
+            </h2>
+            <p class="scene-paragraph">
+              Administra proveedores comerciales con estado activo o inactivo. Cada compra registrada actualiza de forma automática el stock final en el catálogo por cajas o unidades.
+            </p>
+            <div class="module-mockup-card">
+              <div class="mockup-header-bar">
+                <span><i class="bi bi-boxes"></i> Ficha Comercial y Multi-Divisa (PEN / USD / EUR)</span>
+                <span style="color: #059669; font-weight: 800;"><i class="bi bi-toggle-on"></i> Proveedor Activo</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.75rem; font-size: 0.85rem;">
+                <div style="background: #f8fafc; padding: 0.6rem; border-radius: 8px;">
+                  <span style="color: #64748b;">Razón Social:</span><br>
+                  <strong>Distribuidora Mayorista Los Andes S.A.C.</strong>
+                </div>
+                <div style="background: #f8fafc; padding: 0.6rem; border-radius: 8px;">
+                  <span style="color: #64748b;">RUC:</span><br>
+                  <strong>20549812451</strong>
+                </div>
+                <div style="background: #f8fafc; padding: 0.6rem; border-radius: 8px;">
+                  <span style="color: #64748b;">Ingreso Stock:</span><br>
+                  <strong style="color: #0284c7;">+50 Cajas</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SLIDE 4: MÓDULO ARQUEO DE CAJA (34s - 45s) -->
+          <div class="scene-slide" id="slide4">
+            <div class="module-tag" style="background: #ede9fe; color: #6d28d9;">
+              <i class="bi bi-calculator-fill"></i> Arqueo de Turno Inteligente
+            </div>
+            <h2 class="scene-headline">
+              Cero Descuadres: <span class="highlight">Efectivo vs Digital</span>
+            </h2>
+            <p class="scene-paragraph">
+              Al terminar el turno, el sistema compara el conteo físico del cajero contra el saldo del sistema, separando claramente efectivo de transferencias Yape, Plin y tarjetas.
+            </p>
+            <div class="module-mockup-card">
+              <div class="mockup-header-bar">
+                <span><i class="bi bi-lock-fill"></i> Conciliación de Turno (Caja 01)</span>
+                <span style="color: #059669; font-weight: 800;"><i class="bi bi-check-circle-fill"></i> Cuadre Exacto: S/ 0.00</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #f8fafc; padding: 0.75rem; border-radius: 10px; border-left: 4px solid #10b981;">
+                  <span style="font-size: 0.8rem; color: #64748b;">Efectivo en Caja</span>
+                  <div style="font-size: 1.25rem; font-weight: 800; color: #166534; font-family: 'JetBrains Mono', monospace;">S/ 3,420.00</div>
+                </div>
+                <div style="background: #f8fafc; padding: 0.75rem; border-radius: 10px; border-left: 4px solid #8b5cf6;">
+                  <span style="font-size: 0.8rem; color: #64748b;">Yape / Plin / Tarjetas</span>
+                  <div style="font-size: 1.25rem; font-weight: 800; color: #6d28d9; font-family: 'JetBrains Mono', monospace;">S/ 2,860.00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SLIDE 5: MÓDULO CIBERSEGURIDAD (45s - 56s) -->
+          <div class="scene-slide" id="slide5">
+            <div class="module-tag" style="background: #fee2e2; color: #b91c1c;">
+              <i class="bi bi-shield-lock-fill"></i> Auditoría NOC & Ciberseguridad
+            </div>
+            <h2 class="scene-headline">
+              Monitoreo en Vivo y <span class="highlight">Kill Session Remoto</span>
+            </h2>
+            <p class="scene-paragraph">
+              Controla desde tu móvil quién está conectado en cada tienda. Visualiza IPs, ubicación y desconecta intrusos o accesos no autorizados al instante con un solo clic.
+            </p>
+            <div class="module-mockup-card">
+              <div class="mockup-header-bar">
+                <span><i class="bi bi-broadcast"></i> Sesiones Concurrentes Multi-Sede</span>
+                <span style="color: #dc2626; font-weight: 800;"><i class="bi bi-shield-x"></i> Kill Session Activo</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; font-size: 0.88rem; border-bottom: 1px solid #f1f5f9;">
+                <div>
+                  <strong>cajero_norte (Caja 02)</strong> &bull; IP: 190.237.44.12
+                </div>
+                <span class="badge" style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 9999px;">Conectado</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; font-size: 0.88rem;">
+                <div>
+                  <strong style="color: #b91c1c;">acceso_desconocido</strong> &bull; IP: 45.180.22.9
+                </div>
+                <button style="background: #dc2626; color: #fff; border: none; font-size: 0.75rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; cursor: pointer;">
+                  <i class="bi bi-x-circle-fill"></i> Expulsar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SLIDE 6: CIERRE & LLAMADA A LA ACCIÓN (56s - 65s) -->
+          <div class="scene-slide" id="slide6">
+            <div class="module-tag" style="background: #fdf4ff; color: #a21caf;">
+              <i class="bi bi-rocket-takeoff-fill"></i> Comienza Hoy Mismo
+            </div>
+            <h2 class="scene-headline">
+              ¡Haz Crecer tu Negocio con <span class="highlight">COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS</span>!
+            </h2>
+            <p class="scene-paragraph">
+              Potencia tus ventas mayoristas y minoristas con el sistema más confiable, escalable y seguro del mercado. ¡Solicita tu demostración personalizada ahora!
+            </p>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+              <a href="PRESENTACION_INTERACTIVA_USUARIO.html" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; padding: 0.85rem 2rem; border-radius: 9999px; text-decoration: none; font-weight: 800; font-size: 1.05rem; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 8px 20px rgba(2, 132, 199, 0.4);">
+                <i class="bi bi-play-circle-fill"></i> Abrir Demostración Interactiva
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- BARRA DE CONTROLES INFERIOR -->
+    <div class="player-controls">
+      <button class="btn-circle" id="btnPlay" onclick="togglePlay()">
+        <i class="bi bi-play-fill" id="playIcon"></i>
+      </button>
+
+      <div class="scrubber-track" id="scrubber" onclick="seekVideo(event)">
+        <div class="scrubber-fill" id="scrubberFill"></div>
+      </div>
+
+      <div class="timer-text" id="timeLabel">00:00 / 01:05</div>
+
+      <!-- Ondas Musicales -->
+      <div class="music-waves" id="musicVisualizer" title="Pistas de audio activas">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+
+      <!-- Botón de Audio y Voz -->
+      <button class="btn-tool-icon active" id="btnSound" onclick="toggleAudio()" title="Activar/Silenciar Locución y Música">
+        <i class="bi bi-volume-up-fill" id="soundIcon"></i>
+      </button>
+
+      <!-- Pantalla Completa -->
+      <button class="btn-tool-icon" onclick="toggleFs()" title="Pantalla Completa">
+        <i class="bi bi-fullscreen"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // DURACIÓN TOTAL: 65 SEGUNDOS (DISTRIBUIDOS ENTRE LOS 6 MÓDULOS)
+    const DURATION = 65;
+    let currentTime = 0;
+    let isPlaying = false;
+    let animId = null;
+    let audioActive = true;
+    let isSpeaking = false;
+
+    // GUION DE LOCUCIÓN PARA CADA MÓDULO (PRESENTADO POR SOFÍA)
+    const scenes = [
+      {
+        id: 'slide1',
+        start: 0,
+        end: 10,
+        voice: "¡Hola! Soy Sofía. Te doy la bienvenida a COTIC, el SISTEMA POS & GESTIÓN DE PRODUCTOS para gestionar ventas mayoristas y minoristas de todo tipo de productos."
+      },
+      {
+        id: 'slide2',
+        start: 10,
+        end: 22,
+        voice: "En el Módulo POS cobras en cinco segundos. Filtra abarrotes, bebidas o cualquier producto con stock en tiempo real, aplica cupones e imprime tickets en ochenta milímetros o A cuatro."
+      },
+      {
+        id: 'slide3',
+        start: 22,
+        end: 34,
+        voice: "En Proveedores y Compras controlas tus socios comerciales y multi-divisa. Cada compra recibida ingresa cajas y unidades directamente al inventario sin errores."
+      },
+      {
+        id: 'slide4',
+        start: 34,
+        end: 45,
+        voice: "¡Olvídate de los descuadres! El Módulo de Arqueo separa automáticamente el efectivo de los cobros por Yape, Plin y tarjetas para un cierre de turno perfecto."
+      },
+      {
+        id: 'slide5',
+        start: 45,
+        end: 56,
+        voice: "Para tu total tranquilidad, el Módulo de Ciberseguridad supervisa las conexiones de todas tus tiendas en vivo y te permite expulsar intrusos con el botón Kill Session."
+      },
+      {
+        id: 'slide6',
+        start: 56,
+        end: 65,
+        voice: "¡Multiplica las ventas de tus productos y automatiza tu negocio hoy mismo! Haz clic para probar la demostración interactiva o descarga este video en MP4."
+      }
+    ];
+
+    let currentSceneObj = null;
+
+    // AUDIO CONTEXT & SINTETIZADOR
+    let audioCtx = null;
+    let beatTimer = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playWhoosh() {
+      if (!audioActive || !audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } catch (e) { }
+    }
+
+    function startBgmBeat() {
+      if (!audioActive || !audioCtx) return;
+      let step = 0;
+      const bpm = 118;
+      const interval = (60 / bpm) * 1000 / 2;
+
+      beatTimer = setInterval(() => {
+        if (!isPlaying || !audioActive) return;
+        step = (step + 1) % 16;
+        if (step % 4 === 0) {
+          try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.14);
+            gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.14);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.14);
+          } catch (e) { }
+        }
+      }, interval);
+    }
+
+    function stopBgmBeat() {
+      if (beatTimer) clearInterval(beatTimer);
+    }
+
+    // LOCUCIÓN DE SOFÍA
+    let selectedVoice = null;
+    function selectBestSpanishVoice() {
+      if (!('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      selectedVoice = voices.find(v => v.lang.startsWith('es') && (v.name.includes('Natural') || v.name.includes('Sabina') || v.name.includes('Paulina') || v.name.includes('Google') || v.name.includes('Monica')))
+        || voices.find(v => v.lang.startsWith('es-MX') || v.lang.startsWith('es-US') || v.lang.startsWith('es-ES') || v.lang.startsWith('es'))
+        || null;
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = selectBestSpanishVoice;
+      selectBestSpanishVoice();
+    }
+
+    function speakPresenter(text) {
+      if (!audioActive || !('speechSynthesis' in window)) {
+        isSpeaking = false;
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        if (selectedVoice) utt.voice = selectedVoice;
+        utt.lang = selectedVoice ? selectedVoice.lang : 'es-MX';
+        utt.rate = 1.15;
+        utt.pitch = 1.1;
+        utt.volume = 1.0;
+        isSpeaking = true;
+        const mouth = document.getElementById('mouthPath');
+        if (mouth) mouth.classList.add('talking');
+
+        utt.onend = () => {
+          isSpeaking = false;
+          if (mouth) mouth.classList.remove('talking');
+        };
+        utt.onerror = () => {
+          isSpeaking = false;
+          if (mouth) mouth.classList.remove('talking');
+        };
+
+        window.speechSynthesis.speak(utt);
+        setTimeout(() => {
+          isSpeaking = false;
+          if (mouth) mouth.classList.remove('talking');
+        }, 8500);
+      } catch (e) {
+        isSpeaking = false;
+      }
+    }
+
+    // LÍNEA DE TIEMPO
+    function updateTimeline(t) {
+      currentTime = Math.max(0, Math.min(DURATION, t));
+
+      let activeObj = null;
+      scenes.forEach(sc => {
+        const el = document.getElementById(sc.id);
+        if (currentTime >= sc.start && currentTime < sc.end) {
+          el.classList.add('active');
+          activeObj = sc;
+        } else {
+          el.classList.remove('active');
+        }
+      });
+
+      if (activeObj && activeObj !== currentSceneObj) {
+        currentSceneObj = activeObj;
+        playWhoosh();
+        if (isPlaying) {
+          speakPresenter(activeObj.voice);
+        }
+
+        if (activeObj.id === 'slide6' && typeof confetti === 'function') {
+          confetti({ particleCount: 45, spread: 60, origin: { y: 0.6 } });
+        }
+      }
+
+      const pct = (currentTime / DURATION) * 100;
+      document.getElementById('scrubberFill').style.width = `${pct}%`;
+
+      const sec = Math.floor(currentTime);
+      const minStr = Math.floor(sec / 60);
+      const secStr = sec % 60;
+      document.getElementById('timeLabel').innerText = 
+        `0${minStr}:${secStr < 10 ? '0' : ''}${secStr} / 01:05`;
+
+      if (currentTime >= DURATION) {
+        pauseVideo();
+        currentTime = 0;
+        updateTimeline(0);
+      }
+    }
+
+    let lastTime = null;
+    function renderLoop(timestamp) {
+      if (!isPlaying) return;
+      if (!lastTime) lastTime = timestamp;
+      const delta = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+
+      let nextTime = currentTime + delta;
+      // Retener la escena si la presentadora aún no ha terminado de hablar (con salvaguarda de 3.2s)
+      const isStillTalking = isSpeaking && ('speechSynthesis' in window) && window.speechSynthesis.speaking;
+      if (currentSceneObj && isStillTalking && nextTime >= currentSceneObj.end - 0.25) {
+        if (!currentSceneObj._heldAt) currentSceneObj._heldAt = timestamp;
+        if ((timestamp - currentSceneObj._heldAt) < 3200) {
+          nextTime = currentSceneObj.end - 0.25;
+        } else {
+          isSpeaking = false;
+          currentSceneObj._heldAt = null;
+        }
+      } else if (currentSceneObj) {
+        currentSceneObj._heldAt = null;
+      }
+
+      updateTimeline(nextTime);
+      animId = requestAnimationFrame(renderLoop);
+    }
+
+    function playVideo() {
+      initAudioContext();
+      isPlaying = true;
+      lastTime = null;
+      document.getElementById('playIcon').className = 'bi bi-pause-fill';
+      document.getElementById('musicVisualizer').style.opacity = '1';
+      const overlay = document.getElementById('centerPlayOverlay');
+      if (overlay) overlay.style.display = 'none';
+      startBgmBeat();
+      if (currentSceneObj) {
+        speakPresenter(currentSceneObj.voice);
+      }
+      animId = requestAnimationFrame(renderLoop);
+    }
+
+    function pauseVideo() {
+      isPlaying = false;
+      document.getElementById('playIcon').className = 'bi bi-play-fill';
+      document.getElementById('musicVisualizer').style.opacity = '0.3';
+      const overlay = document.getElementById('centerPlayOverlay');
+      if (overlay) overlay.style.display = 'flex';
+      stopBgmBeat();
+      if (animId) cancelAnimationFrame(animId);
+      if ('speechSynthesis' in window) window.speechSynthesis.pause();
+      const mouth = document.getElementById('mouthPath');
+      if (mouth) mouth.classList.remove('talking');
+    }
+
+    function togglePlay() {
+      if (isPlaying) pauseVideo();
+      else playVideo();
+    }
+
+    function seekVideo(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const pct = clickX / rect.width;
+      updateTimeline(pct * DURATION);
+    }
+
+    function toggleAudio() {
+      audioActive = !audioActive;
+      const btn = document.getElementById('btnSound');
+      const icon = document.getElementById('soundIcon');
+      btn.classList.toggle('active', audioActive);
+      icon.className = audioActive ? 'bi bi-volume-up-fill' : 'bi bi-volume-mute-fill';
+      if (!audioActive) {
+        stopBgmBeat();
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      } else if (isPlaying) {
+        initAudioContext();
+        startBgmBeat();
+        if (currentSceneObj) speakPresenter(currentSceneObj.voice);
+      }
+    }
+
+    function toggleFs() {
+      const el = document.getElementById('videoContainer');
+      if (!document.fullscreenElement) el.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    }
+
+    // CANVAS DE FONDO CINEMÁTICO
+    const bgCanvas = document.getElementById('studioCanvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let bgParticles = [];
+
+    function resizeBgCanvas() {
+      bgCanvas.width = bgCanvas.parentElement.clientWidth;
+      bgCanvas.height = bgCanvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeBgCanvas);
+    resizeBgCanvas();
+
+    for (let i = 0; i < 18; i++) {
+      bgParticles.push({
+        x: Math.random() * bgCanvas.width,
+        y: Math.random() * bgCanvas.height,
+        r: Math.random() * 70 + 30,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        color: i % 2 === 0 ? 'rgba(56, 189, 248, 0.15)' : 'rgba(99, 102, 241, 0.12)'
+      });
+    }
+
+    function drawBgLights() {
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      bgParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -80) p.x = bgCanvas.width + 80;
+        if (p.x > bgCanvas.width + 80) p.x = -80;
+        if (p.y < -80) p.y = bgCanvas.height + 80;
+        if (p.y > bgCanvas.height + 80) p.y = -80;
+
+        const g = bgCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+        g.addColorStop(0, p.color);
+        g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        bgCtx.fillStyle = g;
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        bgCtx.fill();
+      });
+      requestAnimationFrame(drawBgLights);
+    }
+    drawBgLights();
+
+    // =========================================================================
+    // EXPORTACIÓN Y DESCARGA MP4 EN ALTA DEFINICIÓN (1280x720 HD)
+    // =========================================================================
+    let isExporting = false;
+    let exportRecorder = null;
+    let exportAnimId = null;
+    let exportCanvas = null;
+    let exportCtx = null;
+    let exportPreviewCanvas = null;
+    let exportPreviewCtx = null;
+    let exportTime = 0;
+    let exportChunks = [];
+
+    function recordAndDownloadMp4() {
+      const file = 'video_2_demo_sofia_cotic.mp4';
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'DOWNLOAD_COTIC_MP4', file: file }, '*');
+          return;
+        } catch (e) { }
+      }
+      fetch(file)
+        .then(res => {
+          if (!res.ok) throw new Error('Fetch failed');
+          return res.blob();
+        })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'video/mp4' }));
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = blobUrl;
+          a.download = file;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }, 1500);
+        })
+        .catch(() => {
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = file;
+          a.setAttribute('download', file);
+          a.target = '_self';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+          }, 500);
+        });
+    }
+
+    function finishExportEarly() {
+      recordAndDownloadMp4();
+    }
+
+    function cancelExportMp4() {
+      isExporting = false;
+    }
+
+    // RENDERIZADOR CANVAS 2D DE ALTA DEFINICIÓN (1280x720)
+    function renderExportFrame(ctx, w, h, t) {
+      // 1. Fondo Estudio
+      const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+      bgGrad.addColorStop(0, '#0f172a');
+      bgGrad.addColorStop(1, '#1e293b');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Partículas suaves
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.05)';
+      for (let i = 0; i < 15; i++) {
+        const px = ((i * 123 + t * 30) % w);
+        const py = ((i * 91 + Math.cos(t + i) * 40) % h);
+        ctx.beginPath();
+        ctx.arc(px, py, 40, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. Barra Superior de Marca
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 20px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText('COTIC  •  SISTEMA POS & GESTIÓN DE PRODUCTOS', 60, 50);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '700 15px "JetBrains Mono", monospace';
+      ctx.fillText('PRODUCTOS EN GENERAL  •  POS  •  ARQUEO  •  STOCK', w - 500, 50);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(60, 68);
+      ctx.lineTo(w - 60, 68);
+      ctx.stroke();
+
+      // 3. Dibujar Presentadora (Sofía) en el tercio izquierdo (x: 60 - 360)
+      drawPresenterAvatar(ctx, 100, 220, t);
+
+      // 4. Dibujar Contenido del Módulo Activo a la derecha (x: 420 - 1220)
+      if (t < 10) {
+        // MÓDULO 1: INTRODUCCIÓN & DASHBOARD
+        drawBadge2D(ctx, 'MÓDULO 1: DASHBOARD GERENCIAL EN VIVO', '#38bdf8', '#0284c7', 440, 120);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 36px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Gestión Integral de Productos en General', 440, 180);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Supervisión 360° de ventas, almacén y sucursales en tiempo real.', 440, 220);
+
+        drawBox2D(ctx, 440, 260, 780, 320, 'rgba(255, 255, 255, 0.05)', '#0284c7', 1.5);
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '700 18px "JetBrains Mono", monospace';
+        ctx.fillText('Métricas Consolidadas de la Red Comercial', 470, 305);
+
+        drawKpiBox2D(ctx, 470, 340, 220, 100, 'S/ 18,450.80', 'Ventas del Día', '#38bdf8');
+        drawKpiBox2D(ctx, 720, 340, 220, 100, '1,420 Ítems', 'Stock en Tiempo Real', '#10b981');
+        drawKpiBox2D(ctx, 970, 340, 220, 100, '4 Sedes', 'Locales Conectados', '#a855f7');
+
+      } else if (t < 22) {
+        // MÓDULO 2: POS MAYOR Y MENOR
+        drawBadge2D(ctx, 'MÓDULO 2: PUNTO DE VENTA (POS) Y FACTURACIÓN', '#34d399', '#059669', 440, 120);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 36px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Venta Rápida con Cuadre Contable Obligatorio', 440, 180);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Filtra cualquier producto por nombre o SKU con stock al instante.', 440, 220);
+
+        drawBox2D(ctx, 440, 255, 780, 335, 'rgba(255, 255, 255, 0.05)', '#059669', 1.5);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 16px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('3 x Arroz Costeño Extra (Saco 50kg)', 470, 300);
+        ctx.fillText('S/ 495.00', 1130, 300);
+
+        ctx.fillText('2 x Aceite Vegetal Primor 1L (Caja x 12)', 470, 340);
+        ctx.fillText('S/ 144.00', 1130, 340);
+
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('Cupón PROMO10 (Descuento del 10%)', 470, 380);
+        ctx.fillText('- S/ 63.90', 1130, 380);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.beginPath();
+        ctx.moveTo(470, 410);
+        ctx.lineTo(1190, 410);
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '700 15px "JetBrains Mono", monospace';
+        ctx.fillText('Subtotal Base: S/ 487.37     IGV (18%): S/ 87.73', 470, 445);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('Total Comprobante: S/ 575.10', 470, 485);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '700 14px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('🖨️ Impresión Dual: Ticketera Térmica 80mm  |  Formato A4 PDF', 470, 545);
+
+      } else if (t < 34) {
+        // MÓDULO 3: PROVEEDORES & COMPRAS
+        drawBadge2D(ctx, 'MÓDULO 3: PROVEEDORES, COMPRAS & INVENTARIO', '#fbbf24', '#d97706', 440, 120);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 36px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Abastecimiento Directo al Catálogo Multirubro', 440, 180);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Registro de compras con entrada de cajas/unidades a stock en tiempo real.', 440, 220);
+
+        drawBox2D(ctx, 440, 260, 780, 320, 'rgba(255, 255, 255, 0.05)', '#f59e0b', 1.5);
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = '800 20px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Control de Proveedores & Multi-Divisa (PEN, USD, EUR)', 470, 310);
+
+        drawRowItem2D(ctx, 470, 360, 'Proveedor:', 'Distribuidora Mayorista Los Andes S.A.C.');
+        drawRowItem2D(ctx, 470, 405, 'RUC:', '20549812451  (Estado: Activo ✔)');
+        drawRowItem2D(ctx, 470, 450, 'Orden de Compra:', 'Ingreso verificado de +50 Cajas al inventario central');
+        drawRowItem2D(ctx, 470, 495, 'Moneda:', 'Soles Peruanos (PEN) autoseleccionada');
+
+      } else if (t < 45) {
+        // MÓDULO 4: ARQUEO DE CAJA
+        drawBadge2D(ctx, 'MÓDULO 4: ARQUEO DE TURNO SIN DESCUADRES', '#c084fc', '#9333ea', 440, 120);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 36px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Cero Descuadres: Efectivo y Medios Digitales', 440, 180);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Conciliación matemática automática al cerrar el turno de cada cajero.', 440, 220);
+
+        drawBox2D(ctx, 440, 260, 780, 320, 'rgba(255, 255, 255, 0.05)', '#a855f7', 1.5);
+        drawKpiBox2D(ctx, 470, 330, 340, 120, 'S/ 3,420.00', 'Efectivo Contado', '#10b981');
+        drawKpiBox2D(ctx, 840, 330, 350, 120, 'S/ 2,860.00', 'Yape / Plin / Tarjetas', '#a855f7');
+
+        ctx.fillStyle = '#34d399';
+        ctx.font = '800 20px "JetBrains Mono", monospace';
+        ctx.fillText('✔ Diferencia de Cierre: S/ 0.00 (Cuadre 100% Exacto)', 470, 520);
+
+      } else if (t < 56) {
+        // MÓDULO 5: CIBERSEGURIDAD
+        drawBadge2D(ctx, 'MÓDULO 5: AUDITORÍA NOC & SEGURIDAD ZERO-TRUST', '#f87171', '#dc2626', 440, 120);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 36px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Monitoreo en Vivo y Botón Kill Session', 440, 180);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Supervisa usuarios conectados por IP y expulsa intrusos con un clic.', 440, 220);
+
+        drawBox2D(ctx, 440, 260, 780, 320, 'rgba(255, 255, 255, 0.05)', '#ef4444', 1.5);
+        drawRowItem2D(ctx, 470, 320, 'Cajero Principal:', 'cajero_norte • Sede Central • IP: 190.237.44.12 [Activo]');
+        drawRowItem2D(ctx, 470, 375, 'Supervisor:', 'cmendoza • Tienda Sur • IP: 181.66.12.80 [Activo]');
+        drawRowItem2D(ctx, 470, 430, 'Acceso Sospechoso:', 'desconocido_ip45 • IP: 45.180.22.9 [EXPULSADO]');
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '800 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('🛡️ Bloqueo y Revocación Remota Inmediata de Tokens JWT', 470, 510);
+
+      } else {
+        // MÓDULO 6: CIERRE & CTA
+        drawBadge2D(ctx, 'EL FUTURO DE TU COMERCIO COMIENZA HOY', '#38bdf8', '#0284c7', 440, 120);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 40px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('¡Haz Crecer tu Negocio con COTIC!', 440, 185);
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '500 20px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('La plataforma integral que unifica tus tiendas y productos en general.', 440, 235);
+
+        drawBox2D(ctx, 440, 280, 780, 280, 'linear-gradient(135deg, #0284c7, #2563eb)', '#38bdf8', 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 28px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('▶ ¡Accede a la Demostración Interactiva en Línea!', 470, 360);
+        ctx.font = '600 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Explora el Simulador POS, prueba el arqueo de caja y calcula tu ahorro mensual.', 470, 420);
+        ctx.fillStyle = '#34d399';
+        ctx.font = '800 18px "JetBrains Mono", monospace';
+        ctx.fillText('Disponible en Cloud, VPS y Redes Seguras', 470, 480);
+      }
+
+      // 5. Barra Inferior de Progreso
+      const pPct = Math.min(1, t / DURATION);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(60, h - 35, w - 120, 6);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(60, h - 35, (w - 120) * pPct, 6);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 13px "JetBrains Mono", monospace';
+      const curSec = Math.min(DURATION, Math.floor(t));
+      const curMin = Math.floor(curSec / 60);
+      const remSec = curSec % 60;
+      ctx.fillText(`0${curMin}:${remSec < 10 ? '0' : ''}${remSec} / 01:05`, 60, h - 16);
+      ctx.fillText('COTIC Showcase &bull; SISTEMA POS & GESTIÓN DE PRODUCTOS', w - 460, h - 16);
+    }
+
+    // Dibujo 2D del Avatar de Sofía en Canvas (Silueta Ejecutiva Alta Definición)
+    function drawPresenterAvatar(ctx, x, y, t) {
+      ctx.save();
+      const bobY = Math.sin(t * 3) * 2.5;
+
+      // 1. Cabello Posterior (Volumen y caída suave)
+      const hairGrad = ctx.createLinearGradient(x, y + 20, x, y + 220);
+      hairGrad.addColorStop(0, '#334155');
+      hairGrad.addColorStop(0.5, '#1e293b');
+      hairGrad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = hairGrad;
+      ctx.beginPath();
+      ctx.ellipse(x + 40, y + 70 + bobY, 52, 65, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Torso / Traje Ejecutivo Azul Medianoche
+      const blazerGrad = ctx.createLinearGradient(x - 50, y + 150, x + 130, y + 300);
+      blazerGrad.addColorStop(0, '#1e293b');
+      blazerGrad.addColorStop(0.7, '#0f172a');
+      blazerGrad.addColorStop(1, '#02132b');
+      ctx.fillStyle = blazerGrad;
+      ctx.beginPath();
+      ctx.moveTo(x - 45, y + 280);
+      ctx.quadraticCurveTo(x - 30, y + 170, x - 15, y + 150);
+      ctx.quadraticCurveTo(x + 40, y + 140, x + 95, y + 150);
+      ctx.quadraticCurveTo(x + 115, y + 170, x + 125, y + 280);
+      ctx.fill();
+
+      // 3. Cuello y Blusa Interior Blanca (Cuello en V)
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(x + 18, y + 144);
+      ctx.lineTo(x + 40, y + 205);
+      ctx.lineTo(x + 62, y + 144);
+      ctx.closePath();
+      ctx.fill();
+
+      // Solapas de Traje Azul Profesional
+      ctx.fillStyle = '#0369a1';
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y + 150);
+      ctx.lineTo(x + 22, y + 225);
+      ctx.lineTo(x + 40, y + 250);
+      ctx.lineTo(x + 10, y + 280);
+      ctx.lineTo(x - 35, y + 280);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(x + 90, y + 150);
+      ctx.lineTo(x + 58, y + 225);
+      ctx.lineTo(x + 40, y + 250);
+      ctx.lineTo(x + 70, y + 280);
+      ctx.lineTo(x + 115, y + 280);
+      ctx.fill();
+
+      // Credencial Lanyard
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 36, y + 145);
+      ctx.lineTo(x + 38, y + 220);
+      ctx.moveTo(x + 44, y + 145);
+      ctx.lineTo(x + 42, y + 220);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 28, y + 220, 24, 30);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(x + 31, y + 223, 18, 8);
+
+      // 4. Cuello con Piel Esbelta
+      const skinGrad = ctx.createLinearGradient(x + 25, y + 90, x + 55, y + 150);
+      skinGrad.addColorStop(0, '#ffedd5');
+      skinGrad.addColorStop(0.6, '#fed7aa');
+      skinGrad.addColorStop(1, '#fba872');
+
+      ctx.fillStyle = skinGrad;
+      ctx.beginPath();
+      ctx.moveTo(x + 28, y + 100 + bobY);
+      ctx.lineTo(x + 25, y + 146);
+      ctx.lineTo(x + 55, y + 146);
+      ctx.lineTo(x + 52, y + 100 + bobY);
+      ctx.fill();
+
+      // 5. Rostro Ovalado Estilizado
+      ctx.fillStyle = skinGrad;
+      ctx.beginPath();
+      ctx.ellipse(x + 40, y + 68 + bobY, 34, 42, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rubor en mejillas
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(x + 24, y + 74 + bobY, 7, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 56, y + 74 + bobY, 7, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. Cabello Frontal y Flequillo Elegante
+      ctx.fillStyle = hairGrad;
+      ctx.beginPath();
+      ctx.arc(x + 40, y + 54 + bobY, 36, Math.PI * 0.95, Math.PI * 2.05);
+      ctx.quadraticCurveTo(x + 40, y + 50 + bobY, x + 20, y + 64 + bobY);
+      ctx.fill();
+
+      // 7. Headset Diadema y Micrófono
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x + 40, y + 42 + bobY, 35, Math.PI * 0.8, Math.PI * 1.85);
+      ctx.stroke();
+
+      // Micrófono curvo al borde de la boca
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x + 12, y + 66 + bobY);
+      ctx.quadraticCurveTo(x + 22, y + 84 + bobY, x + 34, y + 84 + bobY);
+      ctx.stroke();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(x + 34, y + 84 + bobY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(x + 34, y + 84 + bobY, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 8. Ojos con Parpadeo
+      const blink = Math.sin(t * 2) > 0.95 ? 0.15 : 1;
+      // Ojo Izq
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.ellipse(x + 26, y + 64 + bobY, 5, 4 * blink, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(x + 26, y + 64 + bobY, 2.6 * blink, 0, Math.PI * 2);
+      ctx.fill();
+      // Ojo Der
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.ellipse(x + 54, y + 64 + bobY, 5, 4 * blink, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(x + 54, y + 64 + bobY, 2.6 * blink, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cejas finas
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(x + 20, y + 57 + bobY);
+      ctx.quadraticCurveTo(x + 26, y + 54 + bobY, x + 32, y + 57 + bobY);
+      ctx.moveTo(x + 48, y + 57 + bobY);
+      ctx.quadraticCurveTo(x + 54, y + 54 + bobY, x + 60, y + 57 + bobY);
+      ctx.stroke();
+
+      // 9. Boca / Labios Animados Sincronizados con Locución
+      const mouthOpen = (isSpeaking || Math.sin(t * 8) > 0.2) ? 5 : 1.5;
+      ctx.fillStyle = '#e11d48';
+      ctx.beginPath();
+      ctx.ellipse(x + 40, y + 86 + bobY, 8, mouthOpen, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 10. Brazo Derecho Señalando con Elegancia a los Módulos
+      const armBob = Math.sin(t * 3.5) * 3;
+      ctx.fillStyle = '#0369a1';
+      ctx.beginPath();
+      ctx.moveTo(x + 92, y + 155);
+      ctx.quadraticCurveTo(x + 130, y + 175, x + 145, y + 150 + armBob);
+      ctx.lineTo(x + 178, y + 120 + armBob);
+      ctx.lineTo(x + 172, y + 105 + armBob);
+      ctx.quadraticCurveTo(x + 135, y + 140, x + 88, y + 140);
+      ctx.fill();
+
+      // Puño de camisa
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 168, y + 106 + armBob, 7, 14);
+
+      // Mano extendida señalando
+      ctx.fillStyle = skinGrad;
+      ctx.beginPath();
+      ctx.ellipse(x + 180, y + 110 + armBob, 7, 5, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      // Dedo índice señalando al módulo
+      ctx.beginPath();
+      ctx.moveTo(x + 184, y + 107 + armBob);
+      ctx.lineTo(x + 198, y + 102 + armBob);
+      ctx.lineTo(x + 196, y + 106 + armBob);
+      ctx.lineTo(x + 184, y + 111 + armBob);
+      ctx.fill();
+
+      // Badge Sofía
+      drawBadge2D(ctx, 'Sofía • Especialista Comercial COTIC', '#0284c7', '#bae6fd', x - 40, y + 270);
+      ctx.restore();
+    }
+
+    function drawBadge2D(ctx, text, color, strokeColor, x, y) {
+      ctx.font = '800 13px "Plus Jakarta Sans", system-ui, sans-serif';
+      const tw = ctx.measureText(text).width;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y - 18, tw + 24, 28, 14);
+      else ctx.rect(x, y - 18, tw + 24, 28);
+      ctx.fill();
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.fillText(text, x + 12, y + 1);
+    }
+
+    function drawBox2D(ctx, x, y, bw, bh, fill, stroke, strokeW) {
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, bw, bh, 18);
+      else ctx.rect(x, y, bw, bh);
+      ctx.fill();
+      if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = strokeW || 1;
+        ctx.stroke();
+      }
+    }
+
+    function drawKpiBox2D(ctx, x, y, kw, kh, val, label, color) {
+      drawBox2D(ctx, x, y, kw, kh, 'rgba(255, 255, 255, 0.05)', color, 1);
+      ctx.fillStyle = color;
+      ctx.font = '900 24px "JetBrains Mono", monospace';
+      ctx.fillText(val, x + 18, y + 45);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '700 13px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(label, x + 18, y + 75);
+    }
+
+    function drawRowItem2D(ctx, x, y, label, val) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '700 16px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(label, x, y);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '500 16px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(val, x + 170, y);
+    }
+
+    // INICIALIZACIÓN
+    updateTimeline(0);
+
+    // AUTO-DESCARGA POR URL (?download=true)
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('download') === 'true') {
+        setTimeout(recordAndDownloadMp4, 700);
+      }
+    });
+  </script>
+</body>
+</html>

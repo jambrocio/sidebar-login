@@ -5,6 +5,7 @@ import com.elroble.bevadmin.modules.users.dto.UpdateUserWithBranchesRequest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Contrato de servicio síncrono para la gestión de Usuarios y Asignación de Locales.
@@ -44,4 +45,20 @@ public interface UsersService {
      * @return resumen de la actualización
      */
     Map<String, Object> updateUserWithBusinessAndBranches(String identifier, UpdateUserWithBranchesRequest request);
+
+    /**
+     * Restablece la contraseña de un usuario a la clave estándar por default ('Cotic2026#').
+     *
+     * @param identifier UUID, código de usuario o username
+     * @return resumen con el resultado del reseteo y la contraseña asignada
+     */
+    Map<String, Object> resetPasswordToDefault(String identifier);
+
+    /**
+     * Valida si un usuario pertenece al negocio indicado (para usuarios que no sean Superadmin).
+     *
+     * @param identifier UUID, código de usuario o username
+     * @param businessId UUID del negocio matriz
+     */
+    void validateUserBelongsToBusiness(String identifier, UUID businessId);
 }

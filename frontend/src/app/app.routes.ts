@@ -70,6 +70,18 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'suppliers',
+        loadComponent: () =>
+          import('./pages/suppliers/suppliers-management.component').then(
+            m => m.SuppliersManagementComponent
+          ),
+        data: {
+          title: 'Directorio de Proveedores Comerciales',
+          breadcrumb: 'Proveedores',
+          parent: 'Comercial y Ventas',
+        },
+      },
+      {
         path: 'coupons',
         loadComponent: () =>
           import('./pages/coupons/coupons-view.component').then(

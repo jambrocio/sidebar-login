@@ -65,80 +65,200 @@
         1. Datos del Cliente y Selección de Productos (Por Mayor y por Menor)
       </h2>
       <div class="grid-form">
+        <!-- Campo Inactivo: Negocio Matriz (Bloqueado) -->
         <div class="form-group">
-          <label>Negocio Matriz</label>
+          <label>Negocio Matriz (Bloqueado)</label>
           <input
             type="text"
             [value]="businessInfo().commercialName + ' (RUC ' + businessInfo().taxId + ')'"
             readonly
           />
         </div>
+
+        <!-- Campo Inactivo: Local Asignado (Bloqueado) -->
         <div class="form-group">
           <label>Local Asignado al Usuario (Bloqueado)</label>
           <input type="text" [value]="assignedBranch()" readonly />
         </div>
+
         <div class="form-group">
-          <label>Tipo de Comprobante</label>
-          <select name="docType" [(ngModel)]="newSale.documentType">
+          <label>Tipo de Comprobante <span class="required-indicator">*</span></label>
+          <select name="docType" [(ngModel)]="newSale.documentType" required class="required-input">
             <option value="FACTURA ELECTRÓNICA">FACTURA ELECTRÓNICA</option>
             <option value="BOLETA DE VENTA ELECTRÓNICA">BOLETA DE VENTA ELECTRÓNICA</option>
           </select>
         </div>
+
+        <!-- Clientes Registrados para el Negocio -->
         <div class="form-group">
-          <label>Cliente</label>
-          <select name="saleClient" [(ngModel)]="newSale.clientName">
-            <option value="Licorería El Brindis S.A.C.">Licorería El Brindis S.A.C. (Mayorista)</option>
-            <option value="Restaurante & Bar La Esquina">Restaurante & Bar La Esquina (Mayorista)</option>
-            <option value="Bodega Mayorista Don Pepe">Bodega Mayorista Don Pepe (Mayorista)</option>
-            <option value="Cliente Mostrador (Juan Pérez)">Cliente Mostrador — Juan Pérez (Minorista)</option>
+          <label>Cliente Comercial del Negocio <span class="required-indicator">*</span></label>
+          <select
+            name="saleClient"
+            [(ngModel)]="newSale.clientName"
+            required
+            class="required-input"
+            [class.is-invalid]="formSubmitted() && !newSale.clientName.trim()"
+          >
+            <option value="" disabled>-- Selecciona un cliente registrado --</option>
+            <option *ngFor="let c of availableCustomersForBusiness()" [value]="c.commercialName || c.legalName">
+              {{ c.commercialName || c.legalName }} ({{ c.documentType }}: {{ c.documentNumber }}) — {{ c.customerType }}
+            </option>
+            <option value="Cliente Mostrador (Venta Rápida)">Cliente Mostrador (Venta Rápida / Boleta)</option>
           </select>
+          <small class="field-hint" *ngIf="availableCustomersForBusiness().length === 0">
+            No hay clientes registrados en {{ businessInfo().id }}. Se utilizará Cliente Mostrador.
+          </small>
         </div>
+
         <div class="form-group">
-          <label>Medio de Pago</label>
-          <select name="salePayment" [(ngModel)]="newSale.paymentMethod">
+          <label>Medio de Pago <span class="required-indicator">*</span></label>
+          <select name="salePayment" [(ngModel)]="newSale.paymentMethod" required class="required-input">
             <option value="Efectivo">Efectivo en Caja</option>
             <option value="Transferencia / Yape">Transferencia / Yape / Plin</option>
             <option value="Tarjeta">Tarjeta POS</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>Seleccionar Producto</label>
-          <select
-            name="saleSku"
-            [(ngModel)]="newSale.selectedSku"
-            (ngModelChange)="onSaleProductOrModalityChange()"
+        <!-- Buscador Ágil de Productos con Stock Disponible -->
+        <div class="form-group" style="position: relative">
+          <label>Buscar y Seleccionar Producto con Stock <span class="required-indicator">*</span></label>
+          <div style="position: relative; display: flex; align-items: center">
+            <i class="bi bi-search" style="position: absolute; left: 0.85rem; color: #64748b; pointer-events: none"></i>
+            <input
+              type="text"
+              name="prodSearchInput"
+              [ngModel]="productSearchQuery()"
+              (ngModelChange)="productSearchQuery.set($event); isProductDropdownOpen.set(true)"
+              (focus)="isProductDropdownOpen.set(true)"
+              placeholder="Digita nombre o SKU (ej. Piscano, Cristal, PRD-118)..."
+              required
+              class="required-input"
+              [class.is-invalid]="formSubmitted() && !newSale.selectedSku"
+              style="padding-left: 2.25rem; padding-right: 2rem; width: 100%"
+              autocomplete="off"
+            />
+            <button
+              *ngIf="productSearchQuery()"
+              type="button"
+              (click)="clearProductSearch()"
+              style="position: absolute; right: 0.6rem; background: none; border: none; color: #64748b; cursor: pointer; font-size: 1.1rem; padding: 0"
+              title="Limpiar búsqueda"
+            >
+              <i class="bi bi-x-circle-fill"></i>
+            </button>
+          </div>
+
+          <!-- Desplegable flotante de resultados -->
+          <div
+            *ngIf="isProductDropdownOpen() && searchedProducts().length > 0"
+            style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 250px; overflow-y: auto; background: var(--card-bg, #fff); border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 100"
           >
-            <option *ngFor="let p of products()" [value]="p.sku">
-              {{ p.name }} ({{ p.category }})
-            </option>
-          </select>
+            <div
+              *ngFor="let p of searchedProducts()"
+              (click)="selectProductFromSearch(p)"
+              style="padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border-color, #f1f5f9); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s"
+              onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.08)'"
+              onmouseout="this.style.backgroundColor='transparent'"
+            >
+              <div>
+                <strong style="color: var(--text-color, #1e293b); font-size: 0.9rem">{{ p.name }}</strong>
+                <code *ngIf="p.sku" style="margin-left: 0.35rem; font-size: 0.78rem">{{ p.sku }}</code>
+                <div style="font-size: 0.76rem; color: #64748b">
+                  <span>{{ p.category }}</span> · <span>{{ p.presentation }}</span>
+                </div>
+              </div>
+              <div style="text-align: right">
+                <span class="badge badge-success" style="font-size: 0.78rem">
+                  Stock: {{ p.stockBoxes }} cjas ({{ p.stockUnits }} und.)
+                </span>
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.15rem">
+                  Mayor: <strong>{{ currencySymbol() }} {{ p.wholesalePrice | appAmount }}</strong> · Menor: <strong>{{ currencySymbol() }} {{ p.retailPrice | appAmount }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            *ngIf="isProductDropdownOpen() && searchedProducts().length === 0"
+            style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; padding: 1rem; background: var(--card-bg, #fff); border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 100; text-align: center; color: #64748b; font-size: 0.85rem"
+          >
+            <i class="bi bi-exclamation-circle text-warning" style="margin-right: 0.3rem"></i>
+            No se encontraron productos con stock disponible para "{{ productSearchQuery() }}".
+          </div>
+
+          <small class="field-hint" *ngIf="selectedProduct()">
+            Seleccionado: <strong>{{ selectedProduct()?.name }}</strong> — Stock disponible:
+            <strong style="color: #16a34a">{{ newSale.modality === 'Por Mayor' ? (selectedProduct()?.stockBoxes + ' cajas') : (selectedProduct()?.stockUnits + ' unidades') }}</strong>
+          </small>
         </div>
+
         <div class="form-group">
-          <label>Modalidad de Venta</label>
+          <label>Modalidad de Venta <span class="required-indicator">*</span></label>
           <select
             name="saleModality"
             [(ngModel)]="newSale.modality"
             (ngModelChange)="onSaleProductOrModalityChange()"
+            required
+            class="required-input"
           >
             <option value="Por Mayor">Venta por Mayor (Cajas / Packs)</option>
             <option value="Por Menor">Venta por Menor (Unidades / Botellas)</option>
           </select>
         </div>
+
         <div class="form-group">
-          <label>Cantidad ({{ newSale.modality === 'Por Mayor' ? 'Cajas' : 'Unidades' }})</label>
-          <input type="number" name="saleQty" [(ngModel)]="newSale.quantity" min="1" />
+          <label>Cantidad ({{ newSale.modality === 'Por Mayor' ? 'Cajas' : 'Unidades' }}) <span class="required-indicator">*</span></label>
+          <input
+            type="number"
+            name="saleQty"
+            [(ngModel)]="newSale.quantity"
+            min="1"
+            required
+            class="required-input"
+            [class.is-invalid]="formSubmitted() && (!newSale.quantity || newSale.quantity <= 0)"
+          />
         </div>
+
+        <!-- Campo Inactivo: Precio Unitario asignado por catálogo -->
         <div class="form-group">
-          <label>Precio Unitario / Caja ($)</label>
-          <input type="number" name="salePrice" [(ngModel)]="newSale.unitPrice" step="0.5" />
+          <label>Precio Unitario ({{ currencySymbol() }}) <small class="text-muted">(Bloqueado)</small></label>
+          <input
+            type="text"
+            name="saleUnitPrice"
+            [value]="newSale.unitPrice ? (currencySymbol() + ' ' + (newSale.unitPrice | appAmount)) : '—'"
+            readonly
+            tabindex="-1"
+            title="Precio unitario fijado por catálogo según la modalidad seleccionada"
+          />
+          <small class="field-hint">Auto-cargado según modalidad ({{ newSale.modality }})</small>
+        </div>
+
+        <!-- Campo Inactivo: Total por Dicho Producto calculado automáticamente -->
+        <div class="form-group">
+          <label>Total por Producto ({{ currencySymbol() }}) <small class="text-muted">(Bloqueado)</small></label>
+          <input
+            type="text"
+            name="saleProductTotal"
+            [value]="getProductSubtotal() > 0 ? (currencySymbol() + ' ' + (getProductSubtotal() | appAmount)) : (currencySymbol() + ' 0.00')"
+            readonly
+            tabindex="-1"
+            title="Total calculado automáticamente: Cantidad x Precio Unitario"
+            style="font-weight: 700; color: #16a34a"
+          />
+          <small class="field-hint" *ngIf="getProductSubtotal() > 0">
+            {{ newSale.quantity || 0 }} x {{ currencySymbol() }} {{ (newSale.unitPrice || 0) | appAmount }}
+          </small>
+          <small class="field-hint" *ngIf="getProductSubtotal() === 0">
+            Se calcula automáticamente al ingresar la cantidad
+          </small>
         </div>
 
         <div class="form-actions full-width">
           <button
             type="button"
-            class="btn-secondary"
+            class="btn-primary"
             (click)="addItemToSaleCart()"
+            [disabled]="availableProductsForBusiness().length === 0"
           >
             <i class="bi bi-plus-circle-fill"></i>
             <span>Agregar Producto a la Venta</span>
@@ -148,23 +268,8 @@
     </div>
 
     <!-- Lista de Productos Agregados y Total General -->
-    <div class="card">
-      <div class="toolbar">
-        <h2 class="section-title" style="margin: 0">
-          2. Productos Agregados a la Venta ({{ saleCart().length }} líneas / {{ cartTotalItemsCount() }} ítems)
-        </h2>
-        <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem">
-          <label style="margin: 0">Cupón de Descuento:</label>
-          <input
-            type="text"
-            name="saleCoupon"
-            [(ngModel)]="newSale.couponCode"
-            placeholder="Ej. MAYORISTA15"
-            style="width: 150px; padding: 0.45rem 0.65rem"
-          />
-        </div>
-      </div>
-
+    <div class="card" *ngIf="saleCart().length > 0">
+      <h2 class="section-title">2. Detalle de Ítems en el Carrito de Venta</h2>
       <div class="table-responsive">
         <table class="data-table">
           <thead>
@@ -172,79 +277,123 @@
               <th>SKU</th>
               <th>Producto</th>
               <th>Modalidad</th>
-              <th>Formato</th>
+              <th>Presentación</th>
               <th>Cantidad</th>
-              <th>Precio Aplicado</th>
-              <th>Subtotal Línea</th>
-              <th>Quitar</th>
+              <th>Precio Unitario</th>
+              <th>Subtotal</th>
+              <th style="text-align: center">Acción</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of saleCart(); let idx = index">
               <td><code>{{ item.sku }}</code></td>
               <td><strong>{{ item.productName }}</strong></td>
-              <td>
-                <span
-                  class="badge"
-                  [class.badge-info]="item.modality === 'Por Mayor'"
-                  [class.badge-warning]="item.modality === 'Por Menor'"
-                >
-                  {{ item.modality }}
-                </span>
-              </td>
+              <td>{{ item.modality }}</td>
               <td>{{ item.unitLabel }}</td>
-              <td><strong>{{ item.quantity }}</strong></td>
-              <td>\${{ item.unitPrice.toFixed(2) }}</td>
-              <td><strong>\${{ item.lineSubtotal.toFixed(2) }}</strong></td>
-              <td>
+              <td style="min-width: 135px">
+                <div style="display: flex; align-items: center; gap: 0.35rem">
+                  <button
+                    type="button"
+                    class="btn-sm btn-outline"
+                    style="padding: 0.2rem 0.55rem; font-weight: bold; font-size: 0.95rem; border-radius: 4px; line-height: 1"
+                    (click)="decrementCartItemQty(idx)"
+                    title="Disminuir cantidad"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    style="width: 60px; text-align: center; padding: 0.25rem 0.3rem; font-weight: 600; border: 1px solid var(--border-color); border-radius: 4px"
+                    [ngModel]="item.quantity"
+                    (ngModelChange)="updateCartItemQty(idx, $event)"
+                  />
+                  <button
+                    type="button"
+                    class="btn-sm btn-outline"
+                    style="padding: 0.2rem 0.55rem; font-weight: bold; font-size: 0.95rem; border-radius: 4px; line-height: 1"
+                    (click)="incrementCartItemQty(idx)"
+                    title="Aumentar cantidad"
+                  >
+                    +
+                  </button>
+                </div>
+              </td>
+              <td>{{ currencySymbol() }} {{ item.unitPrice | appAmount }}</td>
+              <td><strong>{{ currencySymbol() }} {{ item.lineSubtotal | appAmount }}</strong></td>
+              <td style="text-align: center">
                 <button
                   type="button"
-                  class="btn-secondary btn-sm"
+                  class="btn-action btn-action-deactivate"
                   (click)="removeSaleCartItem(idx)"
+                  title="Quitar ítem"
                 >
                   <i class="bi bi-trash"></i>
                 </button>
               </td>
             </tr>
           </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="6" style="text-align: right">
-                <strong>SUBTOTAL DE PRODUCTOS AGREGADOS ({{ cartTotalItemsCount() }} unds/cajas):</strong>
-              </td>
-              <td colspan="2">
-                <strong>\${{ cartSubtotal().toFixed(2) }}</strong>
-              </td>
-            </tr>
-            <tr *ngIf="getCartDiscountAmount() > 0">
-              <td colspan="6" style="text-align: right">
-                <strong>DESCUENTO CUPÓN ({{ newSale.couponCode }}):</strong>
-              </td>
-              <td colspan="2">
-                <span class="badge badge-success">-\${{ getCartDiscountAmount().toFixed(2) }}</span>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="6" style="text-align: right; font-size: 1rem">
-                <strong>TOTAL GENERAL A PAGAR:</strong>
-              </td>
-              <td colspan="2" style="font-size: 1.08rem">
-                <strong>\${{ getCartFinalTotal().toFixed(2) }} USD</strong>
-              </td>
-            </tr>
-          </tfoot>
         </table>
       </div>
 
-      <div class="form-actions" style="margin-top: 1.1rem; justify-content: flex-end">
-        <button
-          type="button"
-          class="btn-primary"
-          (click)="registerBeverageSale()"
-        >
-          <i class="bi bi-receipt-cutoff"></i>
-          <span>Emitir y Visualizar Comprobante de Venta ($ {{ getCartFinalTotal().toFixed(2) }})</span>
-        </button>
+      <!-- Resumen de Totales y Cupón de Descuento -->
+      <div class="grid-form" style="margin-top: 1.5rem">
+        <div class="form-group">
+          <label>Cupón de Descuento Promocional (Opcional)</label>
+          <input
+            type="text"
+            name="cpCode"
+            [(ngModel)]="newSale.couponCode"
+            placeholder="Ej. MAYORISTA15 o VERANO2026"
+          />
+        </div>
+
+        <!-- Campo Inactivo: Total Bruto de Ítems (Readonly) -->
+        <div class="form-group" *ngIf="getCartDiscountAmount() > 0">
+          <label>Total Bruto de Productos ({{ currencySymbol() }})</label>
+          <input type="text" [value]="currencySymbol() + ' ' + (cartSubtotal() | appAmount)" readonly />
+        </div>
+
+        <!-- Campo Inactivo: Descuento Aplicado (Readonly) -->
+        <div class="form-group" *ngIf="getCartDiscountAmount() > 0">
+          <label>Descuento por Cupón ({{ currencySymbol() }})</label>
+          <input type="text" [value]="'- ' + currencySymbol() + ' ' + (getCartDiscountAmount() | appAmount)" readonly />
+        </div>
+
+        <!-- Campo Inactivo: Subtotal (Importe Total - IGV) (Readonly) -->
+        <div class="form-group">
+          <label>Subtotal (Total - IGV) ({{ currencySymbol() }})</label>
+          <input type="text" [value]="currencySymbol() + ' ' + (getCartNetSubtotal() | appAmount)" readonly />
+        </div>
+
+        <!-- Campo Inactivo: IGV (18%) (Readonly) -->
+        <div class="form-group">
+          <label>IGV (18% SUNAT) ({{ currencySymbol() }})</label>
+          <input type="text" [value]="currencySymbol() + ' ' + (getCartTaxIgv() | appAmount)" readonly />
+        </div>
+
+        <!-- Campo Inactivo: Total General a Cobrar (Readonly) -->
+        <div class="form-group">
+          <label>Importe Total del Comprobante ({{ currencySymbol() }})</label>
+          <input
+            type="text"
+            [value]="currencySymbol() + ' ' + (getCartFinalTotal() | appAmount)"
+            readonly
+            style="font-size: 1.15rem; font-weight: 700; color: #16a34a !important;"
+          />
+          <small class="field-hint">Subtotal ({{ currencySymbol() }} {{ getCartNetSubtotal() | appAmount }}) + IGV ({{ currencySymbol() }} {{ getCartTaxIgv() | appAmount }}) = Total</small>
+        </div>
+
+        <div class="form-actions full-width">
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="registerBeverageSale()"
+          >
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Emitir {{ newSale.documentType }} ({{ currencySymbol() }} {{ getCartFinalTotal() | appAmount }})</span>
+          </button>
+        </div>
       </div>
     </div>
   </ng-container>

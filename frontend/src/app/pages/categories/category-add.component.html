@@ -35,7 +35,7 @@
 
   <div class="card form-card">
     <h2 class="section-title">Registrar Nueva Categoría de Productos</h2>
-    <form (ngSubmit)="saveCategory()" class="grid-form">
+    <form (ngSubmit)="saveCategory()" class="grid-form" [class.was-validated]="formSubmitted()" novalidate>
       <div class="form-group">
         <label>
           Negocio Matriz <span class="required-indicator">*</span>
@@ -63,6 +63,7 @@
           placeholder="Ej. Energizantes e Hidratantes"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !newCategory.name.trim()"
         />
       </div>
       <div class="form-group">
@@ -74,7 +75,7 @@
           placeholder="energizantes-hidratantes"
         />
       </div>
-      <div class="form-group full-width">
+      <div class="form-group">
         <label>Margen Mayorista Objetivo</label>
         <input type="text" name="catMargin" [(ngModel)]="newCategory.wholesaleMargin" />
       </div>

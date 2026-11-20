@@ -8,6 +8,13 @@
         — Usuario: <strong>{{ currentSessionUser() }}</strong>
       </p>
     </div>
+
+    <div class="header-actions">
+      <a routerLink="/dashboard/suppliers" class="btn-primary" style="display: inline-flex; align-items: center; gap: 0.45rem; text-decoration: none; padding: 0.5rem 1rem;">
+        <i class="bi bi-building-gear"></i>
+        <span>Gestionar Proveedores Oficiales</span>
+      </a>
+    </div>
   </header>
 
   <div
@@ -32,40 +39,181 @@
     <h2 class="section-title">
       Registrar Orden de Compra en tu Local Asignado ({{ assignedBranch() }})
     </h2>
-    <form (ngSubmit)="registerBeveragePurchase()" class="grid-form">
+    <form (ngSubmit)="registerBeveragePurchase()" class="grid-form" [class.was-validated]="formSubmitted()" novalidate>
+      <!-- 1. Local asignado (Bloqueado) -->
       <div class="form-group">
         <label>Local / Almacén Asignado del Negocio (Bloqueado)</label>
         <input type="text" [value]="assignedBranch()" readonly />
       </div>
+
+      <!-- 2. Proveedor Oficial (Cargado dinámicamente del negocio) -->
       <div class="form-group">
-        <label>Proveedor Oficial <span class="required-indicator">*</span></label>
-        <select name="purSupplier" [(ngModel)]="newPurchase.supplier" required class="required-input">
-          <option value="Unión de Cervecerías Backus y Johnston">Unión de Cervecerías Backus y Johnston</option>
-          <option value="Diageo / Importadora Premium Licores">Diageo / Importadora Premium Licores</option>
-          <option value="Arca Continental Lindley (Coca-Cola / Inca Kola)">Arca Continental Lindley (Coca-Cola / Inca Kola)</option>
+        <label>Proveedor Oficial del Negocio <span class="required-indicator">*</span></label>
+        <select
+          name="purSupplier"
+          [(ngModel)]="newPurchase.supplier"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !newPurchase.supplier.trim()"
+        >
+          <option value="" disabled>-- Selecciona un proveedor registrado --</option>
+          <option *ngFor="let s of availableSuppliersForBusiness()" [value]="s.commercialName || s.legalName">
+            {{ s.commercialName || s.legalName }} ({{ s.documentType }}: {{ s.documentNumber }})
+          </option>
+          <option *ngIf="availableSuppliersForBusiness().length === 0" value="" disabled>
+            ⚠️ No hay proveedores activos registrados para este negocio
+          </option>
         </select>
+        <small class="field-hint" *ngIf="availableSuppliersForBusiness().length === 0">
+          Puedes dar de alta un proveedor haciendo clic en "Gestionar Proveedores Oficiales".
+        </small>
       </div>
+
+      <!-- 3. Categoría de Producto (Registrada para el negocio) -->
       <div class="form-group">
-        <label>Categoría de Producto <span class="required-indicator">*</span></label>
-        <select name="purCat" [(ngModel)]="newPurchase.category" required class="required-input">
-          <option value="Cervezas">Cervezas</option>
-          <option value="Licores">Licores y Destilados</option>
-          <option value="Gaseosas">Gaseosas y Aguas</option>
-          <option value="Otros">Energizantes y Otros</option>
+        <label>Categoría de Producto (Negocio Activo) <span class="required-indicator">*</span></label>
+        <select
+          name="purCat"
+          [ngModel]="newPurchase.category"
+          (ngModelChange)="onCategoryChange($event)"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !newPurchase.category.trim()"
+        >
+          <option value="" disabled>-- Selecciona una categoría del negocio --</option>
+          <option *ngFor="let cat of availableCategoriesForBusiness()" [value]="cat">
+            {{ cat }}
+          </option>
+          <option *ngIf="availableCategoriesForBusiness().length === 0" value="" disabled>
+            ⚠️ No hay categorías registradas para este negocio
+          </option>
         </select>
+        <small class="field-hint">Filtradas automáticamente por el negocio {{ businessInfo().id }}</small>
       </div>
+
+      <!-- 4. Selección de Producto Existente del Negocio -->
       <div class="form-group">
-        <label>Producto Existente a Reabastecer <span class="required-indicator">*</span></label>
-        <input type="text" name="purProd" [(ngModel)]="newPurchase.productDetail" required class="required-input" />
+        <label>Seleccionar Producto Existente del Negocio <span class="required-indicator">*</span></label>
+        <select
+          name="purProdSelect"
+          [ngModel]="selectedProductKey()"
+          (ngModelChange)="onProductSelected($event)"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !selectedProductKey()"
+        >
+          <option value="">-- Elige un producto del inventario registrado --</option>
+          <option *ngFor="let prod of filteredProductsForPurchase()" [value]="prod.sku || prod.name">
+            {{ prod.name }} {{ prod.sku ? ' (' + prod.sku + ')' : '' }} — [{{ prod.category }}]
+          </option>
+          <option *ngIf="filteredProductsForPurchase().length === 0" value="" disabled>
+            ⚠️ No hay productos disponibles en esta categoría
+          </option>
+        </select>
+        <small class="field-hint">Auto-completa el detalle y costo mayorista del producto</small>
       </div>
+
+      <!-- 5. Detalle / Especificación del Producto -->
       <div class="form-group">
-        <label>Cantidad de Cajas Compradas</label>
-        <input type="number" name="purBoxes" [(ngModel)]="newPurchase.boxesQty" min="1" />
+        <label>Detalle y Presentación del Producto <span class="required-indicator">*</span></label>
+        <input
+          type="text"
+          name="purProd"
+          [(ngModel)]="newPurchase.productDetail"
+          placeholder="Nombre y formato del producto seleccionado"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && !newPurchase.productDetail.trim()"
+        />
       </div>
+
+      <!-- 6. Moneda de la Orden -->
       <div class="form-group">
-        <label>Costo por Caja ($)</label>
-        <input type="number" name="purCost" [(ngModel)]="newPurchase.boxCost" step="0.5" />
+        <label>Moneda de la Orden <span class="required-indicator">*</span></label>
+        <select
+          name="purCurrency"
+          [ngModel]="selectedPurchaseCurrency()"
+          (ngModelChange)="selectedPurchaseCurrency.set($event)"
+          required
+          class="required-input"
+        >
+          <option *ngFor="let c of availableCurrencies()" [value]="c">
+            {{ c === 'PEN' ? 'PEN (Soles — S/)' : (c === 'USD' ? 'USD (Dólares — $)' : 'EUR (Euros — €)') }}
+            {{ c === defaultBusinessCurrency() ? '— [Moneda por Defecto]' : '' }}
+          </option>
+        </select>
+        <small class="field-hint">Auto-seleccionada según la divisa default del negocio</small>
       </div>
+
+      <!-- 7. Cantidad de Cajas -->
+      <div class="form-group">
+        <label>Cantidad de Cajas Compradas <span class="required-indicator">*</span></label>
+        <input
+          type="number"
+          name="purBoxes"
+          [(ngModel)]="newPurchase.boxesQty"
+          min="1"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && (!newPurchase.boxesQty || newPurchase.boxesQty <= 0)"
+        />
+      </div>
+
+      <!-- 8. Costo por Caja -->
+      <div class="form-group">
+        <label>Costo por Caja ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <input
+          type="number"
+          name="purCost"
+          [(ngModel)]="newPurchase.boxCost"
+          step="0.5"
+          min="0.1"
+          required
+          class="required-input"
+          [class.is-invalid]="formSubmitted() && (!newPurchase.boxCost || newPurchase.boxCost <= 0)"
+        />
+      </div>
+
+      <!-- 9. Inversión Estimada -->
+      <div class="form-group">
+        <label>Inversión Estimada ({{ currencySymbol() }})</label>
+        <input type="text" [value]="currencySymbol() + ' ' + (((newPurchase.boxesQty || 0) * (newPurchase.boxCost || 0)) | appAmount)" readonly />
+      </div>
+
+      <!-- 10. Panel de Control de Stock Inicial y Final Resultante -->
+      <div class="form-group full-width" *ngIf="selectedProduct()">
+        <label style="display: flex; align-items: center; gap: 0.4rem">
+          <i class="bi bi-box-seam-fill text-primary"></i>
+          <span>Impacto en Inventario y Stock Final del Producto ({{ selectedProduct()?.name }})</span>
+        </label>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 0.85rem 1.15rem; background: var(--bg-hover, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px">
+          <div>
+            <span style="font-size: 0.78rem; color: var(--text-muted, #64748b); display: block; margin-bottom: 0.2rem">Stock Actual en Almacén</span>
+            <strong style="font-size: 1.05rem; color: #0284c7">
+              <i class="bi bi-boxes" style="margin-right: 0.25rem"></i>
+              {{ currentStockBoxes() }} cajas
+            </strong>
+            <small style="display: block; color: var(--text-muted, #64748b); font-size: 0.75rem">({{ currentStockBoxes() * 12 }} unidades)</small>
+          </div>
+          <div>
+            <span style="font-size: 0.78rem; color: var(--text-muted, #64748b); display: block; margin-bottom: 0.2rem">Cajas a Ingresar (Compra)</span>
+            <strong style="font-size: 1.05rem; color: #16a34a">
+              <i class="bi bi-plus-circle-fill" style="margin-right: 0.25rem"></i>
+              +{{ newPurchase.boxesQty || 0 }} cajas
+            </strong>
+            <small style="display: block; color: var(--text-muted, #64748b); font-size: 0.75rem">(+{{ (newPurchase.boxesQty || 0) * 12 }} unidades)</small>
+          </div>
+          <div>
+            <span style="font-size: 0.78rem; color: var(--text-muted, #64748b); display: block; margin-bottom: 0.2rem">Stock Final Resultante</span>
+            <strong style="font-size: 1.1rem; color: #15803d; font-weight: 700">
+              <i class="bi bi-check2-circle" style="margin-right: 0.25rem"></i>
+              {{ projectedStockBoxes() }} cajas
+            </strong>
+            <small style="display: block; color: #15803d; font-size: 0.75rem">({{ projectedStockBoxes() * 12 }} unidades totales)</small>
+          </div>
+        </div>
+      </div>
+
       <div class="form-actions full-width">
         <button type="submit" class="btn-primary">
           <i class="bi bi-box-arrow-in-down"></i>
@@ -93,19 +241,27 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let pur of purchasesList()">
+          <tr *ngFor="let pur of pagedPurchases()">
             <td><code>{{ pur.id }}</code></td>
             <td>{{ pur.branchName }}</td>
             <td><strong>{{ pur.supplier }}</strong></td>
             <td>{{ pur.productDetail }}</td>
             <td>{{ pur.boxesQty }} cajas</td>
-            <td><strong>\${{ pur.totalCost.toFixed(2) }}</strong></td>
+            <td><strong>{{ currencySymbol() }} {{ pur.totalCost | appAmount }}</strong></td>
             <td><code>{{ pur.buyerUser }}</code></td>
             <td><span class="badge badge-success">{{ pur.status }}</span></td>
-            <td class="text-muted">{{ pur.date }}</td>
+            <td class="text-muted">{{ pur.date | appDate }}</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de Compras (15 por página) -->
+    <app-table-pagination
+      [totalItems]="purchasesList().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

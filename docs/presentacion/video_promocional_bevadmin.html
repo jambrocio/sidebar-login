@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spot Publicitario Oficial — BevAdmin Pro (HyperFrames Video-as-Code)</title>
+  <title>Spot Publicitario Oficial — COTIC (SISTEMA POS & GESTIÓN DE PRODUCTOS)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
@@ -502,81 +502,94 @@
 <body>
 
   <!-- VISOR DE SPOT PUBLICITARIO HYPERFRAMES (16:9 LUMINOSO) -->
-  <div class="video-viewport-frame" id="videoContainer">
+  <div class="video-viewport-frame" id="videoContainer" style="position: relative;">
     
-    <!-- HYPERFRAMES COMPOSITION ROOT -->
+    <!-- BOTÓN DE PLAY CENTRAL INTERACTIVO -->
+    <div id="centerPlayOverlay" onclick="togglePlay()" style="position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); cursor: pointer; transition: all 0.25s ease;">
+      <div style="background: linear-gradient(135deg, #0284c7, #2563eb); width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 50px rgba(56, 189, 248, 0.7); border: 3px solid #ffffff; transition: transform 0.2s ease;">
+        <i class="bi bi-play-fill" style="font-size: 3.5rem; color: #ffffff; margin-left: 6px;"></i>
+      </div>
+      <span style="color: #ffffff; font-weight: 800; font-size: 1.1rem; margin-top: 1rem; text-shadow: 0 2px 10px rgba(0,0,0,0.6); letter-spacing: 0.02em;">
+        Reproducir Spot Comercial (50s)
+      </span>
+    </div>
+    
+    <!-- HYPERFRAMES COMPOSITION ROOT (50s PRODUCTOS EN GENERAL) -->
     <div data-composition-id="bevadmin-promo-showcase" 
          data-width="1920" 
          data-height="1080" 
-         data-duration="38" 
+         data-duration="50" 
          data-fps="30">
 
       <!-- CANVAS CON RAYOS SOLARES Y ESFERAS DE LUZ -->
       <canvas class="canvas-bg" id="lightCanvas"></canvas>
 
       <!-- =================================================================== -->
-      <!-- ESCENA 1: EL DOLOR DEL NEGOCIO (0s - 7s)                            -->
+      <!-- ESCENA 1: EL DOLOR DEL NEGOCIO (0s - 10s)                           -->
       <!-- =================================================================== -->
-      <div class="clip" id="scene1" data-start="0" data-duration="7" data-track-index="1">
+      <div class="clip" id="scene1" data-start="0" data-duration="10" data-track-index="1">
         <div class="badge-commercial" style="color: #dc2626; border-color: #fca5a5;">
           <i class="bi bi-exclamation-octagon-fill"></i> ¿Tienes estos problemas en tu negocio?
         </div>
         <h2 class="scene-title">
-          ¿Cajas descuadradas, <span class="red">fugas de dinero</span> y lentitud para cobrar?
+          ¿Cajas descuadradas, <span class="red">descontrol de stock</span> y lentitud para cobrar?
         </h2>
         <p class="scene-desc">
-          En un día de alta demanda, no puedes darte el lujo de perder clientes por demoras ni perder dinero en el arqueo final.
+          En distribuidoras y comercios de alta demanda, no puedes darte el lujo de perder clientes por demoras ni perder dinero en el arqueo final.
         </p>
 
         <div class="cards-row">
           <div class="card-pain" id="pain1">
             <div class="icon-box"><i class="bi bi-cash-stack"></i></div>
             <h4>Descuadres de Caja</h4>
-            <p>Efectivo que no cuadra al terminar el turno de trabajo.</p>
+            <p>Efectivo que no coincide con las ventas al terminar el turno de trabajo.</p>
           </div>
           <div class="card-pain" id="pain2">
             <div class="icon-box" style="background: #fffbeb; color: #d97706;"><i class="bi bi-clock-history"></i></div>
-            <h4 style="color: #b45309;">Colas Interminables</h4>
-            <p>Demoras buscando precios por botella o por caja.</p>
+            <h4 style="color: #b45309;">Colas y Demoras</h4>
+            <p>Tardanza buscando precios por unidad, paquete, caja o fardo.</p>
           </div>
           <div class="card-pain" id="pain3">
             <div class="icon-box"><i class="bi bi-box-seam"></i></div>
-            <h4>Mermas y Pérdidas</h4>
-            <p>Falta de sincronización real entre tus tiendas y almacenes.</p>
+            <h4>Mermas de Almacén</h4>
+            <p>Falta de sincronización real de stock entre tus tiendas y depósitos.</p>
           </div>
         </div>
       </div>
 
       <!-- =================================================================== -->
-      <!-- ESCENA 2: LA SOLUCIÓN - BEVADMIN PRO (7s - 15s)                    -->
+      <!-- ESCENA 2: LA SOLUCIÓN - BEVADMIN PRO (10s - 20s)                    -->
       <!-- =================================================================== -->
-      <div class="clip" id="scene2" data-start="7" data-duration="8" data-track-index="1">
+      <div class="clip" id="scene2" data-start="10" data-duration="10" data-track-index="1">
         <div class="hero-logo-box">
-          <i class="bi bi-cup-straw"></i>
+          <i class="bi bi-box-seam-fill"></i>
         </div>
         <div class="badge-commercial">
-          <i class="bi bi-award-fill"></i> La Revolución Comercial de Bebidas
+          <i class="bi bi-award-fill"></i> La Revolución Comercial para Todo Tipo de Productos
         </div>
         <h2 class="scene-title">
-          ¡Te Presentamos <span class="blue">BevAdmin Pro</span>!
+          ¡Te Presentamos <span class="blue">COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS</span>!
         </h2>
         <p class="scene-desc">
-          El software especializado diseñado para distribuidoras mayoristas, licorerías y cadenas comerciales de bebidas.
+          El software especializado para distribuidoras mayoristas, minimarkets, almacenes y comercio de productos en general (abarrotes, bebidas, golosinas, limpieza y consumo masivo).
         </p>
 
         <div class="feature-pills">
           <div class="pill-item"><i class="bi bi-lightning-charge-fill" style="color: #0284c7;"></i> Cobro POS en 5 Segundos</div>
+          <div class="pill-item"><i class="bi bi-search" style="color: #0891b2;"></i> Búsqueda Ágil & Stock en Vivo</div>
           <div class="pill-item"><i class="bi bi-shield-check" style="color: #059669;"></i> Arqueo 100% Blindado</div>
-          <div class="pill-item"><i class="bi bi-shop" style="color: #7c3aed;"></i> Control Multi-Tienda en Vivo</div>
+          <div class="pill-item"><i class="bi bi-grid-3x3-gap-fill" style="color: #7c3aed;"></i> Catálogo Multirubro</div>
+          <div class="pill-item"><i class="bi bi-truck" style="color: #d97706;"></i> Proveedores & Abastecimiento</div>
+          <div class="pill-item"><i class="bi bi-shop" style="color: #2563eb;"></i> Control Multi-Tienda en Vivo</div>
         </div>
       </div>
 
       <!-- =================================================================== -->
-      <!-- ESCENA 3: SIMULACIÓN POS EN VIVO (15s - 23s)                       -->
+      <!-- ESCENA 3: SIMULACIÓN POS EN VIVO (20s - 31s)                        -->
       <!-- =================================================================== -->
-      <div class="clip" id="scene3" data-start="15" data-duration="8" data-track-index="1">
+      <div class="clip" id="scene3" data-start="20" data-duration="11" data-track-index="1">
         <div class="badge-commercial" style="color: #059669; border-color: #86efac;">
-          <i class="bi bi-cart-check-fill"></i> Atención Instantánea en Mostrador
+          <i class="bi bi-cart-check-fill"></i> Atención Instantánea en Mostrador & Cuadre Contable
         </div>
         <h2 class="scene-title">
           Vende por Mayor o Menor y Emite <span class="green">Factura en 1 Segundo</span>
@@ -584,34 +597,53 @@
 
         <div class="pos-showcase-box">
           <div class="pos-header-row">
-            <span><i class="bi bi-shop-window"></i> Sede Central Mayorista (Caja 01)</span>
-            <span style="background: #e0f2fe; padding: 0.2rem 0.6rem; border-radius: 9999px;">Atención en Vivo</span>
+            <span><i class="bi bi-shop-window"></i> Sede Central Mayorista (Caja 01) &bull; Moneda: PEN</span>
+            <span style="background: #e0f2fe; padding: 0.2rem 0.6rem; border-radius: 9999px;"><i class="bi bi-check2-circle"></i> Stock en Tiempo Real</span>
           </div>
 
           <div class="cart-anim-item" id="cartItem1">
+            <span>3 x Arroz Costeño Extra (Saco x 50kg)</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #0284c7;">S/ 495.00</span>
+          </div>
+          <div class="cart-anim-item" id="cartItem2">
+            <span>2 x Aceite Vegetal Primor 1L (Caja x 12)</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #0284c7;">S/ 144.00</span>
+          </div>
+          <div class="cart-anim-item" id="cartItem3">
             <span>2 x Cerveza Cusqueña Trigo (Caja x 24)</span>
             <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #0284c7;">S/ 270.00</span>
           </div>
-          <div class="cart-anim-item" id="cartItem2">
-            <span>1 x Whisky JW Black Label (750ml)</span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #0284c7;">S/ 98.00</span>
+          <div class="cart-anim-item" id="cartItem4" style="color: #059669;">
+            <span><span class="badge-cupon-sparkle"><i class="bi bi-stars"></i> Cupón PROMO10</span> Descuento Especial 10%</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">- S/ 90.90</span>
           </div>
-          <div class="cart-anim-item" id="cartItem3" style="color: #059669;">
-            <span><span class="badge-cupon-sparkle"><i class="bi bi-stars"></i> Cupón PROMO10</span> Descuento del 10%</span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">- S/ 36.80</span>
+
+          <!-- Cuadre Contable Subtotal = Total - IGV -->
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #64748b; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0;">
+            <span>Subtotal: S/ 693.31</span>
+            <span>IGV (18%): S/ 124.79</span>
+            <span style="color: #059669; font-weight: 700;"><i class="bi bi-check-all"></i> Subtotal + IGV = Total</span>
           </div>
 
           <div class="pos-total-display">
             <span style="font-size: 1.15rem; color: #334155;">Total Cobrado (Boleta B001-4128):</span>
-            <span id="posTotalNum">S/ 331.20</span>
+            <span id="posTotalNum">S/ 818.10</span>
+          </div>
+
+          <div style="margin-top: 0.75rem; display: flex; gap: 0.75rem; justify-content: center; font-size: 0.8rem; color: #0369a1; background: #f0f9ff; padding: 0.4rem; border-radius: 8px;">
+            <span><i class="bi bi-receipt"></i> Ticketera 80mm</span>
+            <span>&bull;</span>
+            <span><i class="bi bi-file-earmark-pdf"></i> Formato A4 / PDF</span>
+            <span>&bull;</span>
+            <span><i class="bi bi-boxes"></i> Descuento de Stock Automático</span>
           </div>
         </div>
       </div>
 
       <!-- =================================================================== -->
-      <!-- ESCENA 4: SEGURIDAD, ARQUEO Y CONTROL REMOTO (23s - 31s)          -->
+      <!-- ESCENA 4: SEGURIDAD, ARQUEO Y CONTROL REMOTO (31s - 41s)          -->
       <!-- =================================================================== -->
-      <div class="clip" id="scene4" data-start="23" data-duration="8" data-track-index="1">
+      <div class="clip" id="scene4" data-start="31" data-duration="10" data-track-index="1">
         <div class="badge-commercial" style="color: #d97706; border-color: #fde68a;">
           <i class="bi bi-shield-lock-fill"></i> Paz Mental para el Dueño del Negocio
         </div>
@@ -639,14 +671,14 @@
       </div>
 
       <!-- =================================================================== -->
-      <!-- ESCENA 5: LLAMADA A LA ACCIÓN Y CIERRE (31s - 38s)                -->
+      <!-- ESCENA 5: LLAMADA A LA ACCIÓN Y CIERRE (41s - 50s)                -->
       <!-- =================================================================== -->
-      <div class="clip" id="scene5" data-start="31" data-duration="7" data-track-index="1">
+      <div class="clip" id="scene5" data-start="41" data-duration="9" data-track-index="1">
         <div class="badge-commercial">
           <i class="bi bi-rocket-takeoff-fill"></i> El Momento de Crecer es Ahora
         </div>
         <h2 class="scene-title">
-          ¡Haz Despegar tu Negocio con <span class="blue">BevAdmin Pro</span>!
+          ¡Haz Despegar tu Negocio con <span class="blue">COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS</span>!
         </h2>
         
         <div class="stat-counter-box">
@@ -660,7 +692,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-num">100%</div>
-            <div class="stat-lbl">Control de Sucursales</div>
+            <div class="stat-lbl">Control de Productos</div>
           </div>
         </div>
 
@@ -681,7 +713,7 @@
         <div class="scrubber-fill" id="scrubberFill"></div>
       </div>
 
-      <div class="timer-text" id="timeLabel">00:00 / 00:38</div>
+      <div class="timer-text" id="timeLabel">00:00 / 00:50</div>
 
       <!-- Indicador animado de música -->
       <div class="music-waves" id="musicVisualizer" title="Banda sonora comercial activa">
@@ -705,44 +737,45 @@
   </div>
 
   <script>
-    // HYPERFRAMES COMPOSITION TIMELINE (38 SEGUNDOS)
-    const DURATION = 38;
+    // HYPERFRAMES COMPOSITION TIMELINE (50 SEGUNDOS)
+    const DURATION = 50;
     let currentTime = 0;
     let isPlaying = false;
     let animId = null;
     let audioActive = true;
+    let isSpeaking = false;
 
-    // GUION COMERCIAL CON LOCUCIÓN ENERGÉTICA Y PERSUASIVA
+    // GUION COMERCIAL CON LOCUCIÓN ENERGÉTICA Y PERSUASIVA (PRODUCTOS EN GENERAL)
     const scenes = [
       {
         id: 'scene1',
         start: 0,
-        end: 7,
-        voice: "¡Atención distribuidores y dueños de licorerías! ¿Cansado de perder dinero por descuadres en caja, colas lentas y falta de control en tus bebidas?"
+        end: 10,
+        voice: "¡Atención distribuidores y comerciantes! ¿Cansado de perder dinero por descuadres en caja, lentitud para cobrar y falta de control en tus productos?"
       },
       {
         id: 'scene2',
-        start: 7,
-        end: 15,
-        voice: "¡Llegó la solución definitiva que tu negocio esperaba: BevAdmin Pro! El software inteligente para vender por mayor y menor a la velocidad de la luz."
+        start: 10,
+        end: 20,
+        voice: "¡Llegó la solución definitiva para tu negocio! COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS, el sistema integral para vender por mayor y menor todo tipo de productos en segundos."
       },
       {
         id: 'scene3',
-        start: 15,
-        end: 23,
-        voice: "¡Mira esto! Agregas cajas y botellas, aplicas cupones al instante y emites tu boleta electrónica SUNAT en menos de un segundo."
+        start: 20,
+        end: 31,
+        voice: "¡Mira qué fácil! Filtra abarrotes, bebidas o cualquier producto por nombre con stock en vivo, aplica cupones y emites comprobantes con cuadre contable perfecto."
       },
       {
         id: 'scene4',
-        start: 23,
-        end: 31,
-        voice: "¡Cero fugas de dinero! Arqueos de caja exactos que separan Yape y efectivo, y supervisión de todas tus tiendas en vivo con expulsión remota antifraude."
+        start: 31,
+        end: 41,
+        voice: "¡Cero fugas de dinero! Arqueos de turno automáticos que separan efectivo de Yape y tarjetas, y supervisión remota de todas tus tiendas en tiempo real."
       },
       {
         id: 'scene5',
-        start: 31,
-        end: 38,
-        voice: "¡Multiplica tus ganancias y transforma tu negocio hoy mismo! ¡Haz clic abajo y prueba BevAdmin Pro ahora!"
+        start: 41,
+        end: 50,
+        voice: "¡Multiplica tus ganancias y transforma la gestión de tus productos hoy mismo! Haz clic abajo y prueba COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS ahora."
       }
     ];
 
@@ -875,16 +908,27 @@
     }
 
     function speakEnergetic(text) {
-      if (!audioActive || !('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      if (selectedVoice) utt.voice = selectedVoice;
-      utt.lang = selectedVoice ? selectedVoice.lang : 'es-MX';
-      // Tonos y cadencia enérgica publicitaria
-      utt.rate = 1.16;   // Ritmo rápido y entusiasta
-      utt.pitch = 1.12;  // Tono brillante y motivador
-      utt.volume = 1.0;
-      window.speechSynthesis.speak(utt);
+      if (!audioActive || !('speechSynthesis' in window)) {
+        isSpeaking = false;
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        if (selectedVoice) utt.voice = selectedVoice;
+        utt.lang = selectedVoice ? selectedVoice.lang : 'es-MX';
+        utt.rate = 1.15;   // Ritmo ágil y natural
+        utt.pitch = 1.08;  // Tono brillante y motivador
+        utt.volume = 1.0;
+        isSpeaking = true;
+        utt.onend = () => { isSpeaking = false; };
+        utt.onerror = () => { isSpeaking = false; };
+        window.speechSynthesis.speak(utt);
+        // Desbloqueo de seguridad: nunca congelar más de 8s si el navegador no dispara onend
+        setTimeout(() => { isSpeaking = false; }, 8000);
+      } catch (e) {
+        isSpeaking = false;
+      }
     }
 
     // =========================================================================
@@ -958,7 +1002,25 @@
       const delta = (timestamp - lastTime) / 1000;
       lastTime = timestamp;
 
-      updateTimeline(currentTime + delta);
+      let nextTime = currentTime + delta;
+
+      // Si la locución aún está activa y el tiempo va a cruzar a la siguiente escena,
+      // esperamos a que termine de relatar la frase para no cortar la descripción a la mitad
+      // Salvaguarda: máximo 3.2s de retención o si el motor de voz ya no está hablando
+      const isActuallyTalking = isSpeaking && ('speechSynthesis' in window) && window.speechSynthesis.speaking;
+      if (currentSceneObj && isActuallyTalking && nextTime >= currentSceneObj.end - 0.25) {
+        if (!currentSceneObj._heldAt) currentSceneObj._heldAt = timestamp;
+        if ((timestamp - currentSceneObj._heldAt) < 3200) {
+          nextTime = currentSceneObj.end - 0.25;
+        } else {
+          isSpeaking = false;
+          currentSceneObj._heldAt = null;
+        }
+      } else if (currentSceneObj) {
+        currentSceneObj._heldAt = null;
+      }
+
+      updateTimeline(nextTime);
       animId = requestAnimationFrame(renderLoop);
     }
 
@@ -968,6 +1030,8 @@
       lastTime = null;
       document.getElementById('playIcon').className = 'bi bi-pause-fill';
       document.getElementById('musicVisualizer').style.opacity = '1';
+      const overlay = document.getElementById('centerPlayOverlay');
+      if (overlay) overlay.style.display = 'none';
       startBgmBeat();
       if (currentSceneObj) {
         speakEnergetic(currentSceneObj.voice);
@@ -979,6 +1043,8 @@
       isPlaying = false;
       document.getElementById('playIcon').className = 'bi bi-play-fill';
       document.getElementById('musicVisualizer').style.opacity = '0.3';
+      const overlay = document.getElementById('centerPlayOverlay');
+      if (overlay) overlay.style.display = 'flex';
       stopBgmBeat();
       if (animId) cancelAnimationFrame(animId);
       if ('speechSynthesis' in window) window.speechSynthesis.pause();
@@ -1072,8 +1138,389 @@
     }
     drawLights();
 
+    // =========================================================================
+    // EXPORTADOR Y GRABADOR DE VIDEO MP4 EN ALTA DEFINICIÓN (1280x720 HD)
+    // =========================================================================
+    let isExporting = false;
+    let exportRecorder = null;
+    let exportAnimId = null;
+    let exportAudioDest = null;
+    let exportCanvas = null;
+    let exportCtx = null;
+    let exportPreviewCanvas = null;
+    let exportPreviewCtx = null;
+    let exportTime = 0;
+    let exportChunks = [];
+    let exportAudioTimer = null;
+
+    function recordAndDownloadMp4() {
+      const file = 'video_1_spot_comercial_cotic.mp4';
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'DOWNLOAD_COTIC_MP4', file: file }, '*');
+          return;
+        } catch (e) { }
+      }
+      fetch(file)
+        .then(res => {
+          if (!res.ok) throw new Error('Fetch failed');
+          return res.blob();
+        })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'video/mp4' }));
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = blobUrl;
+          a.download = file;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }, 1500);
+        })
+        .catch(() => {
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = file;
+          a.setAttribute('download', file);
+          a.target = '_self';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+          }, 500);
+        });
+    }
+
+    function finishExportEarly() {
+      recordAndDownloadMp4();
+    }
+
+    function cancelExportMp4() {
+      isExporting = false;
+    }
+
+    // RENDERIZADOR 2D CINEMÁTICO EN ALTA DEFINICIÓN (1280x720)
+    function renderExportFrame(ctx, w, h, t) {
+      // 1. Fondo Degradado
+      const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+      if (t < 10) {
+        bgGrad.addColorStop(0, '#0f172a');
+        bgGrad.addColorStop(1, '#1e1b4b');
+      } else if (t < 20) {
+        bgGrad.addColorStop(0, '#0284c7');
+        bgGrad.addColorStop(1, '#0f172a');
+      } else if (t < 31) {
+        bgGrad.addColorStop(0, '#042f2e');
+        bgGrad.addColorStop(1, '#0f172a');
+      } else if (t < 41) {
+        bgGrad.addColorStop(0, '#451a03');
+        bgGrad.addColorStop(1, '#0f172a');
+      } else {
+        bgGrad.addColorStop(0, '#2e1065');
+        bgGrad.addColorStop(1, '#0f172a');
+      }
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Partículas y destellos de fondo
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      for (let i = 0; i < 12; i++) {
+        const px = ((i * 137 + t * 40) % w);
+        const py = ((i * 83 + Math.sin(t + i) * 60) % h);
+        ctx.beginPath();
+        ctx.arc(px, py, (i % 4) * 20 + 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. Barra Superior de Marca
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 20px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText('COTIC  •  SISTEMA POS & GESTIÓN DE PRODUCTOS', 60, 52);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '700 15px "JetBrains Mono", monospace';
+      ctx.fillText('EMISIÓN ELECTRÓNICA  •  STOCK ACID  •  TICKET 80MM / A4', w - 540, 52);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(60, 68);
+      ctx.lineTo(w - 60, 68);
+      ctx.stroke();
+
+      // 3. Renderizado Condicional por Escena
+      if (t < 10) {
+        // ESCENA 1: EL PROBLEMA
+        drawBadge(ctx, '¿TIENES ESTOS PROBLEMAS EN TU DISTRIBUIDORA?', '#f87171', '#dc2626', 60, 115);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 42px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('¿Cajas descuadradas, descontrol de stock', 60, 185);
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('y lentitud para cobrar en horas pico?', 60, 235);
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '500 21px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('En días de alta demanda, no puedes perder ventas por demoras ni dinero en el arqueo.', 60, 280);
+
+        // 3 Tarjetas de dolor
+        drawExportCard(ctx, 60, 330, 360, 260, '#ef4444', 'Descuadres de Caja', 'El efectivo físico no coincide con lo reportado al terminar los turnos.');
+        drawExportCard(ctx, 460, 330, 360, 260, '#f59e0b', 'Colas y Demoras', 'Pérdida de clientes buscando precios de unidades, cajas o fardos.');
+        drawExportCard(ctx, 860, 330, 360, 260, '#6366f1', 'Mermas de Almacén', 'Sin sincronización en tiempo real entre tus tiendas y depósitos.');
+
+      } else if (t < 20) {
+        // ESCENA 2: LA SOLUCIÓN
+        drawBadge(ctx, 'LA REVOLUCIÓN COMERCIAL PARA PRODUCTOS EN GENERAL', '#38bdf8', '#0284c7', 60, 115);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 46px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('¡Te Presentamos ', 60, 190);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('COTIC: SISTEMA POS!', 430, 190);
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '500 22px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('El software integral para distribuidoras mayoristas, minimarkets y comercio multirubro.', 60, 240);
+
+        // 4 Pilares Comerciales
+        drawExportPill(ctx, 60, 310, 560, 80, '#0284c7', '⚡ Cobro POS en 5 Segundos', 'Atención ultra veloz en mostrador por mayor y menor.');
+        drawExportPill(ctx, 660, 310, 560, 80, '#06b6d4', '🔍 Búsqueda Ágil & Stock en Vivo', 'Filtro instantáneo de cualquier producto con stock real.');
+        drawExportPill(ctx, 60, 420, 560, 80, '#10b981', '🛡️ Arqueo 100% Blindado', 'Separación estricta de efectivo, Yape, Plin y tarjetas.');
+        drawExportPill(ctx, 660, 420, 560, 80, '#f59e0b', '📦 Catálogo Multirubro & Compras', 'Abarrotes, bebidas, golosinas y productos de consumo masivo.');
+
+      } else if (t < 31) {
+        // ESCENA 3: SIMULACIÓN POS EN VIVO & CUADRE CONTABLE
+        drawBadge(ctx, 'PUNTO DE VENTA EN VIVO CON CUADRE CONTABLE EXACTO', '#34d399', '#059669', 60, 115);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 42px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Vende por Mayor o Menor y Emite en ', 60, 185);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('1 Segundo', 820, 185);
+
+        // Caja POS Simulador
+        drawBox(ctx, 60, 225, 1160, 385, 'rgba(15, 23, 42, 0.75)', '#059669', 2);
+
+        // Encabezado POS
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '700 18px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Sede Central Mayorista (Caja 01)  •  Moneda: PEN', 90, 265);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('● Stock Sincronizado en Tiempo Real', w - 420, 265);
+
+        // Líneas de Carrito Multirubro
+        drawCartLine(ctx, 90, 305, '3 x Arroz Costeño Extra (Saco x 50kg)', 'S/ 495.00', '#ffffff');
+        drawCartLine(ctx, 90, 345, '2 x Aceite Vegetal Primor 1L (Caja x 12)', 'S/ 144.00', '#ffffff');
+        drawCartLine(ctx, 90, 385, '2 x Cerveza Cusqueña Trigo (Caja x 24)', 'S/ 270.00', '#ffffff');
+        drawCartLine(ctx, 90, 425, '⭐ Cupón PROMO10 (Descuento Especial 10%)', '- S/ 90.90', '#34d399');
+
+        // Cuadre Contable
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.fillRect(90, 450, 1100, 1);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '600 17px "JetBrains Mono", monospace';
+        ctx.fillText('Subtotal Base: S/ 693.31      IGV (18%): S/ 124.79', 90, 480);
+
+        ctx.fillStyle = '#34d399';
+        ctx.font = '700 17px "JetBrains Mono", monospace';
+        ctx.fillText('✔ Cuadre Contable Exacto: Subtotal + IGV = Total', 640, 480);
+
+        // Total
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '800 24px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Total Cobrado (Boleta B001-4128):', 90, 535);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '900 36px "JetBrains Mono", monospace';
+        ctx.fillText('S/ 818.10', 600, 535);
+
+        // Badge impresión dual
+        ctx.fillStyle = '#0284c7';
+        ctx.font = '700 16px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('🖨️ Impresión Dual: Ticketera Térmica 80mm  |  Formato Estándar A4 PDF', 90, 580);
+
+      } else if (t < 41) {
+        // ESCENA 4: SEGURIDAD Y CONTROL MULTI-TIENDA
+        drawBadge(ctx, 'PAZ MENTAL Y CONTROL TOTAL PARA EL GERENTE', '#fbbf24', '#d97706', 60, 115);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 44px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Cajas Sin Fugas y ', 60, 185);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('Control de Sucursales en Vivo', 440, 185);
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '500 22px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('Monitorea cada venta, caja y operador desde cualquier dispositivo.', 60, 235);
+
+        // 2 Grandes Bloques
+        drawSecurityCard(ctx, 60, 290, 560, 310, '#10b981', 'Arqueo de Turno Cuadrado', 
+          ['Separación matemática de Efectivo y Pagos Digitales.',
+           'Registro de sobrantes y faltantes al centavo.',
+           'Historial inmutable con auditoría transaccional.']);
+
+        drawSecurityCard(ctx, 660, 290, 560, 310, '#f59e0b', 'Seguridad y Kill Session Antifraude', 
+          ['Visualización de IPs, ubicaciones y horas de conexión.',
+           'Expulsión remota de intrusos con un solo clic.',
+           'Aislamiento estricto de roles y sedes autorizadas.']);
+
+      } else {
+        // ESCENA 5: LLAMADA A LA ACCIÓN Y CIERRE
+        drawBadge(ctx, 'EL MOMENTO DE TRANSFORMAR TU NEGOCIO ES AHORA', '#c084fc', '#9333ea', 60, 115);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 48px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillText('¡Haz Crecer tus Ganancias con ', 60, 195);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('COTIC: SISTEMA POS!', 720, 195);
+
+        // 3 Estadísticas de Éxito
+        drawStatBox(ctx, 60, 265, 360, 170, '+35%', 'Mayor Velocidad de Venta', 'Atención en mostrador en pocos segundos');
+        drawStatBox(ctx, 460, 265, 360, 170, '0%', 'Descuadres de Caja', 'Cierre de turnos exacto y transparente');
+        drawStatBox(ctx, 860, 265, 360, 170, '100%', 'Control de Productos', 'Información en tiempo real en la nube');
+
+        // Botón CTA Gigante
+        drawBox(ctx, 60, 480, 1160, 110, 'linear-gradient(135deg, #0284c7, #2563eb)', '#38bdf8', 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 32px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('▶ ¡Comienza Tu Demostración Interactiva en Línea!', w / 2, 545);
+        ctx.textAlign = 'start';
+      }
+
+      // 4. Barra Inferior de Progreso y Tiempo
+      const progressPct = Math.min(1, t / DURATION);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(60, h - 35, w - 120, 6);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(60, h - 35, (w - 120) * progressPct, 6);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 13px "JetBrains Mono", monospace';
+      const curSec = Math.min(DURATION, Math.floor(t));
+      ctx.fillText(`00:${curSec < 10 ? '0' : ''}${curSec} / 00:${DURATION}`, 60, h - 16);
+      ctx.fillText('COTIC Master &bull; SISTEMA POS & GESTIÓN DE PRODUCTOS', w - 450, h - 16);
+    }
+
+    // Funciones Auxiliares de Dibujo Canvas 2D
+    function drawBadge(ctx, text, color, strokeColor, x, y) {
+      ctx.font = '800 13px "Plus Jakarta Sans", system-ui, sans-serif';
+      const tw = ctx.measureText(text).width;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y - 18, tw + 28, 28, 14);
+      else ctx.rect(x, y - 18, tw + 28, 28);
+      ctx.fill();
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.fillText(text, x + 14, y + 1);
+    }
+
+    function drawBox(ctx, x, y, bw, bh, fill, stroke, strokeW) {
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, bw, bh, 18);
+      else ctx.rect(x, y, bw, bh);
+      ctx.fill();
+      if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = strokeW || 1;
+        ctx.stroke();
+      }
+    }
+
+    function drawExportCard(ctx, x, y, cw, ch, borderCol, title, desc) {
+      drawBox(ctx, x, y, cw, ch, 'rgba(255, 255, 255, 0.05)', borderCol, 1.5);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 24px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(title, x + 24, y + 55);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '500 17px "Plus Jakarta Sans", system-ui, sans-serif';
+      wrapText(ctx, desc, x + 24, y + 105, cw - 48, 26);
+    }
+
+    function drawExportPill(ctx, x, y, pw, ph, borderCol, title, desc) {
+      drawBox(ctx, x, y, pw, ph, 'rgba(255, 255, 255, 0.05)', borderCol, 1.5);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 20px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(title, x + 24, y + 36);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 15px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(desc, x + 24, y + 62);
+    }
+
+    function drawCartLine(ctx, x, y, name, price, color) {
+      ctx.fillStyle = color || '#ffffff';
+      ctx.font = '600 18px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(name, x, y);
+      ctx.font = '800 20px "JetBrains Mono", monospace';
+      ctx.fillText(price, x + 900, y);
+    }
+
+    function drawSecurityCard(ctx, x, y, sw, sh, color, title, items) {
+      drawBox(ctx, x, y, sw, sh, 'rgba(255, 255, 255, 0.05)', color, 1.5);
+      ctx.fillStyle = color;
+      ctx.font = '800 24px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(title, x + 24, y + 55);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '500 17px "Plus Jakarta Sans", system-ui, sans-serif';
+      items.forEach((item, idx) => {
+        ctx.fillText(`✔  ${item}`, x + 24, y + 115 + (idx * 55));
+      });
+    }
+
+    function drawStatBox(ctx, x, y, sw, sh, num, title, subtitle) {
+      drawBox(ctx, x, y, sw, sh, 'rgba(255, 255, 255, 0.05)', '#38bdf8', 1.5);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '900 48px "JetBrains Mono", monospace';
+      ctx.fillText(num, x + 24, y + 65);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 18px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(title, x + 24, y + 105);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 14px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText(subtitle, x + 24, y + 135);
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
     // INICIAR EN POSICIÓN CERO
     updateTimeline(0);
+
+    // AUTO-DESCARGA POR PARÁMETRO URL (?download=true)
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('download') === 'true') {
+        setTimeout(() => {
+          recordAndDownloadMp4();
+        }, 700);
+      }
+    });
   </script>
 </body>
 </html>

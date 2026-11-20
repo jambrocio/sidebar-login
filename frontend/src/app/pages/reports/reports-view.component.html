@@ -30,11 +30,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let rep of reports()">
+          <tr *ngFor="let rep of pagedReports()">
             <td><code>{{ rep.id }}</code></td>
             <td><strong>{{ rep.title }}</strong></td>
             <td>{{ rep.module }}</td>
-            <td class="text-muted">{{ rep.date }}</td>
+            <td class="text-muted">{{ rep.date | appDate }}</td>
             <td><span class="badge badge-info">{{ rep.format }}</span></td>
             <td class="text-muted">{{ rep.size }}</td>
             <td>
@@ -51,5 +51,13 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de Reportes (15 por página) -->
+    <app-table-pagination
+      [totalItems]="reports().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 </section>

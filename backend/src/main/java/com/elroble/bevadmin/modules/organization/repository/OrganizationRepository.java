@@ -29,32 +29,62 @@ public class OrganizationRepository {
 
     /**
      * Consulta todos los Negocios Matriz registrados ordenados por su código.
+     * Proporciona la moneda configurada por defecto y las monedas admitidas.
      *
      * @return lista de negocios matriz
      */
     public List<Map<String, Object>> findAllBusinesses() {
-        return jdbcClient.sql("""
+        List<Map<String, Object>> rows = jdbcClient.sql("""
                 SELECT codigo AS id, codigo AS code, razon_social AS "legalName", nombre_comercial AS "commercialName",
                        identificacion_fiscal AS "taxId", direccion_fiscal AS "fiscalAddress", telefono AS phone,
-                       correo_soporte AS "supportEmail", zona_horaria AS timezone, moneda AS currency,
+                       correo_soporte AS "supportEmail", zona_horaria AS timezone,
+                       COALESCE(moneda_defecto, moneda, 'PEN') AS currency,
+                       COALESCE(moneda_defecto, moneda, 'PEN') AS "defaultCurrency",
+                       COALESCE(monedas_permitidas, 'PEN,USD') AS "supportedCurrenciesRaw",
                        CASE WHEN activo THEN 'Activo' ELSE 'Inactivo' END AS status
                 FROM empresas
                 ORDER BY codigo ASC
                 """)
                 .query()
                 .listOfRows();
+
+        return rows.stream().map(row -> {
+            Map<String, Object> mutableRow = new java.util.HashMap<>(row);
+            String raw = (String) mutableRow.get("supportedCurrenciesRaw");
+            List<String> currencies = (raw != null && !raw.isBlank())
+                    ? java.util.Arrays.stream(raw.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()
+                    : List.of((String) mutableRow.getOrDefault("currency", "PEN"));
+            mutableRow.put("supportedCurrencies", currencies);
+            return mutableRow;
+        }).toList();
     }
 
     /**
-     * Inserta un nuevo Negocio Matriz en la tabla {@code empresas}.
+     * Inserta un nuevo Negocio Matriz en la tabla {@code empresas} y registra sus
+     * monedas admitidas en {@code core.empresa_monedas}.
      *
      * @param req DTO con los datos fiscales y comerciales del negocio
      */
     public void insertBusiness(CreateBusinessRequest req) {
-        String currency = (req.currency() != null && !req.currency().isBlank()) ? req.currency() : "PEN";
+        String defCurr = (req.defaultCurrency() != null && !req.defaultCurrency().isBlank())
+                ? req.defaultCurrency().trim().toUpperCase()
+                : ((req.currency() != null && !req.currency().isBlank()) ? req.currency().trim().toUpperCase() : "PEN");
+
+        List<String> currencies = (req.supportedCurrencies() != null && !req.supportedCurrencies().isEmpty())
+                ? req.supportedCurrencies().stream().map(c -> c.trim().toUpperCase()).distinct().toList()
+                : List.of(defCurr);
+
+        if (!currencies.contains(defCurr)) {
+            List<String> mutable = new java.util.ArrayList<>(currencies);
+            mutable.add(0, defCurr);
+            currencies = mutable;
+        }
+
+        String supportedRaw = String.join(",", currencies);
+
         jdbcClient.sql("""
-                INSERT INTO empresas (codigo, nombre_comercial, razon_social, identificacion_fiscal, direccion_fiscal, telefono, correo_soporte, moneda)
-                VALUES (:code, :commercialName, :legalName, :taxId, :fiscalAddress, :phone, :supportEmail, :currency)
+                INSERT INTO empresas (codigo, nombre_comercial, razon_social, identificacion_fiscal, direccion_fiscal, telefono, correo_soporte, moneda, moneda_defecto, monedas_permitidas)
+                VALUES (:code, :commercialName, :legalName, :taxId, :fiscalAddress, :phone, :supportEmail, :currency, :defaultCurrency, :supportedCurrencies)
                 """)
                 .param("code", req.code().toUpperCase())
                 .param("commercialName", req.commercialName())
@@ -63,8 +93,29 @@ public class OrganizationRepository {
                 .param("fiscalAddress", req.fiscalAddress())
                 .param("phone", req.phone())
                 .param("supportEmail", req.supportEmail())
-                .param("currency", currency)
+                .param("currency", defCurr)
+                .param("defaultCurrency", defCurr)
+                .param("supportedCurrencies", supportedRaw)
                 .update();
+
+        // Población en core.empresa_monedas
+        for (String c : currencies) {
+            String sym = c.equalsIgnoreCase("PEN") ? "S/" : (c.equalsIgnoreCase("EUR") ? "€" : "$");
+            String name = c.equalsIgnoreCase("PEN") ? "Soles Peruanos (PEN)" : (c.equalsIgnoreCase("EUR") ? "Euros (EUR)" : "Dólares Estadounidenses (USD)");
+            boolean isDef = c.equalsIgnoreCase(defCurr);
+            jdbcClient.sql("""
+                    INSERT INTO empresa_monedas (empresa_id, codigo_moneda, simbolo, nombre, es_defecto)
+                    SELECT id, :c, :sym, :name, :isDef
+                    FROM empresas WHERE codigo = :code
+                    ON CONFLICT (empresa_id, codigo_moneda) DO UPDATE SET es_defecto = :isDef
+                    """)
+                    .param("c", c)
+                    .param("sym", sym)
+                    .param("name", name)
+                    .param("isDef", isDef)
+                    .param("code", req.code().toUpperCase())
+                    .update();
+        }
     }
 
     /**

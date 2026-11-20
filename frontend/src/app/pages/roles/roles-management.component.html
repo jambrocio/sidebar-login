@@ -44,7 +44,7 @@
       </button>
     </div>
 
-    <form (ngSubmit)="saveRole()" class="grid-form">
+    <form (ngSubmit)="saveRole()" class="grid-form" [class.was-validated]="formSubmitted()">
       <div class="form-group">
         <label>Código Único del Rol <span class="required-indicator">*</span></label>
         <input
@@ -55,6 +55,7 @@
           placeholder="Ej. JEFE_ALMACEN"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !roleForm.code.trim()"
         />
       </div>
 
@@ -67,15 +68,23 @@
           placeholder="Ej. Jefe de Almacén y Despacho"
           required
           class="required-input"
+          [class.is-invalid]="formSubmitted() && !roleForm.name.trim()"
         />
       </div>
 
       <div class="form-group">
         <label>Alcance Organizacional <span class="required-indicator">*</span></label>
-        <select name="rlScope" [(ngModel)]="roleForm.scope" required class="required-input">
+        <select name="rlScope" [(ngModel)]="roleForm.scope" required class="required-input" [class.is-invalid]="formSubmitted() && !roleForm.scope">
           <option *ngIf="isGeneralAdmin()" value="Nivel Plataforma (Superusuario)">Nivel Plataforma (Superusuario / Multi-Negocio)</option>
           <option value="Nivel Negocio (Multi-Local)">Nivel Negocio (Multi-Local / Supervisión)</option>
           <option value="Nivel Local Asignado">Nivel Local Asignado (Opera un solo local)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Estado Operativo del Rol</label>
+        <select disabled style="background-color: var(--bg-hover, #f1f5f9); cursor: not-allowed">
+          <option selected>Activo y Vigente para Asignación</option>
         </select>
       </div>
 
@@ -115,7 +124,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let r of systemRoles()">
+          <tr *ngFor="let r of pagedRoles()">
             <td><code>{{ r.code }}</code></td>
             <td><strong>{{ r.name }}</strong></td>
             <td>
@@ -169,6 +178,14 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Paginación de Roles (15 por página) -->
+    <app-table-pagination
+      [totalItems]="systemRoles().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
   </div>
 
   <!-- 3. Matriz de Permisos por Opción de Menú del Rol Seleccionado -->

@@ -9,6 +9,27 @@ export interface FeedbackNotification {
   type: 'success' | 'warning' | 'error' | 'info';
 }
 
+/** Opción de moneda soportada por la plataforma */
+export interface SupportedCurrencyOption {
+  code: string;
+  symbol: string;
+  name: string;
+}
+
+export const SYSTEM_AVAILABLE_CURRENCIES: SupportedCurrencyOption[] = [
+  { code: 'PEN', symbol: 'S/', name: 'PEN (Soles — S/)' },
+  { code: 'USD', symbol: '$', name: 'USD (Dólares — $)' },
+  { code: 'EUR', symbol: '€', name: 'EUR (Euros — €)' },
+];
+
+export function resolveCurrencySymbol(code?: string): string {
+  if (!code) return 'S/';
+  const upper = code.trim().toUpperCase();
+  if (upper.includes('PEN') || upper.includes('SOL')) return 'S/';
+  if (upper.includes('EUR') || upper.includes('€')) return '€';
+  return '$';
+}
+
 /** Representa un Negocio / Empresa registrada en la plataforma */
 export interface BusinessProfile {
   /** Identificador único del negocio (ej. 'BIZ-001') */
@@ -27,8 +48,12 @@ export interface BusinessProfile {
   supportEmail: string;
   /** Zona horaria operativa */
   timezone: string;
-  /** Moneda predeterminada */
+  /** Moneda predeterminada (legacy/compatibilidad) */
   currency: string;
+  /** Moneda predeterminada configurada para auto-selección en formularios */
+  defaultCurrency?: string;
+  /** Lista de monedas admitidas / registradas por el negocio */
+  supportedCurrencies?: string[];
 }
 
 /** Representa un Local / Sucursal / Almacén perteneciente a un Negocio (`businessId`) */
@@ -172,11 +197,31 @@ export interface CommercialCustomer {
   createdAt?: string;
 }
 
+/** Proveedor comercial independiente por Negocio Matriz con control de estado operativo */
+export interface CommercialSupplier {
+  id?: string;
+  supplierCode: string;
+  documentType: 'RUC' | 'DNI' | 'OTRO' | string;
+  documentNumber: string;
+  legalName: string;
+  commercialName?: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  rubroCategory?: string;
+  active: boolean;
+  businessCode?: string;
+  businessName?: string;
+  registeredBy?: string;
+  createdAt?: string;
+}
+
 /** Producto de bebida con precios diferenciados por Mayor y por Menor */
 export interface BeverageProduct {
   sku: string;
   name: string;
-  category: 'Licores' | 'Cervezas' | 'Gaseosas' | 'Otros';
+  category: 'Licores' | 'Cervezas' | 'Gaseosas' | 'Otros' | string;
   presentation: string;
   retailPrice: number;
   wholesalePrice: number;
@@ -187,6 +232,7 @@ export interface BeverageProduct {
   registeredBy?: string;
   businessId?: string;
   businessCode?: string;
+  businessName?: string;
 }
 
 /** Ítem individual agregado al carrito de una venta */
@@ -243,7 +289,7 @@ export interface DiscountCoupon {
   discountType: 'PERCENT' | 'FIXED';
   discountValue: number;
   targetModality: 'Mayorista' | 'Minorista' | 'Mayor y Menor';
-  targetCategory: 'Todas' | 'Licores' | 'Cervezas' | 'Gaseosas' | 'Otros';
+  targetCategory: 'Todas' | 'Todas las Categorías' | string;
   assignedClient: string;
   minPurchase: number;
   usedCount: number;
@@ -282,6 +328,8 @@ export interface BeverageCategory {
   wholesaleMargin: string;
   active?: boolean;
   status?: string;
+  businessCode?: string;
+  businessId?: string;
 }
 
 /** Alias de compatibilidad hacia BeverageCategory */

@@ -45,44 +45,6 @@
   }
 }
 
-.grid-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem 1.5rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-
-  .full-width {
-    grid-column: 1 / -1;
-  }
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-
-  label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-color, #1e293b);
-    display: flex;
-    align-items: center;
-    min-height: 1.35rem;
-    line-height: 1.25;
-  }
-
-  input,
-  select {
-    height: 42px;
-    padding: 0.6rem 0.85rem;
-    box-sizing: border-box;
-    font-size: 0.9rem;
-  }
-}
-
 .required-input,
 input:required,
 select:required {

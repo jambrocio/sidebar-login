@@ -22,7 +22,7 @@ import java.util.List;
 @Schema(description = "Solicitud de emisión de Comprobante Electrónico de Venta con carrito multiproducto")
 public record EmitSaleRequest(
         @Schema(description = "Código correlativo de la venta", example = "VTA-9042")
-        @NotBlank String saleCode,
+        String saleCode,
 
         @Schema(description = "Tipo de comprobante electrónico", example = "FACTURA ELECTRÓNICA", allowableValues = {"FACTURA ELECTRÓNICA", "BOLETA DE VENTA ELECTRÓNICA"})
         @NotBlank String documentType,

@@ -30,6 +30,13 @@ FROM nginx:1.27-alpine AS runner
 LABEL maintainer="Equipo BevAdmin <dev@elroble.com>"
 LABEL description="Contenedor Frontend Nginx para BevAdmin Angular 21"
 
+# Configuración de zona horaria America/Lima (Perú)
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/America/Lima /etc/localtime && \
+    echo "America/Lima" > /etc/timezone
+
+ENV TZ=America/Lima
+
 # Eliminar configuración por defecto de Nginx
 RUN rm -rf /etc/nginx/conf.d/*
 

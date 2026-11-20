@@ -1,6 +1,6 @@
-# El Roble — Plataforma Multisede de Compra y Venta de Bebidas (Mayor y Menor)
+# 📦 COTIC — SISTEMA POS & GESTIÓN DE PRODUCTOS
 
-Repositorio monorepo estructurado en **módulos limpios** (`frontend/`, `backend/` y `docs/`) para la gestión integral de **Negocios Matriz, Múltiples Sedes/Sucursales, Ventas al por Mayor y Menor con Comprobante Electrónico, Historial de Ventas por Usuario, Compras y Abastecimiento, Cupones de Descuento, Arqueo de Caja por Turno y Seguridad RBAC**.
+Repositorio monorepo estructurado en **módulos limpios** (`frontend/`, `backend/` y `docs/`) para la gestión integral de **Negocios Matriz, Múltiples Sedes/Sucursales, Ventas al por Mayor y Menor de Productos en General (Abarrotes, Bebidas, Golosinas, Limpieza, Consumo Masivo), Comprobante Electrónico SUNAT con Impresión Dual, Historial de Ventas, Compras y Abastecimiento a Inventario, Cupones de Descuento, Arqueo de Caja por Turno y Seguridad RBAC**.
 
 ---
 
@@ -61,6 +61,8 @@ sidebar-login/
 │   │   └── 06_modelo_datos_erd.html           # Modelo Relacional ERD (19 Tablas en Español)
 │   │
 │   ├── presentacion/           # Presentación Comercial para Clientes Finales
+│   │   ├── video_demo_modulos_persona.html # Demo con Presentadora Virtual (Sofía - 65s) en MP4
+│   │   ├── video_promocional_bevadmin.html # Spot comercial en video animado HD (50s) en MP4
 │   │   ├── PRESENTACION_INTERACTIVA_USUARIO.html # Pitch Deck interactivo en Tema Claro
 │   │   └── PRESENTACION_INTERACTIVA_USUARIO.md # Manual funcional para el usuario de tienda
 │   │
@@ -342,11 +344,40 @@ docker compose down
 
 ---
 
-## 5. Enlaces a Portales Interactivos
+## 5. Enlaces a Portales Interactivos y Multimedia
 
+* 🎬 **[Portal Central Multimedia (`presentacion/index.html`)](file:///D:/tools/Proyectos/sidebar-login/presentacion/index.html)**
+* 📹 **[Opción 1: Spot Comercial Oficial en Video HD (`docs/presentacion/video_promocional_bevadmin.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/video_promocional_bevadmin.html)**
+* 👩‍💼 **[Opción 2: Demo con Presentadora Sofía (`docs/presentacion/video_demo_modulos_persona.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/video_demo_modulos_persona.html)**
+* 🎨 **[Presentación Interactiva a Clientes y Simulador POS (`docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html)**
 * 🌐 **[Portal de Diagramas Técnicos de Software (`docs/diagrams/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/diagrams/index.html)**
 * ☁️ **[Portal de Arquitecturas Cloud y Costos (`docs/cloud/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/index.html)**
 * 🛡️ **[Diagrama Arquitectura VPS Hardened con Docker (`docs/cloud/03_arquitectura_cloud_vps.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/03_arquitectura_cloud_vps.html)**
-* 🎨 **[Presentación Interactiva en Tema Claro (`docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html)**
+
+---
+
+## 6. Nuevas Capacidades y Mejoras Funcionales Empresariales
+
+### 💱 Multi-Divisa por Negocio con Moneda por Defecto
+- Soporte para operar en múltiples monedas (PEN, USD, EUR) parametrizables por empresa.
+- Detección y autoselección automática de la divisa por defecto según el negocio asignado al usuario.
+
+### 🚚 Módulo de Proveedores Comerciales y Abastecimiento
+- Gestión centralizada de proveedores con RUC/DNI, razón social, rubro comercial, datos de contacto y switch reactivo de estado **Activo / Inactivo**.
+- Enlace directo de compras y abastecimiento con el catálogo de bebidas: cada orden recibida actualiza el stock final de cajas y unidades en tiempo real.
+
+### 🛒 POS Mayor / Menor con Búsqueda Ágil e Impresión Dual
+- **Búsqueda rápida en tiempo real:** Filtro instantáneo por nombre y SKU con indicador visual de stock disponible antes de agregar al carrito.
+- **Edición en carrito:** Modificación dinámica de cantidades con recálculo automático de subtotales e impuestos.
+- **Cuadre Fiscal y Contable Riguroso:** Implementación matemática exacta:
+  $$\text{Subtotal} = \text{Importe Total} - \text{IGV}$$
+  Garantizando que $\text{Subtotal} + \text{IGV} = \text{Importe Total}$ cuadre al centavo tanto en backend como en frontend.
+- **Impresión Dual de Comprobantes:** Selector de formato directo para ticketera térmica de 80mm o descarga en PDF formato estándar A4.
+
+### 📋 Estandarización de Formularios y Formatos de Datos
+- **Fechas Unificadas:** Formato estandarizado `YYYY-MM-DD HH:mm:ss` en todas las tablas y comprobantes.
+- **Montos Numéricos:** Separador de miles por comas y decimales por punto (`1,234.56`).
+- **Validación Visual Reactiva:** Los campos obligatorios sin completar se resaltan en rojo con advertencia visual al intentar guardar; limpieza automática de campos al ingresar o tras registrar/actualizar.
+
 * 🗄️ **[Diccionario de Base de Datos en Español (`docs/sql/README.md`)](file:///D:/tools/Proyectos/sidebar-login/docs/sql/README.md)**
 * 🗺️ **[Mapeo Técnico de Interfaces (`docs/technical_frontend_interfaces_and_database_mapping.md`)](file:///D:/tools/Proyectos/sidebar-login/docs/technical_frontend_interfaces_and_database_mapping.md)**

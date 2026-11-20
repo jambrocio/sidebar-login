@@ -26,6 +26,11 @@ FROM eclipse-temurin:21-jre-alpine AS runner
 LABEL maintainer="Equipo BevAdmin <dev@elroble.com>"
 LABEL description="Contenedor de backend Spring Boot 4 para BevAdmin Pro"
 
+# Configuración de zona horaria America/Lima (Perú)
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/America/Lima /etc/localtime && \
+    echo "America/Lima" > /etc/timezone
+
 # Seguridad: Crear usuario y grupo de sistema sin privilegios
 RUN addgroup -S spring && adduser -S spring -G spring
 
@@ -44,7 +49,8 @@ USER spring:spring
 # Parámetros JVM optimizados para contenedores y variables de entorno por defecto
 ENV PORT=8080 \
     SPRING_PROFILES_ACTIVE=prod \
-    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
+    TZ=America/Lima \
+    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom -Duser.timezone=America/Lima"
 
 # Exponer el puerto de servicio HTTP de la API REST
 EXPOSE 8080

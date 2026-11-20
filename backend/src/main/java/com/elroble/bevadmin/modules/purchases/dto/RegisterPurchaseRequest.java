@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 @Schema(description = "Datos requeridos para registrar el ingreso de una compra de bebidas en el Local Asignado")
 public record RegisterPurchaseRequest(
         @Schema(description = "Código correlativo de la orden de compra", example = "OC-2026-090")
-        @NotBlank String purchaseCode,
+        String purchaseCode,
 
         @Schema(description = "Proveedor o distribuidor oficial", example = "Unión de Cervecerías Peruanas Backus y Johnston")
         @NotBlank String supplier,
@@ -29,6 +29,9 @@ public record RegisterPurchaseRequest(
 
         @Schema(description = "Producto y formato abastecido", example = "Cerveza Pilsen Callao 630ml (Caja x 12)")
         @NotBlank String productDetail,
+
+        @Schema(description = "Código SKU del producto en catálogo", example = "PRD-118")
+        String productSku,
 
         @Schema(description = "Cantidad de cajas recibidas", example = "50")
         @Positive int boxesQty,
