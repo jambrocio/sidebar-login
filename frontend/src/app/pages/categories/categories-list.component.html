@@ -51,6 +51,8 @@
             <th>Slug</th>
             <th>Productos</th>
             <th>Rentabilidad Mayorista</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -66,10 +68,12 @@
             <td><code>/{{ cat.slug }}</code></td>
             <td>{{ cat.totalProducts || 0 }} productos</td>
             <td>{{ cat.wholesaleMargin }}</td>
+            <td><code>{{ cat.registeredBy || 'Ana García López (agarcia)' }}</code></td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ cat.createdAt || '2026-10-20 08:00:00' }}</td>
             <td><span class="badge badge-success">Activa</span></td>
           </tr>
           <tr *ngIf="filteredCategories().length === 0">
-            <td [attr.colspan]="isGeneralAdmin() ? 7 : 6" style="text-align: center; padding: 2rem; color: #64748b">
+            <td [attr.colspan]="isGeneralAdmin() ? 9 : 8" style="text-align: center; padding: 2rem; color: #64748b">
               <i class="bi bi-inbox" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem"></i>
               No se encontraron categorías registradas para este negocio.
             </td>

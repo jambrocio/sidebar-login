@@ -17,10 +17,12 @@ import {
   DiscountCoupon,
   DummyCategory,
   DummyReport,
+  EnterpriseReport,
   KpiCard,
   PasswordExpirationStatus,
   RoleMenuMatrixRow,
   SaleCartItem,
+  SecurityVulnerability,
   SystemRole,
   SystemUser,
 } from '../models/domain.models';
@@ -238,6 +240,7 @@ export class AppDataService {
         { code: 'MGMT_CUSTOMERS', label: 'Clientes', icon: 'bi bi-person-badge-fill', routerLink: '/dashboard/customers' },
         { code: 'MGMT_ROLES', label: 'Roles y Permisos', icon: 'bi bi-shield-lock-fill', routerLink: '/dashboard/roles' },
         { code: 'MGMT_SESSIONS', label: 'Sesiones y Auditoría', icon: 'bi bi-shield-shaded', routerLink: '/dashboard/sessions' },
+        { code: 'MGMT_VULNERABILITIES', label: 'Auditoría de Vulnerabilidades y Seguridad Defensiva', icon: 'bi bi-shield-exclamation', routerLink: '/dashboard/vulnerabilities' },
       ],
     },
     {
@@ -276,6 +279,9 @@ export class AppDataService {
 
   /** Cupones promocionales de descuento */
   readonly couponsList = signal<DiscountCoupon[]>([]);
+
+  /** Hallazgos y auditorías de vulnerabilidad de seguridad (Skill Cybersecurity Senior) */
+  readonly vulnerabilitiesList = signal<SecurityVulnerability[]>([]);
 
   /** Historial de arqueos y cierres de caja */
   readonly cashAuditsList = signal<CashRegisterAudit[]>([]);
@@ -353,6 +359,8 @@ export class AppDataService {
       scope: 'Nivel Plataforma (Superusuario)',
       usersCount: 1,
       active: true,
+      registeredBy: 'Ana García López (agarcia)',
+      createdAt: '2026-10-20 08:00:00',
     },
     {
       code: 'ADMIN_NEGOCIO',
@@ -361,6 +369,8 @@ export class AppDataService {
       scope: 'Nivel Negocio (Multi-Local)',
       usersCount: 1,
       active: true,
+      registeredBy: 'Ana García López (agarcia)',
+      createdAt: '2026-10-20 08:00:00',
     },
     {
       code: 'SUPERVISOR',
@@ -369,6 +379,8 @@ export class AppDataService {
       scope: 'Nivel Negocio (Multi-Local)',
       usersCount: 1,
       active: true,
+      registeredBy: 'Ana García López (agarcia)',
+      createdAt: '2026-10-20 08:00:00',
     },
     {
       code: 'ANALYST',
@@ -377,6 +389,8 @@ export class AppDataService {
       scope: 'Nivel Local Asignado',
       usersCount: 1,
       active: true,
+      registeredBy: 'Ana García López (agarcia)',
+      createdAt: '2026-10-20 08:00:00',
     },
     {
       code: 'AUDITOR',
@@ -385,6 +399,8 @@ export class AppDataService {
       scope: 'Nivel Negocio (Multi-Local)',
       usersCount: 1,
       active: true,
+      registeredBy: 'Ana García López (agarcia)',
+      createdAt: '2026-10-20 08:00:00',
     },
   ]);
 
@@ -411,43 +427,100 @@ export class AppDataService {
     { code: 'MGMT_CUSTOMERS', label: '↳ Clientes', level: 2, routerLink: '/dashboard/customers', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MGMT_ROLES', label: '↳ Roles y Permisos', level: 2, routerLink: '/dashboard/roles', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MGMT_SESSIONS', label: '↳ Sesiones y Auditoría', level: 2, routerLink: '/dashboard/sessions', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
+    { code: 'MGMT_VULNERABILITIES', label: '↳ Auditoría de Vulnerabilidades y Seguridad Defensiva', level: 2, routerLink: '/dashboard/vulnerabilities', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'MOD_REPORTS', label: 'Reportes Comerciales', level: 1, routerLink: '/dashboard/reports', visibleInSidebar: true, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
     { code: 'PROFILE_SETTINGS', label: 'Configuración', level: 1, routerLink: '/dashboard/settings', visibleInSidebar: false, canView: true, canCreate: true, canEdit: true, canDelete: true, canExport: true },
   ]);
 
-  /** Reportes comerciales y de auditoría */
-  readonly reports = signal<DummyReport[]>([
+  /** Reportes comerciales y de auditoría consolidados */
+  readonly reports = signal<EnterpriseReport[]>([
     {
       id: 'REP-001',
-      title: 'Libro de Ventas Electrónicas (SUNAT)',
+      title: 'Consolidado de Ventas Comerciales y Facturación',
+      description: 'Registro detallado de ventas por local, comprobantes emitidos, modalidad, clientes, descuentos por cupón e impuestos.',
       module: 'Ventas POS',
       date: '2026-10-22',
-      format: 'PDF',
-      size: '1.8 MB',
+      format: 'CSV',
+      size: '2.4 MB',
+      registeredBy: 'Ana García López (agarcia)',
+      reportType: 'SALES',
     },
     {
       id: 'REP-002',
-      title: 'Kardex Valorizado de Entradas y Salidas de Productos',
-      module: 'Inventario',
+      title: 'Kardex Valorizado y Rotación de Inventario',
+      description: 'Control físico y valorizado de existencias de bebidas por SKU, categoría, margen mayorista, stock en cajas y unidades.',
+      module: 'Catálogo e Inventario',
       date: '2026-10-22',
       format: 'XLSX',
-      size: '3.4 MB',
+      size: '3.8 MB',
+      registeredBy: 'Ana García López (agarcia)',
+      reportType: 'INVENTORY',
     },
     {
       id: 'REP-003',
-      title: 'Consolidado de Arqueos de Caja por Local y Turno',
-      module: 'Tesorería',
+      title: 'Órdenes de Compra y Abastecimiento a Proveedores',
+      description: 'Historial de adquisiciones de mercadería, recepción en locales, proveedores mayoristas, cantidades y costos totales.',
+      module: 'Compras y Abastecimiento',
       date: '2026-10-22',
-      format: 'PDF',
-      size: '950 KB',
+      format: 'CSV',
+      size: '1.5 MB',
+      registeredBy: 'Ana García López (agarcia)',
+      reportType: 'PURCHASES',
     },
     {
       id: 'REP-004',
-      title: 'Auditoría de Sesiones y Expulsiones Remotas (Kill Session)',
-      module: 'Seguridad',
+      title: 'Auditoría de Cierres y Arqueos de Caja por Turno',
+      description: 'Liquidación de turnos de caja, saldos de apertura, ventas en efectivo/digitales, sobrantes, faltantes y actas de conformidad.',
+      module: 'Tesorería y Caja',
+      date: '2026-10-22',
+      format: 'PDF',
+      size: '980 KB',
+      registeredBy: 'Carlos Mendoza Ríos (cmendoza)',
+      reportType: 'CASH',
+    },
+    {
+      id: 'REP-005',
+      title: 'Rendimiento y Canje de Cupones Promocionales',
+      description: 'Trazabilidad de cupones de descuento, modalidades autorizadas, límites de vigencia, tasas de redención y ahorro otorgado.',
+      module: 'Marketing y Promociones',
+      date: '2026-10-22',
+      format: 'XLSX',
+      size: '640 KB',
+      registeredBy: 'Ana García López (agarcia)',
+      reportType: 'COUPONS',
+    },
+    {
+      id: 'REP-006',
+      title: 'Cartera de Clientes y Líneas de Crédito Mayorista',
+      description: 'Padrón unificado de clientes VIP, distribuidores y minoristas, documentos tributarios, estado de crédito y contactos.',
+      module: 'Clientes y Créditos',
       date: '2026-10-22',
       format: 'CSV',
-      size: '220 KB',
+      size: '820 KB',
+      registeredBy: 'Ana García López (agarcia)',
+      reportType: 'CUSTOMERS',
+    },
+    {
+      id: 'REP-007',
+      title: 'Directorio de Proveedores y Marcas Homologadas',
+      description: 'Catálogo institucional de proveedores de bebidas, categorías comerciales, condiciones de contacto y autorizaciones.',
+      module: 'Proveedores',
+      date: '2026-10-22',
+      format: 'CSV',
+      size: '410 KB',
+      registeredBy: 'Ana García López (agarcia)',
+      reportType: 'SUPPLIERS',
+    },
+    {
+      id: 'REP-008',
+      title: 'Libro de Ventas Electrónicas (SUNAT - Formato 14.1 PLE)',
+      description: 'Estructura contable formal exigida por la administración tributaria SUNAT para la declaración mensual de ingresos.',
+      module: 'Contabilidad y Tributación',
+      date: '2026-10-22',
+      format: 'TXT',
+      size: '1.2 MB',
+      registeredBy: 'Ana García López (agarcia)',
+      reportType: 'SUNAT',
     },
   ]);
 
@@ -552,7 +625,7 @@ export class AppDataService {
     // Evento inaugural cuando el negocio aún no tiene movimientos
     if (activities.length === 0) {
       activities.push({
-        user: this.currentUserProfile().name || 'Administración',
+        user: this.currentUserProfile().name || 'Ana García López',
         branch: this.assignedBranch() || (activeBranches[0]?.name ?? 'Sede Central'),
         action: `Apertura de operaciones comerciales en red para ${this.businessInfo().commercialName}`,
         time: 'Hoy',
@@ -667,6 +740,8 @@ export class AppDataService {
               currency: defCurr,
               defaultCurrency: defCurr,
               supportedCurrencies: supp,
+              createdAt: (b as any).createdAt || '2026-10-20 08:00:00',
+              registeredBy: (b as any).registeredBy || 'Ana García López (agarcia)',
             };
           });
           this.businesses.set(mapped);
@@ -693,6 +768,8 @@ export class AppDataService {
             managerUser: b.managerName || b.managerUser || b.manager || 'Encargado de Sede',
             posTerminals: Number(b.posTerminals) || 1,
             status: (b.status as any) || 'Operativo',
+            createdAt: (b as any).createdAt || '2026-10-20 08:30:00',
+            registeredBy: (b as any).registeredBy || 'Ana García López (agarcia)',
           }));
           this.branches.set(mapped);
           if (mapped[0]) {
@@ -719,6 +796,8 @@ export class AppDataService {
             active: c.active !== undefined ? c.active : (c.status === 'Activo'),
             businessCode: (c.businessCode || 'BIZ-001').toUpperCase(),
             businessId: c.businessId,
+            createdAt: (c as any).createdAt || '2026-10-20 08:00:00',
+            registeredBy: (c as any).registeredBy || 'Ana García López (agarcia)',
           }));
           this.categories.set(mapped);
         }
@@ -741,7 +820,8 @@ export class AppDataService {
             usedCount: Number(c.usedCount || 0),
             maxUses: Number(c.maxUses || 100),
             expiresAt: c.expiresAt,
-            createdByUser: c.createdByUser || 'Admin',
+            createdByUser: c.createdByUser || (c as any).createdBy || 'Ana García López (agarcia)',
+            createdAt: (c as any).createdAt || (c as any).created_at || '2026-11-22 10:00:00',
             active: c.active !== false,
           }));
           this.couponsList.set(mapped);
@@ -876,6 +956,8 @@ export class AppDataService {
             passwordExpiresAt: u.password_expires_at || '2026-12-05',
             daysUntilExpiration: 45,
             mustChangePassword: !!u.must_change_password,
+            createdAt: (u as any).created_at || (u as any).createdAt || '2026-10-20 09:00:00',
+            registeredBy: (u as any).registered_by || (u as any).registeredBy || 'Ana García López (agarcia)',
           }));
           this.users.set(mapped);
         }
@@ -914,6 +996,8 @@ export class AppDataService {
             scope: r.scope as any,
             usersCount: r.usersCount || 0,
             active: r.active !== false,
+            createdAt: (r as any).createdAt || '2026-10-20 08:00:00',
+            registeredBy: (r as any).registeredBy || 'Ana García López (agarcia)',
           }));
           this.systemRoles.set(mapped);
         }
@@ -946,6 +1030,16 @@ export class AppDataService {
             unread: n.unread !== false,
           }));
           this.notifications.set(mapped);
+        }
+      },
+      error: () => {},
+    });
+
+    // 13. Auditoría de Seguridad y Vulnerabilidades (Skill Cybersecurity Senior)
+    this.adminApi.getVulnerabilities().subscribe({
+      next: (vulns) => {
+        if (vulns) {
+          this.vulnerabilitiesList.set(vulns);
         }
       },
       error: () => {},
@@ -1201,7 +1295,9 @@ export class AppDataService {
             stockBoxes: Number(p.stockBoxes),
             stockUnits: Number(p.stockUnits),
             status: p.status,
-            registeredByUser: p.registeredBy || 'Sistema',
+            registeredByUser: p.registeredBy || 'Ana García López (agarcia)',
+            registeredBy: p.registeredBy || 'Ana García López (agarcia)',
+            createdAt: (p as any).createdAt || '2026-10-20 09:30:00',
             businessCode: (p.businessCode || 'BIZ-001').toUpperCase(),
             businessName: p.businessName || '',
             businessId: p.businessId,
@@ -1272,11 +1368,27 @@ export class AppDataService {
   }
 
   /**
-   * Crea un cupón promocional en el Backend.
+   * Crea un cupón promocional en el Backend validando unicidad de código.
    */
-  addCoupon(coupon: DiscountCoupon): void {
+  addCoupon(
+    coupon: DiscountCoupon,
+    onSuccess?: () => void,
+    onError?: (err: any) => void
+  ): void {
+    const cleanCode = (coupon.code || '').trim().toUpperCase();
+
+    // Validación preventiva en memoria local
+    if (this.couponsList().some(c => c.code && c.code.trim().toUpperCase() === cleanCode)) {
+      if (onError) {
+        onError({
+          message: `El código de cupón "${cleanCode}" ya existe en la base de datos. Por favor genera un código único.`,
+        });
+      }
+      return;
+    }
+
     const req = {
-      code: coupon.code,
+      code: cleanCode,
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
       targetModality: coupon.targetModality,
@@ -1286,12 +1398,19 @@ export class AppDataService {
       maxUses: coupon.maxUses,
       expiresAt: coupon.expiresAt,
     };
+
     this.adminApi.createCoupon(req).subscribe({
       next: () => {
         this.couponsList.update(list => [coupon, ...list]);
+        if (onSuccess) {
+          onSuccess();
+        }
       },
-      error: () => {
-        this.couponsList.update(list => [coupon, ...list]);
+      error: (err) => {
+        console.error('Error al registrar cupón en backend:', err);
+        if (onError) {
+          onError(err);
+        }
       },
     });
   }
@@ -1310,6 +1429,49 @@ export class AppDataService {
         this.couponsList.update(list =>
           list.map(c => (c.code === code ? { ...c, active: !c.active } : c))
         );
+      },
+    });
+  }
+
+  /**
+   * Registra un nuevo hallazgo de vulnerabilidad en el Backend (Skill Cybersecurity Senior).
+   */
+  addVulnerability(
+    vuln: SecurityVulnerability,
+    onSuccess?: () => void,
+    onError?: (err: any) => void
+  ): void {
+    this.adminApi.createVulnerability(vuln).subscribe({
+      next: () => {
+        this.vulnerabilitiesList.update(list => [vuln, ...list]);
+        if (onSuccess) onSuccess();
+      },
+      error: (err) => {
+        console.error('Error al registrar vulnerabilidad en backend:', err);
+        if (onError) onError(err);
+      },
+    });
+  }
+
+  /**
+   * Actualiza el estado de mitigación de una vulnerabilidad en el Backend.
+   */
+  updateVulnerabilityStatus(
+    id: string,
+    status: 'ABIERTO' | 'EN_PROCESO' | 'MITIGADO' | 'FALSO_POSITIVO' | 'ACEPTADO',
+    onSuccess?: () => void,
+    onError?: (err: any) => void
+  ): void {
+    this.adminApi.updateVulnerabilityStatus(id, status).subscribe({
+      next: () => {
+        this.vulnerabilitiesList.update(list =>
+          list.map(v => (v.id === id ? { ...v, status } : v))
+        );
+        if (onSuccess) onSuccess();
+      },
+      error: (err) => {
+        console.error('Error al actualizar estado de vulnerabilidad:', err);
+        if (onError) onError(err);
       },
     });
   }

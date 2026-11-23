@@ -35,6 +35,12 @@ export class CashRegisterViewComponent implements OnInit {
   readonly feedbackMessage = signal<FeedbackNotification | null>(null);
   readonly formSubmitted = signal<boolean>(false);
 
+  /** Término de búsqueda textual para filtrar actas de arqueo */
+  readonly searchQuery = signal<string>('');
+
+  /** Filtro por estado de cuadre ('ALL' | 'Cuadre Exacto' | 'Sobrante' | 'Faltante') */
+  readonly filterStatus = signal<string>('ALL');
+
   /** Moneda configurada por defecto para el negocio en sesión */
   readonly defaultBusinessCurrency = computed<string>(() => {
     return this.businessInfo().defaultCurrency || this.businessInfo().currency || 'PEN';
@@ -57,22 +63,42 @@ export class CashRegisterViewComponent implements OnInit {
     return resolveCurrencySymbol(this.selectedAuditCurrency());
   });
 
-  constructor() {
-    effect(() => {
-      this.selectedAuditCurrency.set(this.defaultBusinessCurrency());
-    });
-  }
-
-  /** Tamaño de página estándar (15 registros) */
+  /** Tamaño de página estándar corporativo (15 registros por página) */
   readonly pageSize = 15;
 
   /** Página activa actual */
   readonly currentPage = signal<number>(1);
 
-  /** Arqueos paginados a 15 por página */
+  /**
+   * Lista reactiva de arqueos filtrados por búsqueda textual y estado de cuadre.
+   */
+  readonly filteredCashAudits = computed<CashRegisterAudit[]>(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const st = this.filterStatus();
+    let list = this.cashAuditsList();
+
+    if (st !== 'ALL') {
+      list = list.filter(a => a.status === st);
+    }
+
+    if (!q) {
+      return list;
+    }
+
+    return list.filter(
+      a =>
+        (a.id && a.id.toLowerCase().includes(q)) ||
+        (a.branchName && a.branchName.toLowerCase().includes(q)) ||
+        (a.shift && a.shift.toLowerCase().includes(q)) ||
+        (a.cashierUser && a.cashierUser.toLowerCase().includes(q)) ||
+        (a.closedAt && a.closedAt.toLowerCase().includes(q))
+    );
+  });
+
+  /** Arqueos paginados a 15 por página bajo el estándar corporativo */
   readonly pagedCashAudits = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize;
-    return this.cashAuditsList().slice(start, start + this.pageSize);
+    return this.filteredCashAudits().slice(start, start + this.pageSize);
   });
 
   newCashAudit = {
@@ -84,8 +110,50 @@ export class CashRegisterViewComponent implements OnInit {
     countedCash: null as any,
   };
 
+  /** Efectivo teórico esperado en caja calculado reactivamente */
+  readonly expectedCash = computed<number>(() => {
+    return (
+      (Number(this.newCashAudit.openingBalance) || 0) +
+      (Number(this.newCashAudit.cashSales) || 0) -
+      (Number(this.newCashAudit.expenses) || 0)
+    );
+  });
+
+  /** Diferencia entre el efectivo físico contado y el saldo teórico esperado */
+  readonly cashDifference = computed<number>(() => {
+    return +((Number(this.newCashAudit.countedCash) || 0) - this.expectedCash()).toFixed(2);
+  });
+
+  /** Veredicto de auditoría de arqueo */
+  readonly reconciliationStatus = computed<'Cuadre Exacto' | 'Sobrante' | 'Faltante'>(() => {
+    const diff = this.cashDifference();
+    if (diff === 0) return 'Cuadre Exacto';
+    return diff > 0 ? 'Sobrante' : 'Faltante';
+  });
+
+  constructor() {
+    effect(() => {
+      this.selectedAuditCurrency.set(this.defaultBusinessCurrency());
+    });
+
+    // Resetear a página 1 cuando cambia la búsqueda o filtro
+    effect(() => {
+      this.searchQuery();
+      this.filterStatus();
+      this.currentPage.set(1);
+    });
+  }
+
   ngOnInit(): void {
     this.resetAuditForm();
+    this.dummyData.loadAllFromBackend();
+  }
+
+  /**
+   * Refresca los registros de arqueo desde el servicio centralizado.
+   */
+  refreshData(): void {
+    this.dummyData.loadAllFromBackend();
   }
 
   resetAuditForm(): void {
@@ -101,15 +169,11 @@ export class CashRegisterViewComponent implements OnInit {
   }
 
   getExpectedCash(): number {
-    return (
-      (Number(this.newCashAudit.openingBalance) || 0) +
-      (Number(this.newCashAudit.cashSales) || 0) -
-      (Number(this.newCashAudit.expenses) || 0)
-    );
+    return this.expectedCash();
   }
 
   getCashDifference(): number {
-    return +((Number(this.newCashAudit.countedCash) || 0) - this.getExpectedCash()).toFixed(2);
+    return this.cashDifference();
   }
 
   registerCashRegisterClose(): void {

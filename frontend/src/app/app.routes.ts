@@ -215,6 +215,18 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'vulnerabilities',
+        loadComponent: () =>
+          import('./pages/vulnerabilities/vulnerabilities-view.component').then(
+            m => m.VulnerabilitiesViewComponent
+          ),
+        data: {
+          title: 'Auditoría de Vulnerabilidades y Seguridad Defensiva',
+          breadcrumb: 'Vulnerabilidades',
+          parent: 'Administración',
+        },
+      },
+      {
         path: 'reports',
         loadComponent: () =>
           import('./pages/reports/reports-view.component').then(

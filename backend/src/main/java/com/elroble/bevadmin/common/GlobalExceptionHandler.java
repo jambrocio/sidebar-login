@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /**
      * Captura errores de validación de DTOs anotados con {@code @Valid}.
      *
@@ -207,6 +209,10 @@ public class GlobalExceptionHandler {
             detailMessage = "El cliente con este documento ya se encuentra registrado para este negocio matriz.";
         } else if (msg.contains("uq_cliente_empresa_codigo")) {
             detailMessage = "El código de cliente ya se encuentra registrado para este negocio matriz.";
+        } else if (msg.contains("uq_vulnerabilidad_empresa_codigo")) {
+            detailMessage = "El código de vulnerabilidad ya se encuentra registrado para este negocio matriz.";
+        } else if (msg.contains("cupones_descuento_codigo_key") || msg.contains("cupones_descuento_codigo") || msg.contains("cupones_descuento")) {
+            detailMessage = "El código del cupón promocional ya se encuentra registrado en la base de datos. Ingrese o genere un código diferente.";
         }
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, detailMessage);
@@ -217,16 +223,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Captura cualquier excepción no controlada en el servidor.
+     * Captura cualquier excepción no controlada en el servidor sin fugar información técnica interna (OWASP A05).
      *
      * @param ex excepción inesperada
-     * @return detalle del problema HTTP 500
+     * @return detalle del problema HTTP 500 saneado
      */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
+        log.error("Excepción no controlada en el servidor (HTTP 500): ", ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ocurrió un error inesperado en el servidor: " + (ex.getMessage() != null ? ex.getMessage() : "Error interno")
+                "Ocurrió un error inesperado en el servidor. Por favor, intente nuevamente o comuníquese con el soporte técnico."
         );
         problem.setTitle("Error Interno del Servidor");
         problem.setProperty("timestamp", Instant.now());

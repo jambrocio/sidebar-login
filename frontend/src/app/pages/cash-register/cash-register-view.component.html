@@ -1,15 +1,28 @@
 <section class="page-wrapper">
+  <!-- Cabecera de Página Estándar -->
   <header class="page-header">
     <div>
       <h1>Arqueo y Cierre de Caja por Local</h1>
       <p class="subtitle">
         Negocio: <strong>{{ businessInfo().legalName }}</strong>
         — Local Asignado: <strong>{{ assignedBranch() }}</strong>
-        — Cajero: <strong>{{ currentSessionUser() }}</strong>
+        — Cajero en Sesión: <strong>{{ currentSessionUser() }}</strong>
       </p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="refreshData()"
+        title="Actualizar datos desde el servidor"
+      >
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Refrescar</span>
+      </button>
     </div>
   </header>
 
+  <!-- Banner de Notificación y Feedback -->
   <div
     *ngIf="feedbackMessage()"
     class="feedback-banner"
@@ -28,25 +41,45 @@
     <span>{{ feedbackMessage()?.text }}</span>
   </div>
 
-  <div class="card">
-    <h2 class="section-title">
-      Ejecutar Arqueo de Caja de tu Local Asignado ({{ assignedBranch() }})
-    </h2>
-    <form (ngSubmit)="registerCashRegisterClose()" class="grid-form" [class.was-validated]="formSubmitted()">
-      <div class="form-group">
-        <label>Local / Tienda Asignado (Bloqueado)</label>
-        <input type="text" [value]="assignedBranch()" readonly />
+  <!-- 1. FORMULARIO DE ARQUEO Y CIERRE DE CAJA -->
+  <div class="card" style="margin-bottom: 2rem">
+    <div class="toolbar">
+      <div>
+        <h2 class="section-title" style="margin: 0">
+          <i class="bi bi-cash-stack" style="color: #0284c7; margin-right: 0.4rem"></i>
+          Ejecutar Arqueo de Caja del Local Asignado ({{ assignedBranch() }})
+        </h2>
+        <p class="section-description">
+          Registra el conteo físico de billetes y monedas para contrastarlo contra el saldo teórico esperado del turno.
+        </p>
       </div>
+    </div>
+
+    <form (ngSubmit)="registerCashRegisterClose()" class="grid-form" [class.was-validated]="formSubmitted()" novalidate>
+      <!-- 1. Local / Tienda -->
       <div class="form-group">
-        <label>Turno Laboral</label>
-        <select name="cashShift" [(ngModel)]="newCashAudit.shift">
-          <option value="Turno Mañana (08:00 - 16:00)">Turno Mañana (08:00 - 16:00)</option>
-          <option value="Turno Tarde/Cierre (14:00 - 22:00)">Turno Tarde/Cierre (14:00 - 22:00)</option>
-          <option value="Jornada Completa">Jornada Completa</option>
+        <label>1. Local Asignado (Bloqueado por Sesión)</label>
+        <div class="readonly-input-wrapper">
+          <i class="bi bi-shop"></i>
+          <input type="text" [value]="assignedBranch()" readonly class="readonly-input" />
+        </div>
+        <small class="field-hint">Asignado de acuerdo a la credencial del cajero activo</small>
+      </div>
+
+      <!-- 2. Turno Laboral -->
+      <div class="form-group">
+        <label>2. Turno Laboral <span class="required-indicator">*</span></label>
+        <select name="cashShift" [(ngModel)]="newCashAudit.shift" required class="required-input">
+          <option value="Turno Mañana (08:00 - 16:00)">🌅 Turno Mañana (08:00 - 16:00)</option>
+          <option value="Turno Tarde/Cierre (14:00 - 22:00)">🌇 Turno Tarde/Cierre (14:00 - 22:00)</option>
+          <option value="Jornada Completa">🌕 Jornada Completa</option>
         </select>
+        <small class="field-hint">Selecciona el tramo de turno a liquidar</small>
       </div>
+
+      <!-- 3. Moneda del Arqueo -->
       <div class="form-group">
-        <label>Moneda del Arqueo <span class="required-indicator">*</span></label>
+        <label>3. Moneda del Arqueo <span class="required-indicator">*</span></label>
         <select
           name="cashCurrency"
           [ngModel]="selectedAuditCurrency()"
@@ -60,83 +93,204 @@
             {{ c === defaultBusinessCurrency() ? '— [Moneda por Defecto]' : '' }}
           </option>
         </select>
-        <small class="field-hint">Auto-seleccionada según la divisa default del negocio</small>
+        <small class="field-hint">Divisa corporativa configurada para el negocio</small>
       </div>
 
+      <!-- 4. Fondo Inicial de Apertura -->
       <div class="form-group">
-        <label>Fondo Inicial de Apertura ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <label>4. Fondo Inicial de Apertura ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
         <input
           type="number"
           name="cashOpen"
           [(ngModel)]="newCashAudit.openingBalance"
+          placeholder="0.00"
+          min="0"
+          step="0.10"
           required
           class="required-input"
           [class.is-invalid]="formSubmitted() && (newCashAudit.openingBalance === null || newCashAudit.openingBalance === undefined)"
         />
+        <small class="field-hint">Sencillo o saldo base inicial de la gaveta</small>
       </div>
 
+      <!-- 5. Ventas en Efectivo del Turno -->
       <div class="form-group">
-        <label>Ventas en Efectivo del Turno ({{ currencySymbol() }})</label>
-        <input type="number" name="cashSales" [(ngModel)]="newCashAudit.cashSales" />
+        <label>5. Ventas en Efectivo del Turno ({{ currencySymbol() }})</label>
+        <input
+          type="number"
+          name="cashSales"
+          [(ngModel)]="newCashAudit.cashSales"
+          placeholder="0.00"
+          min="0"
+          step="0.10"
+        />
+        <small class="field-hint">Ingresos totales cobrados en billetes y monedas</small>
       </div>
 
+      <!-- 6. Cobros Digitales -->
       <div class="form-group">
-        <label>Cobros Digitales (Yape / POS) ({{ currencySymbol() }})</label>
-        <input type="number" name="digSales" [(ngModel)]="newCashAudit.digitalSales" />
+        <label>6. Cobros Digitales (Yape / Plin / POS) ({{ currencySymbol() }})</label>
+        <input
+          type="number"
+          name="digSales"
+          [(ngModel)]="newCashAudit.digitalSales"
+          placeholder="0.00"
+          min="0"
+          step="0.10"
+        />
+        <small class="field-hint">Dinero no ingresado físicamente a la gaveta</small>
       </div>
 
+      <!-- 7. Egresos / Gastos Menores -->
       <div class="form-group">
-        <label>Egresos / Gastos Menores ({{ currencySymbol() }})</label>
-        <input type="number" name="cashExp" [(ngModel)]="newCashAudit.expenses" />
+        <label>7. Egresos / Gastos Menores de Caja ({{ currencySymbol() }})</label>
+        <input
+          type="number"
+          name="cashExp"
+          [(ngModel)]="newCashAudit.expenses"
+          placeholder="0.00"
+          min="0"
+          step="0.10"
+        />
+        <small class="field-hint">Vales de compras menores o gastos autorizados</small>
       </div>
 
+      <!-- 8. Efectivo Físico Contado -->
       <div class="form-group">
-        <label>Efectivo Físico Contado ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
+        <label>8. Efectivo Físico Contado ({{ currencySymbol() }}) <span class="required-indicator">*</span></label>
         <input
           type="number"
           name="cashCounted"
           [(ngModel)]="newCashAudit.countedCash"
+          placeholder="0.00"
+          min="0"
+          step="0.10"
           required
           class="required-input"
           [class.is-invalid]="formSubmitted() && (newCashAudit.countedCash === null || newCashAudit.countedCash === undefined)"
         />
+        <small class="field-hint">Conteo real físico de billetes y monedas al cierre</small>
       </div>
 
-      <div class="form-group">
-        <label>Efectivo Esperado en Sistema ({{ currencySymbol() }})</label>
-        <input type="text" [value]="currencySymbol() + ' ' + (getExpectedCash() | appAmount)" readonly />
+      <!-- PANEL DE CONCILIACIÓN VISUAL EN TIEMPO REAL -->
+      <div class="reconciliation-panel full-width">
+        <div class="panel-header">
+          <i class="bi bi-calculator"></i>
+          <span>Resumen de Conciliación en Tiempo Real</span>
+        </div>
+
+        <div class="reconciliation-grid">
+          <!-- Saldo Teórico Esperado -->
+          <div class="reconciliation-card">
+            <span class="rec-label">Efectivo Teórico Esperado</span>
+            <strong class="rec-value">{{ currencySymbol() }} {{ expectedCash() | appAmount }}</strong>
+            <span class="rec-formula">Fondo + Ventas Efectivo - Egresos</span>
+          </div>
+
+          <!-- Efectivo Físico Contado -->
+          <div class="reconciliation-card">
+            <span class="rec-label">Efectivo Físico Contado</span>
+            <strong class="rec-value">{{ currencySymbol() }} {{ (newCashAudit.countedCash || 0) | appAmount }}</strong>
+            <span class="rec-formula">Monto total recontado en gaveta</span>
+          </div>
+
+          <!-- Estado y Diferencia de Auditoría -->
+          <div
+            class="reconciliation-card status-card"
+            [ngClass]="{
+              'status-exact': reconciliationStatus() === 'Cuadre Exacto',
+              'status-surplus': reconciliationStatus() === 'Sobrante',
+              'status-deficit': reconciliationStatus() === 'Faltante'
+            }"
+          >
+            <span class="rec-label">Diferencia y Conciliación</span>
+            <div class="rec-diff-row">
+              <i
+                class="bi"
+                [ngClass]="{
+                  'bi-check-circle-fill': reconciliationStatus() === 'Cuadre Exacto',
+                  'bi-plus-circle-fill': reconciliationStatus() === 'Sobrante',
+                  'bi-exclamation-triangle-fill': reconciliationStatus() === 'Faltante'
+                }"
+              ></i>
+              <strong class="rec-value">
+                {{ cashDifference() >= 0 ? '+' : '' }}{{ currencySymbol() }} {{ cashDifference() | appAmount }}
+              </strong>
+            </div>
+            <span class="rec-verdict">
+              {{ reconciliationStatus() === 'Cuadre Exacto' ? 'Cuadre Exacto (Sin diferencias)' : (reconciliationStatus() === 'Sobrante' ? 'Sobrante en Gaveta' : 'Faltante en Gaveta') }}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Diferencia de Arqueo ({{ currencySymbol() }})</label>
-        <input
-          type="text"
-          [value]="(getCashDifference() >= 0 ? '+' : '') + currencySymbol() + ' ' + (getCashDifference() | appAmount)"
-          readonly
-        />
-      </div>
-
-      <div class="form-group full-width">
-        <label>Estado de Conciliación</label>
-        <input
-          type="text"
-          [value]="getCashDifference() === 0 ? 'Cuadre Exacto (Sin diferencias)' : (getCashDifference() > 0 ? 'Sobrante de Efectivo' : 'Faltante de Efectivo')"
-          readonly
-          [style.color]="getCashDifference() === 0 ? '#16a34a' : (getCashDifference() > 0 ? '#2563eb' : '#dc2626')"
-          style="font-weight: 600"
-        />
-      </div>
+      <!-- Acciones del Formulario -->
       <div class="form-actions full-width">
         <button type="submit" class="btn-primary">
           <i class="bi bi-shield-check"></i>
           <span>Cerrar Turno y Firmar Acta de Arqueo</span>
         </button>
+        <button type="button" class="btn-secondary" (click)="resetAuditForm()">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          <span>Limpiar Formulario</span>
+        </button>
       </div>
     </form>
   </div>
 
+  <!-- 2. TABLA Y AUDITORÍA DE ACTAS DE ARQUEO -->
   <div class="card">
-    <h2 class="section-title">Historial de Arqueos de Caja del Negocio</h2>
+    <div class="toolbar" style="margin-bottom: 1rem">
+      <div>
+        <h2 class="section-title" style="margin: 0">
+          Historial de Arqueos de Caja del Negocio ({{ filteredCashAudits().length }})
+        </h2>
+        <p class="section-description" style="margin-bottom: 0">
+          Auditoría permanente de aperturas, conteos físicos y estados de conciliación de todos los turnos.
+        </p>
+      </div>
+    </div>
+
+    <!-- Barra de Búsqueda y Filtros de la Tabla -->
+    <div class="table-toolbar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="search"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Buscar por N° acta, local, turno o cajero..."
+          aria-label="Buscar actas de arqueo"
+        />
+        <button
+          *ngIf="searchQuery()"
+          type="button"
+          class="btn-clear"
+          (click)="searchQuery.set('')"
+          title="Limpiar búsqueda"
+        >
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      </div>
+
+      <div class="filter-controls">
+        <div class="filter-group">
+          <label><i class="bi bi-funnel"></i> Estado de Cuadre:</label>
+          <select
+            [ngModel]="filterStatus()"
+            (ngModelChange)="filterStatus.set($event)"
+            class="filter-select"
+          >
+            <option value="ALL">Todos los Estados ({{ cashAuditsList().length }})</option>
+            <option value="Cuadre Exacto">🟢 Cuadre Exacto</option>
+            <option value="Sobrante">🔵 Sobrante de Efectivo</option>
+            <option value="Faltante">🔴 Faltante de Efectivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla Responsiva de Arqueos -->
     <div class="table-responsive">
       <table class="data-table">
         <thead>
@@ -146,9 +300,9 @@
             <th>Turno</th>
             <th>Esperado</th>
             <th>Contado Físico</th>
-            <th>Estado Cuadre</th>
-            <th>Cajero (Auditoría)</th>
-            <th>Cierre</th>
+            <th>Estado Conciliación</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
           </tr>
         </thead>
         <tbody>
@@ -165,19 +319,34 @@
                 [class.badge-info]="arq.status === 'Sobrante'"
                 [class.badge-danger]="arq.status === 'Faltante'"
               >
+                <i
+                  class="bi"
+                  [ngClass]="{
+                    'bi-check-circle-fill': arq.status === 'Cuadre Exacto',
+                    'bi-plus-circle-fill': arq.status === 'Sobrante',
+                    'bi-exclamation-triangle-fill': arq.status === 'Faltante'
+                  }"
+                  style="margin-right: 0.25rem"
+                ></i>
                 {{ arq.status }} ({{ arq.difference >= 0 ? '+' : '' }}{{ currencySymbol() }} {{ arq.difference | appAmount }})
               </span>
             </td>
             <td><code>{{ arq.cashierUser }}</code></td>
-            <td class="text-muted">{{ arq.closedAt | appDate }}</td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ arq.closedAt }}</td>
+          </tr>
+          <tr *ngIf="filteredCashAudits().length === 0">
+            <td colspan="8" class="empty-state-cell">
+              <i class="bi bi-inbox"></i>
+              No se encontraron actas de arqueo{{ searchQuery() || filterStatus() !== 'ALL' ? ' con los filtros aplicados' : '' }}.
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Paginación de Arqueos (15 por página) -->
+    <!-- Paginación Estándar de Arqueos (15 por página) -->
     <app-table-pagination
-      [totalItems]="cashAuditsList().length"
+      [totalItems]="filteredCashAudits().length"
       [pageSize]="pageSize"
       [currentPage]="currentPage()"
       (pageChange)="currentPage.set($event)"

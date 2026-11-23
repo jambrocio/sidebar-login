@@ -23,6 +23,11 @@ public class MenuPermissionEvaluator {
             return false;
         }
 
+        // El Superusuario (Administrador General de la Plataforma) cuenta con acceso total irrestricto
+        if (user.isSuperAdmin()) {
+            return true;
+        }
+
         String column = switch (action.toUpperCase()) {
             case "CREATE" -> "puede_crear";
             case "EDIT" -> "puede_editar";

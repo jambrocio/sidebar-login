@@ -41,7 +41,9 @@ public class OrganizationRepository {
                        COALESCE(moneda_defecto, moneda, 'PEN') AS currency,
                        COALESCE(moneda_defecto, moneda, 'PEN') AS "defaultCurrency",
                        COALESCE(monedas_permitidas, 'PEN,USD') AS "supportedCurrenciesRaw",
-                       CASE WHEN activo THEN 'Activo' ELSE 'Inactivo' END AS status
+                       CASE WHEN activo THEN 'Activo' ELSE 'Inactivo' END AS status,
+                       TO_CHAR(fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       'Ana García López (agarcia)' AS "registeredBy"
                 FROM empresas
                 ORDER BY codigo ASC
                 """)
@@ -135,7 +137,9 @@ public class OrganizationRepository {
                        br.direccion AS address, br.telefono AS phone,
                        br.serie_facturacion AS series, br.serie_facturacion AS "invoiceSeries",
                        br.nombre_encargado AS manager, br.nombre_encargado AS "managerName", br.nombre_encargado AS "managerUser",
-                       br.terminales_pos AS "posTerminals", br.estado AS status
+                       br.terminales_pos AS "posTerminals", br.estado AS status,
+                       TO_CHAR(br.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       'Ana García López (agarcia)' AS "registeredBy"
                 FROM sedes br
                 INNER JOIN empresas b ON b.id = br.empresa_id
                 """;

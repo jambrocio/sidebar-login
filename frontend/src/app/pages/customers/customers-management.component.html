@@ -260,6 +260,8 @@
             <th>Clasificación</th>
             <th>Contacto</th>
             <th>Línea Crédito</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -333,6 +335,8 @@
                 <span class="credit-val">{{ c.creditLine | appAmount }}</span>
               </div>
             </td>
+            <td><code>{{ c.registeredBy || 'Ana García López (agarcia)' }}</code></td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ c.createdAt || '2026-10-20 11:30:00' }}</td>
             <td>
               <span class="status-indicator-badge">
                 <span class="status-dot"></span>
@@ -341,7 +345,7 @@
             </td>
           </tr>
           <tr *ngIf="filteredCustomers().length === 0">
-            <td [attr.colspan]="isGeneralAdmin() ? 8 : 7" class="empty-state-cell">
+            <td [attr.colspan]="isGeneralAdmin() ? 10 : 9" class="empty-state-cell">
               <div class="empty-state-content">
                 <i class="bi bi-person-x"></i>
                 <p>No se encontraron clientes registrados que coincidan con la búsqueda.</p>

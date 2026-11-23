@@ -123,6 +123,28 @@ export class PurchasesViewComponent implements OnInit {
   /** SKU o nombre del producto seleccionado en el dropdown de existentes */
   readonly selectedProductKey = signal<string>('');
 
+  /** Término de búsqueda ágil de producto por texto o SKU */
+  readonly productSearchQuery = signal<string>('');
+
+  /** Control del desplegable de búsqueda interactivo */
+  readonly isProductDropdownOpen = signal<boolean>(false);
+
+  /**
+   * Lista reactiva de productos filtrados por búsqueda rápida o catálogo.
+   * Si el usuario escribe una búsqueda, busca en todo el catálogo del negocio;
+   * de lo contrario, muestra los productos filtrados por la categoría seleccionada.
+   */
+  readonly searchedProducts = computed<BeverageProduct[]>(() => {
+    const q = this.productSearchQuery().trim().toLowerCase();
+    const baseList = q ? this.availableProductsForBusiness() : this.filteredProductsForPurchase();
+    if (!q) return baseList;
+    return baseList.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.sku && p.sku.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q))
+    );
+  });
+
   /** Producto seleccionado en el catálogo */
   readonly selectedProduct = computed<BeverageProduct | undefined>(() => {
     const key = this.selectedProductKey()?.trim().toUpperCase();
@@ -186,6 +208,33 @@ export class PurchasesViewComponent implements OnInit {
       boxCost: null as any,
     };
     this.selectedProductKey.set('');
+    this.productSearchQuery.set('');
+    this.isProductDropdownOpen.set(false);
+  }
+
+  /**
+   * Selecciona un producto desde la búsqueda interactiva, autocompletando
+   * categoría, detalle comercial y costo de referencia por caja.
+   */
+  selectProductFromSearch(product: BeverageProduct): void {
+    const key = product.sku || product.name;
+    this.selectedProductKey.set(key);
+    this.productSearchQuery.set(`${product.name}${product.sku ? ' (' + product.sku + ')' : ''}`);
+    this.isProductDropdownOpen.set(false);
+    this.newPurchase.category = product.category;
+    this.newPurchase.productDetail = `${product.name}${product.sku ? ' (' + product.sku + ')' : ''} — ${product.presentation || 'Caja'}`;
+    this.newPurchase.boxCost = product.wholesalePrice || product.retailPrice || 25.0;
+  }
+
+  /**
+   * Limpia el buscador y el producto seleccionado.
+   */
+  clearProductSearch(): void {
+    this.selectedProductKey.set('');
+    this.productSearchQuery.set('');
+    this.newPurchase.productDetail = '';
+    this.newPurchase.boxCost = null as any;
+    this.isProductDropdownOpen.set(false);
   }
 
   /**
@@ -193,8 +242,10 @@ export class PurchasesViewComponent implements OnInit {
    * Auto-completa la categoría, detalle del producto y costo sugerido por caja.
    */
   onProductSelected(prodKey: string): void {
-    this.selectedProductKey.set(prodKey);
-    if (!prodKey) return;
+    if (!prodKey) {
+      this.clearProductSearch();
+      return;
+    }
 
     const targetKey = prodKey.trim().toUpperCase();
     const prod = this.availableProductsForBusiness().find(
@@ -202,9 +253,7 @@ export class PurchasesViewComponent implements OnInit {
     );
 
     if (prod) {
-      this.newPurchase.category = prod.category;
-      this.newPurchase.productDetail = `${prod.name}${prod.sku ? ' (' + prod.sku + ')' : ''} — ${prod.presentation || 'Caja'}`;
-      this.newPurchase.boxCost = prod.wholesalePrice || prod.retailPrice || 25.0;
+      this.selectProductFromSearch(prod);
     }
   }
 
@@ -220,8 +269,7 @@ export class PurchasesViewComponent implements OnInit {
         p => (p.sku && p.sku === currentKey) || p.name === currentKey
       );
       if (prod && (prod.category || '').toLowerCase() !== (newCat || '').toLowerCase()) {
-        this.selectedProductKey.set('');
-        this.newPurchase.productDetail = '';
+        this.clearProductSearch();
       }
     }
   }

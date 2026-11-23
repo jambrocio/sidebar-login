@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DummyDataService } from '../../core/services/dummy-data.service';
-import { BeverageProduct, BeverageSale, CommercialCustomer, FeedbackNotification, resolveCurrencySymbol } from '../../core/models/domain.models';
+import { BeverageProduct, BeverageSale, CommercialCustomer, DiscountCoupon, FeedbackNotification, resolveCurrencySymbol } from '../../core/models/domain.models';
 import { SaleReceiptViewComponent } from '../../shared/components/sale-receipt-view/sale-receipt-view.component';
 import { AppAmountPipe } from '../../shared/pipes/app-amount.pipe';
 import { formatAmount, formatCurrentDateTime } from '../../core/utils/formatters';
@@ -270,15 +270,133 @@ export class SalesPosComponent implements OnInit {
     this.saleCart.update(items => items.filter((_, idx) => idx !== index));
   }
 
+  /**
+   * Valida integralmente el cupón promocional contra el estado del carrito y el cliente beneficiario.
+   * Regla de Negocio: Si el cupón fue asignado a un cliente específico, solo puede usarse si dicho cliente coincide con el de la venta.
+   */
+  getCouponValidation(): { valid: boolean; message: string; coupon?: DiscountCoupon } {
+    const code = (this.newSale.couponCode || '').trim().toUpperCase();
+    if (!code) {
+      return { valid: false, message: '' };
+    }
+
+    const coupon = this.couponsList().find(c => c.code.toUpperCase() === code);
+    if (!coupon) {
+      return {
+        valid: false,
+        message: `El código "${code}" no corresponde a ningún cupón registrado.`,
+      };
+    }
+
+    if (!coupon.active) {
+      return {
+        valid: false,
+        message: `El cupón "${code}" se encuentra pausado o inactivo.`,
+      };
+    }
+
+    if (coupon.usedCount >= coupon.maxUses) {
+      return {
+        valid: false,
+        message: `El cupón "${code}" ha superado su límite máximo de ${coupon.maxUses} canjes.`,
+      };
+    }
+
+    // Regla de Negocio: Restricción estricta por Cliente Beneficiario
+    const currentClient = (this.newSale.clientName || '').trim();
+    const assignedClient = (coupon.assignedClient || '').trim();
+
+    if (
+      assignedClient &&
+      assignedClient !== 'Todos los Clientes del Negocio' &&
+      assignedClient.toLowerCase() !== currentClient.toLowerCase()
+    ) {
+      return {
+        valid: false,
+        message: `Cupón exclusivo para "${assignedClient}". No aplica para "${currentClient || 'Cliente no seleccionado'}".`,
+      };
+    }
+
+    // Validación de compra mínima
+    const subtotal = this.cartSubtotal();
+    if (coupon.minPurchase > 0 && subtotal > 0 && subtotal < coupon.minPurchase) {
+      return {
+        valid: false,
+        message: `El cupón "${code}" requiere una compra mínima de ${this.currencySymbol()} ${coupon.minPurchase}.`,
+      };
+    }
+
+    const benefitText =
+      coupon.discountType === 'PERCENT'
+        ? `${coupon.discountValue}% OFF`
+        : `- ${this.currencySymbol()} ${coupon.discountValue}`;
+
+    return {
+      valid: true,
+      message: `¡Cupón válido! Beneficio: ${benefitText} (Asignado a: ${assignedClient}).`,
+      coupon,
+    };
+  }
+
+  /**
+   * Cupones de descuento promocionales disponibles y elegibles para la venta en curso:
+   * 1. Debe estar activo.
+   * 2. Debe contar con canjes disponibles (usedCount < maxUses).
+   * 3. Debe coincidir con la modalidad de venta o aplicar a "Mayor y Menor".
+   * 4. Asignación: Aplica si está asignado a "Todos los Clientes..." O si coincide con el cliente de la venta.
+   */
+  readonly availableCouponsForSale = computed<DiscountCoupon[]>(() => {
+    const rawClient = (this.newSale.clientName || '').trim();
+    const client = rawClient.toLowerCase();
+    const isOccasional = !rawClient || client.includes('ocasional') || client.includes('rápida');
+    const modality = this.newSale.modality;
+
+    return this.couponsList().filter(c => {
+      if (c.active === false) return false;
+      if (c.usedCount >= c.maxUses) return false;
+
+      // Modalidad: si el cupón restringe a Mayorista o Minorista, contrastar con la venta
+      if (c.targetModality && c.targetModality !== 'Mayor y Menor') {
+        const isWholesale = modality === 'Por Mayor';
+        if (c.targetModality === 'Mayorista' && !isWholesale) return false;
+        if (c.targetModality === 'Minorista' && isWholesale) return false;
+      }
+
+      // Regla de asignación por cliente
+      const assigned = (c.assignedClient || '').trim().toLowerCase();
+      const isForAll = !assigned ||
+        assigned === 'todos los clientes del negocio' ||
+        assigned === 'todos los clientes' ||
+        assigned === 'todos';
+
+      if (isForAll) return true;
+
+      // Si es exclusivo para un cliente específico, solo se habilita si coincide con el cliente seleccionado
+      return !isOccasional && assigned === client;
+    });
+  });
+
+  /** Selecciona y aplica un cupón de descuento */
+  selectCoupon(code: string): void {
+    this.newSale.couponCode = (code || '').trim().toUpperCase();
+  }
+
+  /** Retira o deselecciona el cupón aplicado */
+  clearCoupon(): void {
+    this.newSale.couponCode = '';
+  }
+
   getCartDiscountAmount(): number {
     const subtotal = this.cartSubtotal();
-    const code = this.newSale.couponCode.trim().toUpperCase();
-    const matchedCoupon = this.couponsList().find(c => c.code === code && c.active);
-    if (!matchedCoupon || subtotal === 0) return 0;
+    if (subtotal === 0) return 0;
 
-    return matchedCoupon.discountType === 'PERCENT'
-      ? +(subtotal * (matchedCoupon.discountValue / 100)).toFixed(2)
-      : Math.min(subtotal, matchedCoupon.discountValue);
+    const validation = this.getCouponValidation();
+    if (!validation.valid || !validation.coupon) return 0;
+
+    const coupon = validation.coupon;
+    return coupon.discountType === 'PERCENT'
+      ? +(subtotal * (coupon.discountValue / 100)).toFixed(2)
+      : Math.min(subtotal, coupon.discountValue);
   }
 
   /**
@@ -324,6 +442,19 @@ export class SalesPosComponent implements OnInit {
         type: 'warning',
       });
       return;
+    }
+
+    // Validación estricta del cupón de descuento si se digitó alguno
+    const rawCoupon = (this.newSale.couponCode || '').trim();
+    if (rawCoupon) {
+      const couponCheck = this.getCouponValidation();
+      if (!couponCheck.valid) {
+        this.feedbackMessage.set({
+          text: `No se puede emitir la venta: ${couponCheck.message}`,
+          type: 'warning',
+        });
+        return;
+      }
     }
 
     const netSubtotal = this.getCartNetSubtotal();

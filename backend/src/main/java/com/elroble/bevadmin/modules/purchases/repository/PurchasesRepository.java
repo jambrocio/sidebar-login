@@ -36,7 +36,7 @@ public class PurchasesRepository {
      */
     public List<Map<String, Object>> findPurchasesByBusinessId(UUID businessId) {
         return jdbcClient.sql("""
-                SELECT p.codigo_compra AS id, p.fecha_compra AS date, br.nombre AS branch,
+                SELECT p.codigo_compra AS id, TO_CHAR(p.fecha_compra, 'YYYY-MM-DD HH24:MI:SS') AS date, br.nombre AS branch,
                        p.proveedor AS supplier, p.nombre_categoria AS category, p.detalle_producto AS "productDetail",
                        p.cantidad_cajas AS "boxesQty", p.costo_caja AS "boxCost", p.costo_total AS "totalCost",
                        (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "buyerUser", p.estado AS status

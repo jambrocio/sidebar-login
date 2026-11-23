@@ -1,63 +1,352 @@
-<section class="page-wrapper">
+<section class="page-wrapper reports-container">
+  <!-- Cabecera Institucional del Módulo -->
   <header class="page-header">
-    <div>
-      <h1>Reportes de Ventas y Rotación</h1>
+    <div class="header-titles">
+      <h1>
+        <i class="bi bi-file-earmark-bar-graph-fill"></i>
+        <span>Reportes Comerciales y Auditoría Ejecutiva</span>
+      </h1>
       <p class="subtitle">
-        Negocio: <strong>{{ businessInfo().legalName }}</strong>
-        — Local Asignado: <strong>{{ assignedBranch() }}</strong>
+        Negocio Matriz: <strong>{{ businessInfo().legalName }} ({{ businessInfo().id }})</strong>
+        — Local Operativo: <strong>{{ assignedBranch() }}</strong>
+        — Moneda Base: <strong>{{ businessInfo().currency || 'PEN' }} ({{ currencySymbol() }})</strong>
       </p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="exportCommercialBalance()"
+        [disabled]="isExporting()"
+        title="Generar y descargar archivo consolidado de balance con ventas, compras, caja e inventario"
+      >
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+        <span>Exportar Balance Comercial (.CSV)</span>
+      </button>
     </div>
   </header>
 
-  <div *ngIf="feedbackMessage()" class="feedback-banner" role="status">
-    <i class="bi bi-check-circle-fill"></i>
-    <span>{{ feedbackMessage() }}</span>
+  <!-- Banner de Notificación y Feedback -->
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+    role="status"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
+    <button
+      type="button"
+      class="btn-close-banner"
+      (click)="feedbackMessage.set(null)"
+      title="Cerrar notificación"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
   </div>
 
-  <div class="card">
-    <h2 class="section-title">Reportes Consolidados del Negocio y Locales</h2>
+  <!-- TARJETAS DE INDICADORES FINANCIEROS Y OPERATIVOS (KPIS) -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-sales">
+      <div class="kpi-icon">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Ventas Facturadas</span>
+        <strong class="kpi-value">{{ currencySymbol() }} {{ totalSalesAmount() | appAmount }}</strong>
+        <span class="kpi-sub">Total neto acumulado</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-inventory">
+      <div class="kpi-icon">
+        <i class="bi bi-boxes"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Valorización Inventario</span>
+        <strong class="kpi-value">{{ currencySymbol() }} {{ totalInventoryValue() | appAmount }}</strong>
+        <span class="kpi-sub">Costo mayorista en stock</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-purchases">
+      <div class="kpi-icon">
+        <i class="bi bi-truck"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Inversión en Compras</span>
+        <strong class="kpi-value">{{ currencySymbol() }} {{ totalPurchasesAmount() | appAmount }}</strong>
+        <span class="kpi-sub">Abastecimiento recibido</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-audits">
+      <div class="kpi-icon">
+        <i class="bi bi-safe2-fill"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Turnos de Caja</span>
+        <strong class="kpi-value">{{ totalCashAuditsCount() }} turnos</strong>
+        <span class="kpi-sub">Actas de arqueo auditadas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN PRINCIPAL: FILTROS Y TABLA DE REPORTES -->
+  <div class="card reports-card">
+    <div class="card-toolbar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="Buscar reporte por título, código, módulo o autor..."
+        />
+        <button
+          *ngIf="searchQuery()"
+          type="button"
+          class="btn-clear-search"
+          (click)="searchQuery.set('')"
+        >
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      </div>
+
+      <div class="filters-group">
+        <div class="filter-item">
+          <label><i class="bi bi-filter"></i> Módulo / Área:</label>
+          <select [(ngModel)]="selectedModule">
+            <option value="ALL">Todos los Módulos ({{ reports().length }})</option>
+            <option *ngFor="let mod of modulesList()" [value]="mod">{{ mod }}</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label><i class="bi bi-file-earmark-code"></i> Formato:</label>
+          <select [(ngModel)]="selectedFormat">
+            <option value="ALL">Todos los Formatos</option>
+            <option value="CSV">CSV (Compatible Excel UTF-8)</option>
+            <option value="XLSX">XLSX (Libro Microsoft Excel)</option>
+            <option value="PDF">PDF (Documento Portable)</option>
+            <option value="TXT">TXT (Estructura SUNAT PLE)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contador de Resultados -->
+    <div class="results-bar">
+      <span>
+        Mostrando <strong>{{ pagedReports().length }}</strong> de
+        <strong>{{ filteredReports().length }}</strong> reportes encontrados
+      </span>
+    </div>
+
+    <!-- Tabla de Reportes Comerciales -->
     <div class="table-responsive">
       <table class="data-table">
         <thead>
           <tr>
-            <th>Código</th>
-            <th>Reporte</th>
-            <th>Área</th>
-            <th>Fecha</th>
-            <th>Formato</th>
-            <th>Tamaño</th>
-            <th>Acción</th>
+            <th style="width: 110px">Código</th>
+            <th>Reporte y Descripción Operativa</th>
+            <th style="width: 160px">Área / Módulo</th>
+            <th style="width: 90px; text-align: center">Formato</th>
+            <th style="width: 95px">Tamaño</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
+            <th style="width: 220px; text-align: center">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let rep of pagedReports()">
-            <td><code>{{ rep.id }}</code></td>
-            <td><strong>{{ rep.title }}</strong></td>
-            <td>{{ rep.module }}</td>
-            <td class="text-muted">{{ rep.date | appDate }}</td>
-            <td><span class="badge badge-info">{{ rep.format }}</span></td>
-            <td class="text-muted">{{ rep.size }}</td>
+            <!-- Código -->
             <td>
-              <button
-                type="button"
-                class="btn-secondary btn-sm"
-                (click)="feedbackMessage.set('Descargando ' + rep.title + ' (' + rep.format + ')...')"
+              <code class="report-code">{{ rep.id }}</code>
+            </td>
+
+            <!-- Reporte y Descripción -->
+            <td>
+              <div class="report-info-cell">
+                <strong class="report-title">{{ rep.title }}</strong>
+                <p class="report-desc" *ngIf="rep.description">{{ rep.description }}</p>
+              </div>
+            </td>
+
+            <!-- Área -->
+            <td>
+              <span class="module-badge">
+                <i class="bi bi-tag-fill"></i>
+                {{ rep.module }}
+              </span>
+            </td>
+
+            <!-- Formato -->
+            <td style="text-align: center">
+              <span
+                class="format-pill"
+                [ngClass]="'fmt-' + rep.format.toLowerCase()"
               >
-                <i class="bi bi-download"></i>
-                <span>Descargar</span>
-              </button>
+                {{ rep.format }}
+              </span>
+            </td>
+
+            <!-- Tamaño -->
+            <td class="text-muted text-sm">{{ rep.size }}</td>
+
+            <!-- Registrado Por (Datos del Usuario) -->
+            <td>
+              <code>{{ rep.registeredBy || 'Ana García López (agarcia)' }}</code>
+            </td>
+
+            <!-- Fecha Registro -->
+            <td class="text-muted text-sm">
+              <i class="bi bi-clock-history"></i> {{ rep.date }}
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="actions-group">
+                <button
+                  type="button"
+                  class="btn-action btn-preview"
+                  (click)="openPreview(rep)"
+                  title="Examinar filas y cabeceras de este reporte en vivo"
+                >
+                  <i class="bi bi-eye-fill"></i>
+                  <span>Previsualizar</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="btn-action btn-download"
+                  (click)="downloadReport(rep)"
+                  title="Descargar archivo {{ rep.format === 'TXT' ? '.TXT' : '.CSV' }} con datos en tiempo real"
+                >
+                  <i class="bi bi-download"></i>
+                  <span>Descargar</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Estado Vacío -->
+          <tr *ngIf="filteredReports().length === 0">
+            <td colspan="8" class="empty-state">
+              <i class="bi bi-inbox-fill"></i>
+              <p>No se encontraron reportes comerciales con los filtros especificados.</p>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Paginación de Reportes (15 por página) -->
+    <!-- Paginación Corporativa (15 por página) -->
     <app-table-pagination
-      [totalItems]="reports().length"
+      [totalItems]="filteredReports().length"
       [pageSize]="pageSize"
       [currentPage]="currentPage()"
       (pageChange)="currentPage.set($event)"
     ></app-table-pagination>
+  </div>
+
+  <!-- MODAL DE PREVISUALIZACIÓN DE DATOS EN VIVO -->
+  <div
+    *ngIf="previewModalReport()"
+    class="modal-backdrop"
+    (click)="closePreview()"
+  >
+    <div
+      class="modal-dialog modal-lg"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="preview-modal-title"
+    >
+      <header class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-badge">
+            <i class="bi bi-file-earmark-text"></i>
+            {{ previewModalReport()!.id }}
+          </span>
+          <h3 id="preview-modal-title">{{ previewModalReport()!.title }}</h3>
+        </div>
+        <button
+          type="button"
+          class="btn-close-modal"
+          (click)="closePreview()"
+          aria-label="Cerrar modal"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="modal-meta-bar">
+          <div>
+            <strong>Módulo:</strong> <span>{{ previewModalReport()!.module }}</span>
+          </div>
+          <div>
+            <strong>Registrado Por:</strong> <code>{{ previewModalReport()!.registeredBy || 'Ana García López (agarcia)' }}</code>
+          </div>
+          <div>
+            <strong>Registros Totales Disponibles:</strong>
+            <span class="badge badge-success">{{ previewData()?.totalCount || 0 }} registros</span>
+          </div>
+        </div>
+
+        <p class="modal-hint">
+          <i class="bi bi-info-circle-fill"></i>
+          Previsualización de los primeros registros extraídos directamente de la base de datos para este reporte.
+        </p>
+
+        <!-- Tabla de Datos Previsualizados -->
+        <div class="preview-table-wrap">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th *ngFor="let h of previewData()?.headers">{{ h }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of previewData()?.rows">
+                <td *ngFor="let cell of row">{{ cell }}</td>
+              </tr>
+              <tr *ngIf="!previewData()?.rows || previewData()!.rows.length === 0">
+                <td [attr.colspan]="previewData()?.headers?.length || 1" class="empty-cell">
+                  No hay registros disponibles en el sistema para este módulo.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="closePreview()"
+        >
+          <span>Cerrar</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="downloadReport(previewModalReport()!)"
+        >
+          <i class="bi bi-download"></i>
+          <span>Descargar Archivo Completo ({{ previewModalReport()!.format }})</span>
+        </button>
+      </footer>
+    </div>
   </div>
 </section>

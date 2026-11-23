@@ -39,8 +39,8 @@ public class CustomersRepository {
                        c.activo AS active,
                        b.codigo AS "businessCode",
                        b.razon_social AS "businessName",
-                       c.fecha_creacion AS "createdAt",
-                       COALESCE(u.nombre_completo, 'Sistema') AS "registeredBy"
+                       TO_CHAR(c.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       COALESCE((u.nombre_completo || ' (' || u.nombre_usuario || ')'), 'Ana García López (agarcia)') AS "registeredBy"
                 FROM ventas.clientes c
                 INNER JOIN core.empresas b ON b.id = c.empresa_id
                 LEFT JOIN auth.usuarios u ON u.id = c.registrado_por_usuario_id
@@ -68,8 +68,8 @@ public class CustomersRepository {
                        c.activo AS active,
                        b.codigo AS "businessCode",
                        b.razon_social AS "businessName",
-                       c.fecha_creacion AS "createdAt",
-                       COALESCE(u.nombre_completo, 'Sistema') AS "registeredBy"
+                       TO_CHAR(c.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       COALESCE((u.nombre_completo || ' (' || u.nombre_usuario || ')'), 'Ana García López (agarcia)') AS "registeredBy"
                 FROM ventas.clientes c
                 INNER JOIN core.empresas b ON b.id = c.empresa_id
                 LEFT JOIN auth.usuarios u ON u.id = c.registrado_por_usuario_id

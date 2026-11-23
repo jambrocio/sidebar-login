@@ -84,11 +84,14 @@ export class ProductsListComponent implements OnInit {
   /** Historial de ventas globales del sistema */
   readonly salesList = this.dummyData.salesList;
 
-  /** Producto seleccionado actualmente para ver su histórico */
+  /** Producto seleccionado actualmente para ver su histórico en vista completa */
   readonly selectedProductForHistory = signal<BeverageProduct | null>(null);
 
-  /** Pestaña activa dentro del modal de histórico ('all' | 'purchases' | 'sales') */
+  /** Pestaña activa dentro de la vista completa de histórico ('all' | 'purchases' | 'sales') */
   readonly historyActiveTab = signal<'all' | 'purchases' | 'sales'>('all');
+
+  /** Búsqueda interna dentro del histórico de compras y ventas */
+  readonly historySearchQuery = signal<string>('');
 
   /** Compras y abastecimiento asociadas al producto seleccionado */
   readonly productPurchases = computed<BeveragePurchase[]>(() => {
@@ -172,20 +175,88 @@ export class ProductsListComponent implements OnInit {
     return this.productSales().reduce((acc, s) => acc + (s.subtotal || 0), 0);
   });
 
+  /** Compras y abastecimiento filtradas por búsqueda interna */
+  readonly filteredProductPurchases = computed<BeveragePurchase[]>(() => {
+    const list = this.productPurchases();
+    const q = this.historySearchQuery().trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      p =>
+        (p.id && p.id.toLowerCase().includes(q)) ||
+        (p.supplier && p.supplier.toLowerCase().includes(q)) ||
+        (p.branchName && p.branchName.toLowerCase().includes(q)) ||
+        (p.buyerUser && p.buyerUser.toLowerCase().includes(q)) ||
+        (p.date && p.date.toLowerCase().includes(q))
+    );
+  });
+
+  /** Ventas emitidas filtradas por búsqueda interna */
+  readonly filteredProductSales = computed<ProductSaleHistoryEntry[]>(() => {
+    const list = this.productSales();
+    const q = this.historySearchQuery().trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      s =>
+        (s.saleId && s.saleId.toLowerCase().includes(q)) ||
+        (s.clientName && s.clientName.toLowerCase().includes(q)) ||
+        (s.documentType && s.documentType.toLowerCase().includes(q)) ||
+        (s.sellerUser && s.sellerUser.toLowerCase().includes(q)) ||
+        (s.date && s.date.toLowerCase().includes(q))
+    );
+  });
+
+  /** Tamaño de página estándar para las tablas del histórico */
+  readonly historyPageSize = 15;
+
+  /** Página activa de Compras (Entradas) en el Histórico */
+  readonly purchasesCurrentPage = signal<number>(1);
+
+  /** Página activa de Ventas (Salidas) en el Histórico */
+  readonly salesCurrentPage = signal<number>(1);
+
+  /** Compras y abastecimiento paginadas bajo el estándar corporativo */
+  readonly paginatedProductPurchases = computed<BeveragePurchase[]>(() => {
+    const list = this.filteredProductPurchases();
+    const page = this.purchasesCurrentPage();
+    const start = (page - 1) * this.historyPageSize;
+    return list.slice(start, start + this.historyPageSize);
+  });
+
+  /** Ventas emitidas paginadas bajo el estándar corporativo */
+  readonly paginatedProductSales = computed<ProductSaleHistoryEntry[]>(() => {
+    const list = this.filteredProductSales();
+    const page = this.salesCurrentPage();
+    const start = (page - 1) * this.historyPageSize;
+    return list.slice(start, start + this.historyPageSize);
+  });
+
   /**
-   * Abre el modal de histórico cargando el producto seleccionado y refrescando datos.
+   * Abre la vista completa de histórico para el producto seleccionado y refresca datos.
    */
   openProductHistory(prod: BeverageProduct): void {
     this.selectedProductForHistory.set(prod);
     this.historyActiveTab.set('all');
+    this.historySearchQuery.set('');
+    this.purchasesCurrentPage.set(1);
+    this.salesCurrentPage.set(1);
     this.dummyData.loadAllFromBackend();
   }
 
   /**
-   * Cierra el modal de histórico de movimientos.
+   * Cierra la vista de histórico y regresa al inventario maestro.
    */
   closeProductHistory(): void {
     this.selectedProductForHistory.set(null);
+    this.historySearchQuery.set('');
+    this.purchasesCurrentPage.set(1);
+    this.salesCurrentPage.set(1);
+  }
+
+  /**
+   * Refresca los datos del catálogo e histórico desde la capa de datos.
+   */
+  refreshData(): void {
+    this.dummyData.loadAllFromBackend();
   }
 
   constructor() {
@@ -202,6 +273,14 @@ export class ProductsListComponent implements OnInit {
     effect(() => {
       this.searchQuery();
       this.currentPage.set(1);
+    });
+
+    // Resetear a página 1 en el histórico cuando cambie la búsqueda interna o pestaña
+    effect(() => {
+      this.historySearchQuery();
+      this.historyActiveTab();
+      this.purchasesCurrentPage.set(1);
+      this.salesCurrentPage.set(1);
     });
   }
 

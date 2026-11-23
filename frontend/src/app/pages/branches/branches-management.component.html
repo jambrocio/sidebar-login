@@ -248,6 +248,8 @@
               <th>Teléfono</th>
               <th>Moneda</th>
               <th>Locales</th>
+              <th>Registrado Por</th>
+              <th>Fecha Registro</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -272,6 +274,8 @@
                   {{ getBranchCount(biz.id) }} locales
                 </span>
               </td>
+              <td><code>{{ biz.registeredBy || 'Ana García López (agarcia)' }}</code></td>
+              <td class="text-muted"><i class="bi bi-clock-history"></i> {{ biz.createdAt || '2026-10-20 08:00:00' }}</td>
               <td>
                 <button
                   type="button"
@@ -438,6 +442,8 @@
               <th>Serie Comprobantes</th>
               <th>Responsable</th>
               <th>Cajas POS</th>
+              <th>Registrado Por</th>
+              <th>Fecha Registro</th>
               <th>Estado</th>
             </tr>
           </thead>
@@ -451,6 +457,8 @@
               <td><code>{{ branch.invoiceSeries }}</code></td>
               <td>{{ branch.managerUser }}</td>
               <td>{{ branch.posTerminals }} cajas</td>
+              <td><code>{{ branch.registeredBy || 'Ana García López (agarcia)' }}</code></td>
+              <td class="text-muted"><i class="bi bi-clock-history"></i> {{ branch.createdAt || '2026-10-20 08:30:00' }}</td>
               <td>
                 <span
                   *ngIf="branch.name === assignedBranch()"

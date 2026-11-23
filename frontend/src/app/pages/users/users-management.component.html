@@ -252,6 +252,8 @@
             <th>Negocio y Local Principal</th>
             <th>Locales Autorizados</th>
             <th>Vigencia / Expiración de Clave</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
             <th>Estado Cuenta</th>
             <th>Acciones</th>
           </tr>
@@ -303,6 +305,8 @@
                 }})
               </div>
             </td>
+            <td><code>{{ user.registeredBy || 'Ana García López (agarcia)' }}</code></td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ user.createdAt || '2026-10-20 09:00:00' }}</td>
             <td>
               <span
                 class="badge"

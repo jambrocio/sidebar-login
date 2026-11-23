@@ -82,6 +82,13 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 // Deshabilita CSRF dado que la API opera con tokens Bearer JWT sin cookies de sesión
                 .csrf(csrf -> csrf.disable())
+                // Endurecimiento defensivo de encabezados HTTP (OWASP A05 - Defensa en Profundidad)
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin())
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .xssProtection(Customizer.withDefaults())
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+                )
                 // No se mantiene estado de sesión en memoria del servidor (100% Stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Reglas de autorización de rutas HTTP

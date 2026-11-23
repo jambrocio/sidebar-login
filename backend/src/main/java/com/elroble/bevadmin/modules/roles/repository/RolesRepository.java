@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * Repositorio síncrono de acceso a datos para Roles y Matriz de Permisos RBAC
- * ({@code roles}, {@code usuario_roles} y {@code permisos_rol_menu}).
+ * ({@code rbac.roles}, {@code rbac.usuario_roles} y {@code rbac.permisos_rol_menu}).
  */
 @Repository
 public class RolesRepository {
@@ -35,10 +35,12 @@ public class RolesRepository {
         return jdbcClient.sql("""
                 SELECT r.codigo AS code, r.nombre AS name, r.descripcion AS description, r.alcance AS scope, r.es_sistema AS "isSystem",
                        CASE WHEN r.activo THEN 'Activo' ELSE 'Inactivo' END AS status,
+                       TO_CHAR(r.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       'Ana García López (agarcia)' AS "registeredBy",
                        COUNT(ur.id) AS "usersCount"
-                FROM roles r
-                LEFT JOIN usuario_roles ur ON ur.rol_id = r.id
-                GROUP BY r.id, r.codigo, r.nombre, r.descripcion, r.alcance, r.es_sistema, r.activo
+                FROM rbac.roles r
+                LEFT JOIN rbac.usuario_roles ur ON ur.rol_id = r.id
+                GROUP BY r.id, r.codigo, r.nombre, r.descripcion, r.alcance, r.es_sistema, r.activo, r.fecha_creacion
                 ORDER BY r.fecha_creacion ASC
                 """)
                 .query()
@@ -46,13 +48,13 @@ public class RolesRepository {
     }
 
     /**
-     * Inserta un nuevo rol personalizado en la tabla {@code roles}.
+     * Inserta un nuevo rol personalizado en la tabla {@code rbac.roles}.
      *
      * @param req DTO con los datos del rol a insertar
      */
     public void insertRole(CreateRoleRequest req) {
         jdbcClient.sql("""
-                INSERT INTO roles (codigo, nombre, descripcion, alcance, es_sistema, activo)
+                INSERT INTO rbac.roles (codigo, nombre, descripcion, alcance, es_sistema, activo)
                 VALUES (:code, :name, :description, :scope, FALSE, TRUE)
                 """)
                 .param("code", req.code().toUpperCase())
@@ -63,30 +65,60 @@ public class RolesRepository {
     }
 
     /**
-     * Consulta la matriz de permisos de opciones de menú ({@code permisos_rol_menu}) para un rol específico.
+     * Consulta la matriz jerárquica de permisos de opciones de menú ({@code rbac.permisos_rol_menu})
+     * para un rol específico mediante un CTE recursivo que preserva el orden de árbol y niveles exactos.
      * Si una opción de menú aún no tiene fila en la matriz, devuelve los valores predeterminados sin omitir el ítem.
      *
      * @param roleCode código técnico del rol (ej. {@code ADMIN})
-     * @return filas de permisos de menú para el rol indicado
+     * @return filas de permisos de menú para el rol indicado ordenadas jerárquicamente
      */
     public List<Map<String, Object>> findRoleMenuMatrixByRoleCode(String roleCode) {
         return jdbcClient.sql("""
+                WITH RECURSIVE arbol_menu AS (
+                    SELECT
+                        m.id,
+                        m.padre_id,
+                        m.codigo,
+                        m.etiqueta,
+                        m.ruta_enlace,
+                        m.es_visible,
+                        m.orden,
+                        1 AS nivel,
+                        ARRAY[m.orden] AS ruta_orden
+                    FROM rbac.opciones_menu m
+                    WHERE m.padre_id IS NULL
+
+                    UNION ALL
+
+                    SELECT
+                        hijo.id,
+                        hijo.padre_id,
+                        hijo.codigo,
+                        hijo.etiqueta,
+                        hijo.ruta_enlace,
+                        hijo.es_visible,
+                        hijo.orden,
+                        padre.nivel + 1 AS nivel,
+                        padre.ruta_orden || hijo.orden AS ruta_orden
+                    FROM rbac.opciones_menu hijo
+                    INNER JOIN arbol_menu padre ON hijo.padre_id = padre.id
+                )
                 SELECT :roleCode AS "roleCode",
-                       m.codigo AS code,
-                       m.etiqueta AS label,
-                       m.etiqueta AS module,
-                       COALESCE(m.ruta_enlace, '— (Módulo / Grupo)') AS "routerLink",
-                       CASE WHEN m.padre_id IS NULL THEN 1 ELSE 2 END AS level,
-                       COALESCE(rmp.visible_en_menu, m.es_visible) AS "visibleInSidebar",
+                       t.codigo AS code,
+                       t.etiqueta AS label,
+                       t.etiqueta AS module,
+                       COALESCE(t.ruta_enlace, '— (Módulo / Grupo)') AS "routerLink",
+                       t.nivel AS level,
+                       COALESCE(rmp.visible_en_menu, t.es_visible) AS "visibleInSidebar",
                        COALESCE(rmp.puede_ver, FALSE) AS "canView",
                        COALESCE(rmp.puede_crear, FALSE) AS "canCreate",
                        COALESCE(rmp.puede_editar, FALSE) AS "canEdit",
                        COALESCE(rmp.puede_eliminar, FALSE) AS "canDelete",
                        COALESCE(rmp.puede_exportar, FALSE) AS "canExport"
-                FROM opciones_menu m
-                LEFT JOIN permisos_rol_menu rmp ON rmp.opcion_menu_id = m.id
-                     AND rmp.rol_id = (SELECT id FROM roles WHERE codigo = :roleCode LIMIT 1)
-                ORDER BY m.padre_id NULLS FIRST, m.orden ASC
+                FROM arbol_menu t
+                LEFT JOIN rbac.permisos_rol_menu rmp ON rmp.opcion_menu_id = t.id
+                     AND rmp.rol_id = (SELECT id FROM rbac.roles WHERE codigo = :roleCode LIMIT 1)
+                ORDER BY t.ruta_orden ASC
                 """)
                 .param("roleCode", roleCode.toUpperCase())
                 .query()
@@ -94,13 +126,13 @@ public class RolesRepository {
     }
 
     /**
-     * Actualiza o inserta en lote la matriz de permisos de opciones de menú para un rol.
+     * Actualiza o inserta en lote la matriz de permisos de opciones de menú para un rol en {@code rbac.permisos_rol_menu}.
      *
      * @param roleCode    código del rol a modificar
      * @param permissions lista de filas con sus permisos actualizados
      */
     public void updateRolePermissions(String roleCode, List<Map<String, Object>> permissions) {
-        var roleIdOpt = jdbcClient.sql("SELECT id::text FROM roles WHERE codigo = :roleCode LIMIT 1")
+        var roleIdOpt = jdbcClient.sql("SELECT id::text FROM rbac.roles WHERE codigo = :roleCode LIMIT 1")
                 .param("roleCode", roleCode.toUpperCase())
                 .query(String.class)
                 .optional();
@@ -123,11 +155,11 @@ public class RolesRepository {
             boolean canExport = Boolean.TRUE.equals(perm.get("canExport"));
 
             jdbcClient.sql("""
-                    INSERT INTO permisos_rol_menu (
+                    INSERT INTO rbac.permisos_rol_menu (
                         rol_id, opcion_menu_id, visible_en_menu, puede_ver, puede_crear, puede_editar, puede_eliminar, puede_exportar, fecha_actualizacion
                     )
                     SELECT :roleId::uuid, m.id, :visible, :view, :create, :edit, :delete, :export, NOW()
-                    FROM opciones_menu m WHERE m.codigo = :code
+                    FROM rbac.opciones_menu m WHERE m.codigo = :code
                     ON CONFLICT (rol_id, opcion_menu_id) DO UPDATE SET
                         visible_en_menu = EXCLUDED.visible_en_menu,
                         puede_ver = EXCLUDED.puede_ver,

@@ -11,6 +11,7 @@ import {
   CommercialCustomer,
   CommercialSupplier,
   DiscountCoupon,
+  SecurityVulnerability,
 } from '../models/domain.models';
 
 /**
@@ -39,6 +40,8 @@ export interface BackendBusinessDto {
   supportedCurrenciesRaw?: string;
   /** Estado de activación del negocio */
   active?: boolean;
+  createdAt?: string;
+  registeredBy?: string;
 }
 
 /**
@@ -127,6 +130,8 @@ export interface BackendBranchDto {
   status?: string;
   /** Indicador de vigencia activa */
   active?: boolean;
+  createdAt?: string;
+  registeredBy?: string;
 }
 
 /**
@@ -161,6 +166,10 @@ export interface BackendUserDto {
   must_change_password?: boolean;
   /** Fecha de vencimiento de contraseña */
   password_expires_at?: string;
+  created_at?: string;
+  createdAt?: string;
+  registered_by?: string;
+  registeredBy?: string;
 }
 
 /**
@@ -949,6 +958,39 @@ export class AdminApiService {
     return this.http.patch<GenericMutationResponse>(
       `${this.baseUrl}/notifications/read-all`,
       {},
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // =========================================================================
+  // 12. AUDITORÍA DE SEGURIDAD Y VULNERABILIDADES (Skill Cybersecurity Senior)
+  // =========================================================================
+
+  /**
+   * Obtiene la lista de vulnerabilidades de seguridad registradas para el negocio matriz.
+   */
+  getVulnerabilities(): Observable<SecurityVulnerability[]> {
+    return this.http.get<SecurityVulnerability[]>(`${this.baseUrl}/vulnerabilities`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  /**
+   * Registra un nuevo hallazgo de vulnerabilidad en la base de datos.
+   */
+  createVulnerability(vuln: Partial<SecurityVulnerability>): Observable<GenericMutationResponse> {
+    return this.http.post<GenericMutationResponse>(`${this.baseUrl}/vulnerabilities`, vuln, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  /**
+   * Actualiza el estado de mitigación de un hallazgo (ej. MITIGADO, EN_PROCESO, etc.).
+   */
+  updateVulnerabilityStatus(id: string, status: string, mitigationNotes?: string): Observable<GenericMutationResponse> {
+    return this.http.patch<GenericMutationResponse>(
+      `${this.baseUrl}/vulnerabilities/${encodeURIComponent(id)}/status`,
+      { status, mitigationNotes },
       { headers: this.getHeaders() }
     );
   }

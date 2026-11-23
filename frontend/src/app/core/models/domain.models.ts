@@ -54,6 +54,8 @@ export interface BusinessProfile {
   defaultCurrency?: string;
   /** Lista de monedas admitidas / registradas por el negocio */
   supportedCurrencies?: string[];
+  registeredBy?: string;
+  createdAt?: string;
 }
 
 /** Representa un Local / Sucursal / Almacén perteneciente a un Negocio (`businessId`) */
@@ -78,6 +80,8 @@ export interface BusinessBranch {
   posTerminals: number;
   /** Estado operativo del local */
   status: 'Operativo' | 'Mantenimiento';
+  registeredBy?: string;
+  createdAt?: string;
 }
 
 /** Tarjeta de indicador clave de rendimiento (KPI) */
@@ -145,6 +149,8 @@ export interface SystemUser {
   passwordLastChangedAt?: string;
   /** Etiqueta descriptiva del escenario de prueba para validar en el Login */
   testCaseDescription?: string;
+  registeredBy?: string;
+  createdAt?: string;
 }
 
 /** Rol del sistema con alcance organizacional (Negocio vs Local) */
@@ -161,6 +167,8 @@ export interface SystemRole {
   usersCount: number;
   /** Estado de vigencia del rol */
   active: boolean;
+  registeredBy?: string;
+  createdAt?: string;
 }
 
 /** Fila de la matriz RBAC de permisos por opción de menú */
@@ -175,6 +183,12 @@ export interface RoleMenuMatrixRow {
   canEdit: boolean;
   canDelete: boolean;
   canExport: boolean;
+  /** Ícono Bootstrap Icons representativo */
+  icon?: string;
+  /** Módulo padre al que pertenece la opción */
+  moduleGroup?: string;
+  /** Bandera que indica si actúa como contenedor o grupo de submenú */
+  isGroup?: boolean;
 }
 
 /** Cliente comercial independiente único por Negocio Matriz */
@@ -233,6 +247,7 @@ export interface BeverageProduct {
   businessId?: string;
   businessCode?: string;
   businessName?: string;
+  createdAt?: string;
 }
 
 /** Ítem individual agregado al carrito de una venta */
@@ -296,6 +311,7 @@ export interface DiscountCoupon {
   maxUses: number;
   expiresAt: string;
   createdByUser: string;
+  createdAt?: string;
   active: boolean;
 }
 
@@ -330,6 +346,8 @@ export interface BeverageCategory {
   status?: string;
   businessCode?: string;
   businessId?: string;
+  registeredBy?: string;
+  createdAt?: string;
 }
 
 /** Alias de compatibilidad hacia BeverageCategory */
@@ -339,11 +357,33 @@ export type DummyCategory = BeverageCategory;
 export interface EnterpriseReport {
   id: string;
   title: string;
+  description?: string;
   module: string;
   date: string;
-  format: 'PDF' | 'XLSX' | 'CSV';
+  format: 'PDF' | 'XLSX' | 'CSV' | 'TXT';
   size: string;
+  registeredBy?: string;
+  reportType?: 'SALES' | 'INVENTORY' | 'PURCHASES' | 'CASH' | 'COUPONS' | 'CUSTOMERS' | 'SUPPLIERS' | 'SUNAT';
 }
 
 /** Alias de compatibilidad hacia EnterpriseReport */
 export type DummyReport = EnterpriseReport;
+
+/** Registro de hallazgo de seguridad y auditoría defensiva (Skill Cybersecurity Senior / OWASP / CIS) */
+export interface SecurityVulnerability {
+  id?: string;
+  code: string;
+  title: string;
+  category: string;
+  severity: 'CRITICA' | 'ALTA' | 'MEDIA' | 'BAJA' | 'INFORMATIVA';
+  status: 'ABIERTO' | 'EN_PROCESO' | 'MITIGADO' | 'FALSO_POSITIVO' | 'ACEPTADO';
+  affectedComponent: string;
+  description: string;
+  estimatedImpact?: string;
+  remediationPlan: string;
+  reportedByUser?: string;
+  mitigatedByUser?: string;
+  detectionDate?: string;
+  mitigationDate?: string;
+}
+

@@ -37,7 +37,9 @@ public record CreateUserWithBranchesRequest(
         @Email @NotBlank String email,
 
         @Schema(description = "Contraseña inicial en texto plano (se cifra con BCrypt)", example = "Admin123*")
-        @NotBlank String password,
+        @NotBlank
+        @jakarta.validation.constraints.Size(min = 8, max = 100, message = "La contraseña inicial debe contener entre 8 y 100 caracteres")
+        String password,
 
         @Schema(description = "Código del Rol asignado", example = "ANALYST")
         @NotBlank String roleCode,

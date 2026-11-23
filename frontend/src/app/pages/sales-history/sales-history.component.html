@@ -110,7 +110,7 @@
               <th>Cupón</th>
               <th>Total Neto</th>
               <th>Registrado Por</th>
-              <th>Fecha</th>
+              <th>Fecha Registro</th>
               <th>Comprobante</th>
             </tr>
           </thead>
@@ -127,7 +127,7 @@
               </td>
               <td><strong>{{ currencySymbol() }} {{ sale.total | appAmount }}</strong></td>
               <td><code>{{ sale.sellerUser }}</code></td>
-              <td class="text-muted">{{ sale.date | appDate }}</td>
+              <td class="text-muted"><i class="bi bi-clock-history"></i> {{ sale.date }}</td>
               <td>
                 <button
                   type="button"

@@ -1,5 +1,6 @@
 package com.elroble.bevadmin.modules.coupons.service;
 
+import com.elroble.bevadmin.common.exception.BusinessRuleException;
 import com.elroble.bevadmin.modules.coupons.dto.CreateCouponRequest;
 import com.elroble.bevadmin.modules.coupons.repository.CouponsRepository;
 import com.elroble.bevadmin.security.AuthenticatedUserPrincipal;
@@ -42,8 +43,15 @@ public class CouponsServiceImpl implements CouponsService {
     @Override
     @Transactional
     public Map<String, Object> createCoupon(CreateCouponRequest request, AuthenticatedUserPrincipal user) {
+        String cleanCode = request.code().trim().toUpperCase();
+        if (couponsRepository.existsByCode(cleanCode)) {
+            throw new BusinessRuleException(
+                    "El código de cupón '" + cleanCode + "' ya se encuentra registrado en la base de datos. " +
+                    "Los códigos de cupón deben ser únicos e irrepetibles."
+            );
+        }
         couponsRepository.insertCoupon(user.businessId(), user.userId(), request);
-        return Map.of("code", request.code().toUpperCase(), "active", true);
+        return Map.of("code", cleanCode, "active", true);
     }
 
     /**

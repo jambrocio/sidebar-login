@@ -119,6 +119,8 @@
             <th>Alcance (Negocio / Local)</th>
             <th>Descripción</th>
             <th>Usuarios</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
             <th>Estado</th>
             <th>Administración</th>
           </tr>
@@ -138,6 +140,8 @@
             </td>
             <td>{{ r.description }}</td>
             <td>{{ r.usersCount }} usuario(s)</td>
+            <td><code>{{ r.registeredBy || 'Ana García López (agarcia)' }}</code></td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ r.createdAt || '2026-10-20 08:00:00' }}</td>
             <td>
               <span
                 class="badge"
@@ -189,47 +193,320 @@
   </div>
 
   <!-- 3. Matriz de Permisos por Opción de Menú del Rol Seleccionado -->
-  <div class="card">
-    <div class="toolbar">
-      <h2 class="section-title" style="margin: 0">
-        Matriz de Permisos de Menú — Rol Activo: {{ selectedRoleCode() }}
-      </h2>
-      <button
-        type="button"
-        class="btn-primary"
-        (click)="saveRoleMatrix()"
-      >
-        <i class="bi bi-check2-circle"></i>
-        <span>Guardar Matriz de Permisos</span>
-      </button>
+  <div class="card matrix-card">
+    <!-- Barra Superior: Título, Rol Activo y Botones de Acción Global -->
+    <div class="toolbar matrix-toolbar">
+      <div>
+        <div class="matrix-title-wrapper">
+          <i class="bi bi-shield-check matrix-main-icon"></i>
+          <div>
+            <h2 class="section-title" style="margin: 0">
+              Matriz de Permisos de Menú
+            </h2>
+            <p class="subtitle" style="margin: 0.2rem 0 0 0">
+              Rol en configuración: <span class="badge badge-info">{{ selectedRoleCode() }}</span>
+              — Opciones totales: <strong>{{ roleMenuMatrix().length }}</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="matrix-actions-group">
+        <button
+          type="button"
+          class="btn-secondary btn-sm"
+          (click)="setFullAccess()"
+          title="Conceder todos los permisos a todas las opciones"
+        >
+          <i class="bi bi-check-all"></i>
+          <span>Acceso Total</span>
+        </button>
+        <button
+          type="button"
+          class="btn-secondary btn-sm"
+          (click)="setReadOnlyAccess()"
+          title="Configurar visibilidad, lectura y exportación"
+        >
+          <i class="bi bi-eye"></i>
+          <span>Solo Lectura</span>
+        </button>
+        <button
+          type="button"
+          class="btn-secondary btn-sm"
+          (click)="clearAllPermissions()"
+          title="Desmarcar todos los permisos"
+        >
+          <i class="bi bi-dash-circle"></i>
+          <span>Limpiar Todo</span>
+        </button>
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="saveRoleMatrix()"
+        >
+          <i class="bi bi-check2-circle"></i>
+          <span>Guardar Matriz</span>
+        </button>
+      </div>
     </div>
 
+    <!-- Pestañas de Filtrado por Módulo y Buscador Rápido -->
+    <div class="matrix-filter-bar">
+      <div class="module-tabs-scroll">
+        <button
+          *ngFor="let tab of moduleFilterTabs"
+          type="button"
+          class="module-tab-btn"
+          [class.active]="selectedModuleFilter() === tab"
+          (click)="selectedModuleFilter.set(tab)"
+        >
+          <span>{{ tab }}</span>
+          <span class="tab-count-pill">{{ getCategoryCount(tab) }}</span>
+        </button>
+      </div>
+
+      <div class="matrix-search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          type="text"
+          [ngModel]="matrixSearchQuery()"
+          (ngModelChange)="matrixSearchQuery.set($event)"
+          placeholder="Buscar opción, módulo, código o ruta..."
+          aria-label="Buscar opciones en la matriz de permisos"
+        />
+        <button
+          *ngIf="matrixSearchQuery()"
+          type="button"
+          class="clear-search-btn"
+          (click)="matrixSearchQuery.set('')"
+          title="Limpiar búsqueda"
+        >
+          <i class="bi bi-x"></i>
+        </button>
+        <span class="results-tag">
+          {{ filteredMatrix().length }} / {{ roleMenuMatrix().length }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Tabla Detallada con Iconografía y Códigos de Color por Módulo -->
     <div class="table-responsive">
-      <table class="data-table">
+      <table class="data-table matrix-table">
         <thead>
           <tr>
-            <th>Opción de Menú</th>
+            <th style="min-width: 250px">Opción de Menú</th>
+            <th style="min-width: 140px">Módulo Funcional</th>
             <th>Código Menú</th>
-            <th>Ruta</th>
-            <th>Visible en Sidebar</th>
-            <th>Ver</th>
-            <th>Crear</th>
-            <th>Editar</th>
-            <th>Eliminar</th>
-            <th>Exportar</th>
+            <th>Ruta / Destino</th>
+            <th class="text-center col-chk-header">
+              <div class="th-with-checkbox">
+                <span><i class="bi bi-eye-fill"></i> Visible</span>
+                <input
+                  type="checkbox"
+                  [checked]="isColumnAllChecked('visibleInSidebar')"
+                  (change)="toggleAllColumn('visibleInSidebar')"
+                  title="Marcar / Desmarcar todos en Visible"
+                  aria-label="Marcar o desmarcar todos en columna Visible"
+                />
+              </div>
+            </th>
+            <th class="text-center col-chk-header">
+              <div class="th-with-checkbox">
+                <span><i class="bi bi-book-half"></i> Ver</span>
+                <input
+                  type="checkbox"
+                  [checked]="isColumnAllChecked('canView')"
+                  (change)="toggleAllColumn('canView')"
+                  title="Marcar / Desmarcar todos en Ver"
+                  aria-label="Marcar o desmarcar todos en columna Ver"
+                />
+              </div>
+            </th>
+            <th class="text-center col-chk-header">
+              <div class="th-with-checkbox">
+                <span><i class="bi bi-plus-circle-fill"></i> Crear</span>
+                <input
+                  type="checkbox"
+                  [checked]="isColumnAllChecked('canCreate')"
+                  (change)="toggleAllColumn('canCreate')"
+                  title="Marcar / Desmarcar todos en Crear"
+                  aria-label="Marcar o desmarcar todos en columna Crear"
+                />
+              </div>
+            </th>
+            <th class="text-center col-chk-header">
+              <div class="th-with-checkbox">
+                <span><i class="bi bi-pencil-fill"></i> Editar</span>
+                <input
+                  type="checkbox"
+                  [checked]="isColumnAllChecked('canEdit')"
+                  (change)="toggleAllColumn('canEdit')"
+                  title="Marcar / Desmarcar todos en Editar"
+                  aria-label="Marcar o desmarcar todos en columna Editar"
+                />
+              </div>
+            </th>
+            <th class="text-center col-chk-header">
+              <div class="th-with-checkbox">
+                <span><i class="bi bi-trash-fill"></i> Eliminar</span>
+                <input
+                  type="checkbox"
+                  [checked]="isColumnAllChecked('canDelete')"
+                  (change)="toggleAllColumn('canDelete')"
+                  title="Marcar / Desmarcar todos en Eliminar"
+                  aria-label="Marcar o desmarcar todos en columna Eliminar"
+                />
+              </div>
+            </th>
+            <th class="text-center col-chk-header">
+              <div class="th-with-checkbox">
+                <span><i class="bi bi-download"></i> Exportar</span>
+                <input
+                  type="checkbox"
+                  [checked]="isColumnAllChecked('canExport')"
+                  (change)="toggleAllColumn('canExport')"
+                  title="Marcar / Desmarcar todos en Exportar"
+                  aria-label="Marcar o desmarcar todos en columna Exportar"
+                />
+              </div>
+            </th>
+            <th class="text-center" style="width: 80px">Estado</th>
+            <th class="text-center" style="width: 70px">Fila</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of roleMenuMatrix()">
-            <td><strong>{{ item.label }}</strong></td>
-            <td><code>{{ item.code }}</code></td>
-            <td><code>{{ item.routerLink }}</code></td>
-            <td><input type="checkbox" [(ngModel)]="item.visibleInSidebar" /></td>
-            <td><input type="checkbox" [(ngModel)]="item.canView" /></td>
-            <td><input type="checkbox" [(ngModel)]="item.canCreate" /></td>
-            <td><input type="checkbox" [(ngModel)]="item.canEdit" /></td>
-            <td><input type="checkbox" [(ngModel)]="item.canDelete" /></td>
-            <td><input type="checkbox" [(ngModel)]="item.canExport" /></td>
+          <tr *ngIf="filteredMatrix().length === 0">
+            <td colspan="12" class="empty-matrix-state">
+              <i class="bi bi-search"></i>
+              <p>No se encontraron opciones de menú con el criterio "{{ matrixSearchQuery() }}".</p>
+              <button type="button" class="btn-secondary btn-sm" (click)="matrixSearchQuery.set(''); selectedModuleFilter.set('TODOS')">
+                Restablecer Filtros
+              </button>
+            </td>
+          </tr>
+
+          <tr
+            *ngFor="let item of filteredMatrix()"
+            [ngClass]="getModuleClass(item)"
+            [class.row-level-1]="item.level === 1"
+            [class.row-level-2]="item.level === 2"
+            [class.row-level-3]="item.level === 3"
+          >
+            <!-- Opción de Menú con Sangría Jerárquica e Ícono Representativo -->
+            <td>
+              <div class="menu-label-cell" [style.padding-left.rem]="(item.level - 1) * 1.25">
+                <span *ngIf="item.level === 2" class="tree-elbow" title="Submenú">↳</span>
+                <span *ngIf="item.level === 3" class="tree-elbow level-3" title="Sub-opción">↳↳</span>
+
+                <span class="item-icon-box" [ngClass]="getModuleClass(item)">
+                  <i [class]="item.icon"></i>
+                </span>
+
+                <div class="label-info">
+                  <span class="label-text" [class.is-root-module]="item.level === 1">
+                    {{ getCleanLabel(item) }}
+                  </span>
+                  <span *ngIf="item.level === 1" class="chip chip-module">MÓDULO</span>
+                  <span *ngIf="item.level > 1 && item.isGroup" class="chip chip-group">GRUPO</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Módulo Funcional Padre -->
+            <td>
+              <span class="module-group-chip" [ngClass]="getModuleClass(item)">
+                {{ item.moduleGroup }}
+              </span>
+            </td>
+
+            <!-- Código Técnico -->
+            <td>
+              <code class="menu-code-badge">{{ item.code }}</code>
+            </td>
+
+            <!-- Ruta de Navegación / Contenedor -->
+            <td>
+              <span class="router-link-badge" [class.is-group]="item.routerLink.includes('Módulo')">
+                <i class="bi" [ngClass]="item.routerLink.includes('Módulo') ? 'bi-folder2-open' : 'bi-link-45deg'"></i>
+                {{ item.routerLink }}
+              </span>
+            </td>
+
+            <!-- Checkboxes de Permisos RBAC -->
+            <td class="text-center cell-chk">
+              <input
+                type="checkbox"
+                [(ngModel)]="item.visibleInSidebar"
+                (ngModelChange)="onPermissionChange(item, 'visible')"
+                [attr.aria-label]="'Visibilidad en sidebar de ' + getCleanLabel(item)"
+              />
+            </td>
+            <td class="text-center cell-chk">
+              <input
+                type="checkbox"
+                [(ngModel)]="item.canView"
+                (ngModelChange)="onPermissionChange(item, 'view')"
+                [attr.aria-label]="'Permiso de ver ' + getCleanLabel(item)"
+              />
+            </td>
+            <td class="text-center cell-chk">
+              <input
+                type="checkbox"
+                [(ngModel)]="item.canCreate"
+                (ngModelChange)="onPermissionChange(item, 'create')"
+                [attr.aria-label]="'Permiso de crear en ' + getCleanLabel(item)"
+              />
+            </td>
+            <td class="text-center cell-chk">
+              <input
+                type="checkbox"
+                [(ngModel)]="item.canEdit"
+                (ngModelChange)="onPermissionChange(item, 'edit')"
+                [attr.aria-label]="'Permiso de editar en ' + getCleanLabel(item)"
+              />
+            </td>
+            <td class="text-center cell-chk">
+              <input
+                type="checkbox"
+                [(ngModel)]="item.canDelete"
+                (ngModelChange)="onPermissionChange(item, 'delete')"
+                [attr.aria-label]="'Permiso de eliminar en ' + getCleanLabel(item)"
+              />
+            </td>
+            <td class="text-center cell-chk">
+              <input
+                type="checkbox"
+                [(ngModel)]="item.canExport"
+                (ngModelChange)="onPermissionChange(item, 'export')"
+                [attr.aria-label]="'Permiso de exportar en ' + getCleanLabel(item)"
+              />
+            </td>
+
+            <!-- Medidor de Permisos Activos de la Fila -->
+            <td class="text-center">
+              <span
+                class="perm-meter"
+                [class.perm-all]="getActivePermissionsCount(item) === 5"
+                [class.perm-partial]="getActivePermissionsCount(item) > 0 && getActivePermissionsCount(item) < 5"
+                [class.perm-none]="getActivePermissionsCount(item) === 0"
+                [title]="getActivePermissionsCount(item) + ' de 5 permisos activos'"
+              >
+                {{ getActivePermissionsCount(item) }}/5
+              </span>
+            </td>
+
+            <!-- Conmutador Rápido por Fila -->
+            <td class="text-center">
+              <button
+                type="button"
+                class="btn-icon-subtle"
+                (click)="toggleRow(item)"
+                [title]="item.canView ? 'Desmarcar fila' : 'Marcar fila completa'"
+                [attr.aria-label]="'Alternar fila de ' + getCleanLabel(item)"
+              >
+                <i class="bi" [ngClass]="item.canView ? 'bi-check-square-fill text-primary' : 'bi-dash-square'"></i>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>

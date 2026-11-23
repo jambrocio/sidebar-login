@@ -37,7 +37,7 @@ public class CashRegisterRepository {
     public List<Map<String, Object>> findCashAuditsByBusinessId(UUID businessId) {
         return jdbcClient.sql("""
                 SELECT a.codigo_arqueo AS id, br.nombre AS branch, a.nombre_turno AS shift,
-                       a.fecha_cierre AS "closedAt",
+                       TO_CHAR(a.fecha_cierre, 'YYYY-MM-DD HH24:MI:SS') AS "closedAt",
                        (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "cashierUser",
                        a.saldo_apertura AS "openingBalance", a.ventas_efectivo AS "cashSales",
                        a.ventas_digitales AS "digitalSales", a.gastos AS expenses,

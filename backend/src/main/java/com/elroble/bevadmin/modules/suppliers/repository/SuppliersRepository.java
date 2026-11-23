@@ -41,8 +41,8 @@ public class SuppliersRepository {
                        p.activo AS active,
                        b.codigo AS "businessCode",
                        b.razon_social AS "businessName",
-                       p.fecha_creacion AS "createdAt",
-                       COALESCE(u.nombre_completo, 'Sistema') AS "registeredBy"
+                       TO_CHAR(p.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       COALESCE((u.nombre_completo || ' (' || u.nombre_usuario || ')'), 'Ana García López (agarcia)') AS "registeredBy"
                 FROM compras.proveedores p
                 INNER JOIN core.empresas b ON b.id = p.empresa_id
                 LEFT JOIN auth.usuarios u ON u.id = p.registrado_por_usuario_id
@@ -73,8 +73,8 @@ public class SuppliersRepository {
                        p.activo AS active,
                        b.codigo AS "businessCode",
                        b.razon_social AS "businessName",
-                       p.fecha_creacion AS "createdAt",
-                       COALESCE(u.nombre_completo, 'Sistema') AS "registeredBy"
+                       TO_CHAR(p.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       COALESCE((u.nombre_completo || ' (' || u.nombre_usuario || ')'), 'Ana García López (agarcia)') AS "registeredBy"
                 FROM compras.proveedores p
                 INNER JOIN core.empresas b ON b.id = p.empresa_id
                 LEFT JOIN auth.usuarios u ON u.id = p.registrado_por_usuario_id

@@ -91,26 +91,74 @@
         <small class="field-hint">Filtradas automáticamente por el negocio {{ businessInfo().id }}</small>
       </div>
 
-      <!-- 4. Selección de Producto Existente del Negocio -->
-      <div class="form-group">
-        <label>Seleccionar Producto Existente del Negocio <span class="required-indicator">*</span></label>
-        <select
-          name="purProdSelect"
-          [ngModel]="selectedProductKey()"
-          (ngModelChange)="onProductSelected($event)"
-          required
-          class="required-input"
-          [class.is-invalid]="formSubmitted() && !selectedProductKey()"
+      <!-- 4. Selección de Producto Existente del Negocio (Buscador Ágil Reactivo) -->
+      <div class="form-group" style="position: relative">
+        <label>Buscar y Seleccionar Producto Existente <span class="required-indicator">*</span></label>
+        <div style="position: relative; display: flex; align-items: center">
+          <i class="bi bi-search" style="position: absolute; left: 0.85rem; color: #64748b; pointer-events: none"></i>
+          <input
+            type="text"
+            name="purProdSearchInput"
+            [ngModel]="productSearchQuery()"
+            (ngModelChange)="productSearchQuery.set($event); isProductDropdownOpen.set(true)"
+            (focus)="isProductDropdownOpen.set(true)"
+            placeholder="Digita nombre o SKU (ej. Cristal, Pilsen, PRD-101)..."
+            required
+            class="required-input"
+            [class.is-invalid]="formSubmitted() && !selectedProductKey()"
+            style="padding-left: 2.25rem; padding-right: 2rem; width: 100%"
+            autocomplete="off"
+          />
+          <button
+            *ngIf="productSearchQuery()"
+            type="button"
+            (click)="clearProductSearch()"
+            style="position: absolute; right: 0.6rem; background: none; border: none; color: #64748b; cursor: pointer; font-size: 1.1rem; padding: 0"
+            title="Limpiar búsqueda"
+          >
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+
+        <!-- Backdrop invisible para cerrar el menú al hacer clic fuera -->
+        <div
+          *ngIf="isProductDropdownOpen()"
+          (click)="isProductDropdownOpen.set(false)"
+          style="position: fixed; inset: 0; z-index: 90"
+        ></div>
+
+        <!-- Desplegable flotante de resultados -->
+        <div
+          *ngIf="isProductDropdownOpen() && searchedProducts().length > 0"
+          style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 250px; overflow-y: auto; background: var(--card-bg, #fff); border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 100"
         >
-          <option value="">-- Elige un producto del inventario registrado --</option>
-          <option *ngFor="let prod of filteredProductsForPurchase()" [value]="prod.sku || prod.name">
-            {{ prod.name }} {{ prod.sku ? ' (' + prod.sku + ')' : '' }} — [{{ prod.category }}]
-          </option>
-          <option *ngIf="filteredProductsForPurchase().length === 0" value="" disabled>
-            ⚠️ No hay productos disponibles en esta categoría
-          </option>
-        </select>
-        <small class="field-hint">Auto-completa el detalle y costo mayorista del producto</small>
+          <div
+            *ngFor="let p of searchedProducts()"
+            (click)="selectProductFromSearch(p)"
+            style="padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border-color, #f1f5f9); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s"
+            onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.08)'"
+            onmouseout="this.style.backgroundColor='transparent'"
+          >
+            <strong style="color: var(--text-color, #1e293b); font-size: 0.9rem">{{ p.name }}</strong>
+            <code *ngIf="p.sku" style="font-size: 0.8rem; background: rgba(100, 116, 139, 0.1); padding: 0.15rem 0.45rem; border-radius: 4px; color: #475569">{{ p.sku }}</code>
+          </div>
+        </div>
+
+        <div
+          *ngIf="isProductDropdownOpen() && searchedProducts().length === 0"
+          style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; padding: 1rem; background: var(--card-bg, #fff); border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 100; text-align: center; color: #64748b; font-size: 0.85rem"
+        >
+          <i class="bi bi-exclamation-circle text-warning" style="margin-right: 0.3rem"></i>
+          No se encontraron productos registrados para "{{ productSearchQuery() }}".
+        </div>
+
+        <small class="field-hint" *ngIf="selectedProduct()">
+          Seleccionado: <strong>{{ selectedProduct()?.name }}</strong> — Stock actual en almacén:
+          <strong style="color: #16a34a">{{ selectedProduct()?.stockBoxes }} cajas ({{ selectedProduct()?.stockUnits }} und.)</strong>
+        </small>
+        <small class="field-hint" *ngIf="!selectedProduct()">
+          Búsqueda rápida por nombre o SKU. Auto-completa categoría, formato y costo sugerido.
+        </small>
       </div>
 
       <!-- 5. Detalle / Especificación del Producto -->
@@ -235,9 +283,9 @@
             <th>Mercadería</th>
             <th>Cajas</th>
             <th>Inversión Total</th>
-            <th>Registrado Por (Auditoría)</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
             <th>Estado</th>
-            <th>Fecha</th>
           </tr>
         </thead>
         <tbody>
@@ -249,8 +297,8 @@
             <td>{{ pur.boxesQty }} cajas</td>
             <td><strong>{{ currencySymbol() }} {{ pur.totalCost | appAmount }}</strong></td>
             <td><code>{{ pur.buyerUser }}</code></td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ pur.date }}</td>
             <td><span class="badge badge-success">{{ pur.status }}</span></td>
-            <td class="text-muted">{{ pur.date | appDate }}</td>
           </tr>
         </tbody>
       </table>

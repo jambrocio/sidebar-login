@@ -1,0 +1,431 @@
+<div class="view-container">
+  <!-- Cabecera de la Vista -->
+  <div class="header-container">
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-shield-check"></i>
+        <span>Auditoría de Vulnerabilidades y Seguridad Defensiva</span>
+      </h1>
+      <p class="page-subtitle">
+        Registro centralizado, seguimiento y remediación de hallazgos de seguridad identificados bajo el estándar <strong>Cybersecurity Senior (OWASP Top 10 & CIS Benchmarks)</strong> para el negocio {{ businessInfo().id }}.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="refreshData()" title="Refrescar catálogo desde la base de datos">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Sincronizar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Banner de Notificación / Feedback -->
+  <div
+    *ngIf="feedbackMessage()"
+    class="feedback-banner"
+    [ngClass]="'feedback-' + feedbackMessage()?.type"
+  >
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-check-circle-fill': feedbackMessage()?.type === 'success',
+        'bi-exclamation-triangle-fill': feedbackMessage()?.type === 'warning',
+        'bi-x-circle-fill': feedbackMessage()?.type === 'error',
+        'bi-info-circle-fill': feedbackMessage()?.type === 'info'
+      }"
+    ></i>
+    <span>{{ feedbackMessage()?.text }}</span>
+    <button type="button" class="btn-close-banner" (click)="feedbackMessage.set(null)">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+
+  <!-- TARJETAS DE MÉTRICAS (KPIs de Postura de Seguridad) -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-total">
+      <div class="kpi-icon">
+        <i class="bi bi-shield-shaded"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Total Hallazgos Auditados</span>
+        <strong class="kpi-value">{{ totalCount() }}</strong>
+        <span class="kpi-sub">En base de datos PostgreSQL</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-critical">
+      <div class="kpi-icon">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Críticas y Altas Pendientes</span>
+        <strong class="kpi-value">{{ criticalAndHighPending() }}</strong>
+        <span class="kpi-sub" [class.alert-danger]="criticalAndHighPending() > 0">
+          {{ criticalAndHighPending() > 0 ? '⚠️ Atención prioritaria requerida' : '✅ Postura controlada' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-progress">
+      <div class="kpi-icon">
+        <i class="bi bi-tools"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">En Proceso de Hardening</span>
+        <strong class="kpi-value">{{ inProgressCount() }}</strong>
+        <span class="kpi-sub">Remediaciones activas</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-mitigated">
+      <div class="kpi-icon">
+        <i class="bi bi-shield-fill-check"></i>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Mitigadas y Blindadas</span>
+        <strong class="kpi-value">{{ mitigatedCount() }}</strong>
+        <span class="kpi-sub rate-badge">
+          <i class="bi bi-graph-up-arrow"></i> {{ mitigationRate() }}% de resolución
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. FORMULARIO DE REGISTRO DE VULNERABILIDAD -->
+  <div class="card form-card">
+    <div class="card-header-styled">
+      <div class="header-icon">
+        <i class="bi bi-shield-plus"></i>
+      </div>
+      <div>
+        <h2 class="card-title">Registrar Nuevo Hallazgo de Seguridad</h2>
+        <p class="card-subtitle">
+          Documenta vulnerabilidades detectadas en código, APIs, contenedores Docker, bases de datos o infraestructura de red.
+        </p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="saveVulnerability()" class="vuln-form" [class.was-validated]="formSubmitted()" novalidate>
+      <div class="form-grid">
+        <!-- 1. Código Identificador -->
+        <div class="form-group">
+          <label>
+            1. Código del Hallazgo <span class="required-indicator">*</span>
+            <span class="badge-locked"><i class="bi bi-lock-fill"></i> Único</span>
+          </label>
+          <div class="input-with-action readonly-code-wrapper">
+            <i class="bi bi-shield-lock-fill input-icon-lock"></i>
+            <input
+              type="text"
+              name="vlCode"
+              [(ngModel)]="newVuln.code"
+              placeholder="SEC-2026-XXXX"
+              required
+              readonly
+              tabindex="-1"
+              class="required-input readonly-code-input"
+            />
+          </div>
+          <small class="field-hint">Código único correlativo auto-generado para trazabilidad</small>
+        </div>
+
+        <!-- 2. Nivel de Severidad -->
+        <div class="form-group">
+          <label>2. Nivel de Severidad <span class="required-indicator">*</span></label>
+          <select name="vlSeverity" [(ngModel)]="newVuln.severity" required class="required-input severity-select">
+            <option value="CRITICA">🔴 CRÍTICA - Explotación directa o compromiso total</option>
+            <option value="ALTA">🟠 ALTA - Riesgo significativo de acceso o fuga</option>
+            <option value="MEDIA">🟡 MEDIA - Requiere condiciones específicas</option>
+            <option value="BAJA">🔵 BAJA - Impacto menor o mitigable</option>
+            <option value="INFORMATIVA">⚪ INFORMATIVA - Buena práctica o endurecimiento</option>
+          </select>
+          <small class="field-hint">Prioridad de remediación según matriz de riesgo</small>
+        </div>
+
+        <!-- 3. Título del Hallazgo -->
+        <div class="form-group full-width">
+          <label>3. Título del Hallazgo o Vulnerabilidad <span class="required-indicator">*</span></label>
+          <input
+            type="text"
+            name="vlTitle"
+            [(ngModel)]="newVuln.title"
+            placeholder="Ej: Ausencia de cabecera Content-Security-Policy en Nginx / Permisos excesivos en BD"
+            required
+            class="required-input"
+            [class.is-invalid]="formSubmitted() && !newVuln.title.trim()"
+          />
+          <small class="field-hint">Descripción corta y comprensible del problema detectado</small>
+        </div>
+
+        <!-- 4. Categoría OWASP / CIS -->
+        <div class="form-group">
+          <label>4. Categoría del Marco Defensivo <span class="required-indicator">*</span></label>
+          <select name="vlCategory" [(ngModel)]="newVuln.category" required class="required-input">
+            <option *ngFor="let cat of categoriesList" [value]="cat">
+              {{ cat }}
+            </option>
+          </select>
+          <small class="field-hint">Mapeo formal con el estándar de ciberseguridad</small>
+        </div>
+
+        <!-- 5. Componente / Servicio Afectado -->
+        <div class="form-group">
+          <label>5. Componente o Servicio Afectado <span class="required-indicator">*</span></label>
+          <input
+            type="text"
+            name="vlComponent"
+            [(ngModel)]="newVuln.affectedComponent"
+            placeholder="Ej: dev-frontend/nginx.conf, CouponsController.java, dev-postgres"
+            required
+            class="required-input"
+            [class.is-invalid]="formSubmitted() && !newVuln.affectedComponent.trim()"
+          />
+          <small class="field-hint">Ubicación exacta o módulo en el código / infraestructura</small>
+        </div>
+
+        <!-- 6. Descripción Técnica -->
+        <div class="form-group full-width">
+          <label>6. Descripción del Riesgo Técnico <span class="required-indicator">*</span></label>
+          <textarea
+            name="vlDescription"
+            [(ngModel)]="newVuln.description"
+            rows="3"
+            placeholder="Describe detalladamente en qué consiste la vulnerabilidad y bajo qué escenario se manifiesta..."
+            required
+            class="required-input textarea-control"
+            [class.is-invalid]="formSubmitted() && !newVuln.description.trim()"
+          ></textarea>
+          <small class="field-hint">Evidencia y análisis del vector de riesgo observado</small>
+        </div>
+
+        <!-- 7. Plan de Remediación / Hardening Recomendado -->
+        <div class="form-group full-width">
+          <label>7. Plan de Remediación y Endurecimiento Recomendado (Cybersecurity Senior) <span class="required-indicator">*</span></label>
+          <textarea
+            name="vlRemediation"
+            [(ngModel)]="newVuln.remediationPlan"
+            rows="3"
+            placeholder="Detalla los pasos exactos para mitigar el riesgo (ej. directivas a configurar, código a refactorizar o parches a aplicar)..."
+            required
+            class="required-input textarea-control"
+            [class.is-invalid]="formSubmitted() && !newVuln.remediationPlan.trim()"
+          ></textarea>
+          <small class="field-hint">Guía técnica de solución preventiva para el equipo de desarrollo</small>
+        </div>
+      </div>
+
+      <!-- Acciones del Formulario -->
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">
+          <i class="bi bi-shield-check"></i>
+          <span>Registrar Hallazgo en Base de Datos</span>
+        </button>
+        <button type="button" class="btn-secondary" (click)="resetForm()">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          <span>Limpiar Formulario</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. CATÁLOGO Y AUDITORÍA DE VULNERABILIDADES -->
+  <div class="card table-card">
+    <div class="toolbar-header">
+      <div>
+        <h2 class="card-title">
+          Registro de Vulnerabilidades y Seguimiento ({{ filteredVulnerabilities().length }})
+        </h2>
+        <p class="card-subtitle">
+          Control de estado de mitigación, criticidad y trazabilidad de acciones correctivas.
+        </p>
+      </div>
+    </div>
+
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="filters-bar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Buscar por código, título, componente o categoría..."
+        />
+        <button *ngIf="searchQuery()" type="button" class="btn-clear-search" (click)="searchQuery.set('')">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <label><i class="bi bi-filter"></i> Severidad:</label>
+        <select [ngModel]="filterSeverity()" (ngModelChange)="filterSeverity.set($event)">
+          <option value="ALL">Todas las Severidades</option>
+          <option value="CRITICA">🔴 Crítica</option>
+          <option value="ALTA">🟠 Alta</option>
+          <option value="MEDIA">🟡 Media</option>
+          <option value="BAJA">🔵 Baja</option>
+          <option value="INFORMATIVA">⚪ Informativa</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label><i class="bi bi-check2-circle"></i> Estado:</label>
+        <select [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event)">
+          <option value="ALL">Todos los Estados</option>
+          <option value="ABIERTO">Abierto (Pendiente)</option>
+          <option value="EN_PROCESO">En Proceso de Hardening</option>
+          <option value="MITIGADO">Mitigado / Resuelto</option>
+          <option value="FALSO_POSITIVO">Falso Positivo</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabla de Vulnerabilidades -->
+    <div class="table-container">
+      <table class="corporate-table">
+        <thead>
+          <tr>
+            <th style="width: 130px">Código</th>
+            <th>Hallazgo y Componente Afectado</th>
+            <th style="width: 170px">Categoría</th>
+            <th style="width: 120px">Severidad</th>
+            <th style="width: 130px">Estado</th>
+            <th>Plan de Remediación</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
+            <th style="width: 170px; text-align: center">Acciones de Mitigación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of pagedVulnerabilities()">
+            <!-- Código -->
+            <td>
+              <span class="code-badge">
+                <i class="bi bi-shield-shaded"></i>
+                <code>{{ v.code }}</code>
+              </span>
+            </td>
+
+            <!-- Título y Componente -->
+            <td>
+              <div class="vuln-title-cell">
+                <strong class="vuln-title">{{ v.title }}</strong>
+                <span class="vuln-component">
+                  <i class="bi bi-hdd-network"></i> {{ v.affectedComponent }}
+                </span>
+                <small class="vuln-meta" *ngIf="v.reportedByUser">
+                  Reportado por: {{ v.reportedByUser }} ({{ v.detectionDate | slice:0:10 }})
+                </small>
+              </div>
+            </td>
+
+            <!-- Categoría -->
+            <td>
+              <span class="category-badge">{{ v.category }}</span>
+            </td>
+
+            <!-- Severidad -->
+            <td>
+              <span class="severity-pill" [ngClass]="'sev-' + v.severity.toLowerCase()">
+                <i
+                  class="bi"
+                  [ngClass]="{
+                    'bi-exclamation-octagon-fill': v.severity === 'CRITICA',
+                    'bi-exclamation-circle-fill': v.severity === 'ALTA',
+                    'bi-exclamation-triangle-fill': v.severity === 'MEDIA',
+                    'bi-info-circle-fill': v.severity === 'BAJA' || v.severity === 'INFORMATIVA'
+                  }"
+                ></i>
+                {{ v.severity }}
+              </span>
+            </td>
+
+            <!-- Estado -->
+            <td>
+              <span class="status-pill" [ngClass]="'st-' + v.status.toLowerCase().replace('_', '-')">
+                <i
+                  class="bi"
+                  [ngClass]="{
+                    'bi-circle-fill': v.status === 'ABIERTO',
+                    'bi-arrow-repeat': v.status === 'EN_PROCESO',
+                    'bi-shield-fill-check': v.status === 'MITIGADO',
+                    'bi-slash-circle': v.status === 'FALSO_POSITIVO'
+                  }"
+                ></i>
+                {{ v.status === 'EN_PROCESO' ? 'EN PROCESO' : v.status }}
+              </span>
+            </td>
+
+            <!-- Plan de Remediación -->
+            <td>
+              <div class="remediation-snippet" [title]="v.remediationPlan">
+                <i class="bi bi-wrench-adjustable-circle"></i>
+                <span>{{ v.remediationPlan }}</span>
+              </div>
+            </td>
+
+            <!-- Registrado Por -->
+            <td>
+              <code>{{ v.reportedByUser || 'Ana García López (agarcia)' }}</code>
+            </td>
+
+            <!-- Fecha Registro -->
+            <td>
+              <span class="text-muted"><i class="bi bi-clock-history"></i> {{ v.detectionDate || '2026-10-22 10:00:00' }}</span>
+            </td>
+
+            <!-- Acciones -->
+            <td style="text-align: center">
+              <div class="actions-group">
+                <button
+                  *ngIf="v.status !== 'MITIGADO'"
+                  type="button"
+                  class="btn-action btn-mitigate"
+                  (click)="changeStatus(v, 'MITIGADO')"
+                  title="Marcar como Mitigado"
+                >
+                  <i class="bi bi-check-lg"></i> Mitigar
+                </button>
+
+                <button
+                  *ngIf="v.status === 'ABIERTO'"
+                  type="button"
+                  class="btn-action btn-process"
+                  (click)="changeStatus(v, 'EN_PROCESO')"
+                  title="Iniciar Proceso de Hardening"
+                >
+                  <i class="bi bi-play-fill"></i> Iniciar
+                </button>
+
+                <button
+                  *ngIf="v.status === 'MITIGADO'"
+                  type="button"
+                  class="btn-action btn-reopen"
+                  (click)="changeStatus(v, 'ABIERTO')"
+                  title="Reabrir Hallazgo"
+                >
+                  <i class="bi bi-arrow-counterclockwise"></i> Reabrir
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Estado Vacío -->
+          <tr *ngIf="pagedVulnerabilities().length === 0">
+            <td colspan="7" class="empty-state-cell">
+              <i class="bi bi-shield-check"></i>
+              <p>No se encontraron hallazgos de vulnerabilidad registrados con los filtros seleccionados.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación Estándar Corporativa -->
+    <app-table-pagination
+      [totalItems]="filteredVulnerabilities().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)"
+    ></app-table-pagination>
+  </div>
+</div>

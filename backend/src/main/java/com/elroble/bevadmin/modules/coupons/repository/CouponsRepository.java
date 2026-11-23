@@ -40,7 +40,8 @@ public class CouponsRepository {
                        c.cliente_asignado AS "assignedClient", c.compra_minima AS "minPurchase",
                        c.usos_actuales AS "usedCount", c.usos_maximos AS "maxUses",
                        c.etiqueta_expiracion AS "expiresAt", c.activo AS active,
-                       (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "createdBy"
+                       (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "createdBy",
+                       TO_CHAR(c.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt"
                 FROM cupones_descuento c
                 INNER JOIN usuarios u ON u.id = c.creado_por_usuario_id
                 WHERE c.empresa_id = :businessId
@@ -49,6 +50,24 @@ public class CouponsRepository {
                 .param("businessId", businessId)
                 .query()
                 .listOfRows();
+    }
+
+    /**
+     * Verifica si ya existe un cupón registrado en la base de datos con el código especificado.
+     *
+     * @param code código del cupón a comprobar
+     * @return {@code true} si ya existe un cupón con ese código, {@code false} en caso contrario
+     */
+    public boolean existsByCode(String code) {
+        Integer count = jdbcClient.sql("""
+                SELECT COUNT(1)
+                FROM cupones_descuento
+                WHERE UPPER(TRIM(codigo)) = :code
+                """)
+                .param("code", code.trim().toUpperCase())
+                .query(Integer.class)
+                .single();
+        return count != null && count > 0;
     }
 
     /**

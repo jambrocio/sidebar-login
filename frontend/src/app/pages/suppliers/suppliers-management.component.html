@@ -250,13 +250,15 @@
             <th>Proveedor / Marca</th>
             <th>Contacto y Teléfono</th>
             <th>Rubro</th>
+            <th>Registrado Por</th>
+            <th>Fecha Registro</th>
             <th>Estado</th>
             <th style="text-align: center">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="pagedSuppliers().length === 0">
-            <td [attr.colspan]="isGeneralAdmin() ? 8 : 7" style="text-align: center; padding: 2rem; color: #64748b">
+            <td [attr.colspan]="isGeneralAdmin() ? 10 : 9" style="text-align: center; padding: 2rem; color: #64748b">
               <i class="bi bi-inbox" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem"></i>
               No se encontraron proveedores registrados para los criterios seleccionados.
             </td>
@@ -285,6 +287,8 @@
             <td>
               <span class="rubro-badge">{{ s.rubroCategory || 'Bebidas' }}</span>
             </td>
+            <td><code>{{ s.registeredBy || 'Ana García López (agarcia)' }}</code></td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ s.createdAt || '2026-10-20 10:00:00' }}</td>
             <td>
               <span class="badge" [ngClass]="s.active ? 'badge-success' : 'badge-danger'">
                 <i class="bi" [ngClass]="s.active ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>

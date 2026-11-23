@@ -338,14 +338,74 @@
 
       <!-- Resumen de Totales y Cupón de Descuento -->
       <div class="grid-form" style="margin-top: 1.5rem">
-        <div class="form-group">
-          <label>Cupón de Descuento Promocional (Opcional)</label>
-          <input
-            type="text"
-            name="cpCode"
-            [(ngModel)]="newSale.couponCode"
-            placeholder="Ej. MAYORISTA15 o VERANO2026"
-          />
+        <!-- Cupón de Descuento Promocional Disponible -->
+        <div class="form-group" style="grid-column: 1 / -1">
+          <label style="display: flex; justify-content: space-between; align-items: center">
+            <span>
+              <i class="bi bi-ticket-perforated-fill" style="color: #0284c7"></i> Cupón de Descuento Disponible (Opcional)
+            </span>
+            <span *ngIf="availableCouponsForSale().length > 0" class="badge-info">
+              <i class="bi bi-tags-fill"></i> {{ availableCouponsForSale().length }} cupón(es) disponible(s) para esta venta
+            </span>
+            <span *ngIf="availableCouponsForSale().length === 0" style="font-size: 0.78rem; color: #94a3b8">
+              Sin cupones vigentes aplicables
+            </span>
+          </label>
+
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap">
+            <select
+              name="cpSelect"
+              [ngModel]="newSale.couponCode"
+              (ngModelChange)="selectCoupon($event)"
+              style="flex: 1; min-width: 250px"
+            >
+              <option value="">-- Ninguno (Sin Cupón de Descuento) --</option>
+              <option *ngFor="let cp of availableCouponsForSale()" [value]="cp.code">
+                🏷️ {{ cp.code }} — {{ cp.discountType === 'PERCENT' ? cp.discountValue + '% OFF' : ('- ' + currencySymbol() + ' ' + (cp.discountValue | appAmount)) }} | {{ cp.assignedClient === 'Todos los Clientes del Negocio' || cp.assignedClient === 'Todos los Clientes' ? '🏢 Todos los Clientes' : '👤 ' + cp.assignedClient }}
+              </option>
+            </select>
+
+            <!-- Botón Retirar / Deseleccionar Cupón -->
+            <button
+              *ngIf="newSale.couponCode"
+              type="button"
+              class="btn-secondary"
+              (click)="clearCoupon()"
+              title="Retirar cupón aplicado"
+              style="padding: 0.55rem 0.95rem; border-color: rgba(239, 68, 68, 0.4); color: #dc2626; background: rgba(239, 68, 68, 0.08); display: inline-flex; align-items: center; gap: 0.35rem"
+            >
+              <i class="bi bi-x-circle-fill"></i>
+              <span>Retirar Cupón</span>
+            </button>
+          </div>
+
+          <!-- Selección Rápida en 1 Clic con Chips -->
+          <div *ngIf="availableCouponsForSale().length > 0" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem">
+            <small style="color: #64748b; font-size: 0.76rem; font-weight: 700">Canje directo:</small>
+            <button
+              *ngFor="let cp of availableCouponsForSale()"
+              type="button"
+              (click)="newSale.couponCode.trim().toUpperCase() === cp.code.toUpperCase() ? clearCoupon() : selectCoupon(cp.code)"
+              [style.background]="newSale.couponCode.trim().toUpperCase() === cp.code.toUpperCase() ? 'rgba(34, 197, 94, 0.18)' : '#f1f5f9'"
+              [style.borderColor]="newSale.couponCode.trim().toUpperCase() === cp.code.toUpperCase() ? 'rgba(34, 197, 94, 0.45)' : '#cbd5e1'"
+              [style.color]="newSale.couponCode.trim().toUpperCase() === cp.code.toUpperCase() ? '#15803d' : '#334155'"
+              style="border: 1px solid; border-radius: 9999px; padding: 0.2rem 0.65rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease"
+              [title]="newSale.couponCode.trim().toUpperCase() === cp.code.toUpperCase() ? 'Clic para retirar cupón' : 'Clic para aplicar cupón'"
+            >
+              <i class="bi" [ngClass]="newSale.couponCode.trim().toUpperCase() === cp.code.toUpperCase() ? 'bi-check-circle-fill' : 'bi-ticket-perforated'"></i>
+              <code>{{ cp.code }}</code>
+              <span>({{ cp.discountType === 'PERCENT' ? cp.discountValue + '% OFF' : (currencySymbol() + ' ' + cp.discountValue) }})</span>
+            </button>
+          </div>
+
+          <small
+            *ngIf="newSale.couponCode.trim() && getCouponValidation().message"
+            [style.color]="getCouponValidation().valid ? '#16a34a' : '#dc2626'"
+            style="display: block; margin-top: 0.4rem; font-weight: 600; font-size: 0.82rem"
+          >
+            <i class="bi" [ngClass]="getCouponValidation().valid ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+            {{ getCouponValidation().message }}
+          </small>
         </div>
 
         <!-- Campo Inactivo: Total Bruto de Ítems (Readonly) -->

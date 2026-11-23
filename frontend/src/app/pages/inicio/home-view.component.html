@@ -40,11 +40,11 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Usuario Responsable</th>
+            <th>Registrado Por</th>
             <th>Local del Negocio</th>
             <th>Operación Auditada</th>
             <th>Módulo</th>
-            <th>Tiempo</th>
+            <th>Fecha Registro</th>
           </tr>
         </thead>
         <tbody>
@@ -53,7 +53,7 @@
             <td><code>{{ item.branch }}</code></td>
             <td>{{ item.action }}</td>
             <td><span class="badge badge-info">{{ item.badge }}</span></td>
-            <td class="text-muted">{{ item.time | appDate }}</td>
+            <td class="text-muted"><i class="bi bi-clock-history"></i> {{ item.time }}</td>
           </tr>
         </tbody>
       </table>

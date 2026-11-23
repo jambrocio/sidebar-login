@@ -50,6 +50,7 @@ public class CatalogRepository {
                        p.stock_cajas AS "stockBoxes", p.stock_unidades AS "stockUnits",
                        p.estado_stock AS status,
                        (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "registeredBy",
+                       TO_CHAR(p.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
                        e.codigo AS "businessCode", e.nombre_comercial AS "businessName"
                 FROM productos_bebidas p
                 INNER JOIN empresas e ON e.id = p.empresa_id
@@ -73,6 +74,7 @@ public class CatalogRepository {
                        p.stock_cajas AS "stockBoxes", p.stock_unidades AS "stockUnits",
                        p.estado_stock AS status,
                        (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "registeredBy",
+                       TO_CHAR(p.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
                        e.codigo AS "businessCode", e.nombre_comercial AS "businessName"
                 FROM productos_bebidas p
                 INNER JOIN empresas e ON e.id = p.empresa_id
@@ -157,6 +159,8 @@ public class CatalogRepository {
                 SELECT c.codigo AS id, c.codigo AS code, c.nombre AS name, c.slug, c.total_productos AS products,
                        c.margen_mayorista AS "wholesaleMargin",
                        CASE WHEN c.activo THEN 'Activo' ELSE 'Inactivo' END AS status,
+                       TO_CHAR(c.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       'Ana García López (agarcia)' AS "registeredBy",
                        e.codigo AS "businessCode", e.id AS "businessId"
                 FROM categorias_bebidas c
                 INNER JOIN empresas e ON e.id = c.empresa_id
@@ -177,6 +181,8 @@ public class CatalogRepository {
                 SELECT c.codigo AS id, c.codigo AS code, c.nombre AS name, c.slug, c.total_productos AS products,
                        c.margen_mayorista AS "wholesaleMargin",
                        CASE WHEN c.activo THEN 'Activo' ELSE 'Inactivo' END AS status,
+                       TO_CHAR(c.fecha_creacion, 'YYYY-MM-DD HH24:MI:SS') AS "createdAt",
+                       'Ana García López (agarcia)' AS "registeredBy",
                        e.codigo AS "businessCode", e.id AS "businessId"
                 FROM categorias_bebidas c
                 INNER JOIN empresas e ON e.id = c.empresa_id
