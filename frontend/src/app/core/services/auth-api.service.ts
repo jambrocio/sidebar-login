@@ -1,9 +1,10 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, throwError } from 'rxjs';
 import { SystemUser, PasswordExpirationStatus } from '../models/domain.models';
 import { environment } from '../../../environments/environment';
+import { AppDialogService } from './app-dialog.service';
 
 /**
  * Contrato de usuario organizacional devuelto por el Backend Spring Boot 4.
@@ -63,7 +64,29 @@ export interface ProblemDetailError {
 export class AuthApiService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly dialogService = inject(AppDialogService);
   private readonly baseUrl = environment.authUrl;
+
+  /**
+   * Solicita confirmación al usuario antes de destruir la sesión utilizando el sistema centralizado de alertas.
+   */
+  async requestLogout(): Promise<void> {
+    const confirmed = await this.dialogService.confirm({
+      title: '¿Cerrar Sesión Activa?',
+      subtitle: 'COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS',
+      message: '¿Estás seguro de que deseas salir del sistema?',
+      warningText: 'Si tienes operaciones de caja, compras o ventas sin confirmar, asegúrate de haberlas guardado antes de continuar.',
+      icon: 'bi-box-arrow-right',
+      type: 'danger',
+      confirmText: 'Sí, Cerrar Sesión',
+      cancelText: 'Permanecer en el Sistema',
+      cancelIcon: 'bi-shield-check'
+    });
+
+    if (confirmed) {
+      this.logout();
+    }
+  }
 
   /**
    * Determina si existe una sesión de usuario válida y activa en la pestaña actual.

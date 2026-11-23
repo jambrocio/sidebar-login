@@ -2,6 +2,7 @@ package com.auth.identity.service;
 
 import com.auth.identity.core.exception.AccountLockedException;
 import com.auth.identity.core.exception.AuthenticationFailedException;
+import com.auth.identity.core.exception.BusinessRuleException;
 import com.auth.identity.core.exception.CredentialsExpiredException;
 import com.auth.identity.core.security.AuthenticatedUserPrincipal;
 import com.auth.identity.core.security.JwtTokenService;
@@ -318,6 +319,11 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(request.currentPassword(), user.passwordHash())) {
             auditRepository.logSecurityEvent(userId, user.assignedBranchId(), "PASSWORD_CHANGE_FAILED", "Contraseña actual incorrecta", "Seguridad", ipAddress, null);
             throw new AuthenticationFailedException("La contraseña actual proporcionada no coincide.");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.passwordHash()) || request.newPassword().equals(request.currentPassword())) {
+            auditRepository.logSecurityEvent(userId, user.assignedBranchId(), "PASSWORD_CHANGE_REJECTED", "Intento de reutilizar la misma contraseña activa", "Seguridad", ipAddress, null);
+            throw new BusinessRuleException("La nueva contraseña no puede ser idéntica a la contraseña actual por políticas de rotación de seguridad.");
         }
 
         String newHash = passwordEncoder.encode(request.newPassword());

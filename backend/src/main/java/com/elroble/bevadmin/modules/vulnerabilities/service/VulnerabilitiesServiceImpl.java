@@ -50,7 +50,14 @@ public class VulnerabilitiesServiceImpl implements VulnerabilitiesService {
     @Override
     @Transactional
     public Map<String, Object> updateStatus(UUID id, UpdateVulnerabilityStatusRequest request, AuthenticatedUserPrincipal user) {
-        int rows = vulnerabilitiesRepository.updateStatus(user.businessId(), user.userId(), id, request.status(), user.isSuperAdmin());
+        int rows = vulnerabilitiesRepository.updateStatus(
+                user.businessId(),
+                user.userId(),
+                id,
+                request.status(),
+                request.mitigationNotes(),
+                user.isSuperAdmin()
+        );
         if (rows == 0) {
             throw new ResourceNotFoundException("Vulnerabilidad de seguridad", id);
         }

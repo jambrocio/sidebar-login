@@ -466,6 +466,7 @@
         <li><a class="toc-link" href="#mod13"><i class="bi bi-person-gear"></i> 13. Control de Usuarios</a></li>
         <li><a class="toc-link" href="#mod14"><i class="bi bi-key"></i> 14. Roles y Permisos RBAC</a></li>
         <li><a class="toc-link" href="#mod15"><i class="bi bi-broadcast"></i> 15. Sesiones y Kill-Session</a></li>
+        <li><a class="toc-link" href="#mod16"><i class="bi bi-shield-check"></i> 16. Auditoría de Seguridad</a></li>
       </ul>
     </aside>
 
@@ -801,6 +802,24 @@
         <p class="module-desc">Monitor en vivo de accesos concurrentes con IP, navegador, sistema operativo y botón <strong>Kill Session</strong>. Implementa aislamiento multi-empresa estricto: el usuario <strong>Raúl Ambrocio Mendoza</strong> (<code>rambrocio</code>) visualiza exclusivamente las sesiones correspondientes a <strong>COTIC S.A.C.</strong>, mientras que los administradores globales (<code>SUPERADMIN</code>) pueden auditar la totalidad de negocios del ecosistema.</p>
         <div class="image-wrapper">
           <img src="imagenes/15_sesiones_activas.png" alt="Monitoreo de Sesiones Activas COTIC" loading="lazy">
+        </div>
+      </section>
+
+      <!-- MÓDULO 16 -->
+      <section class="module-section" id="mod16">
+        <div class="module-header">
+          <div>
+            <span class="module-badge">Módulo 16</span>
+            <h2 class="module-title">Auditoría de Vulnerabilidades y Seguridad Defensiva</h2>
+          </div>
+          <span class="module-route">/dashboard/vulnerabilities</span>
+        </div>
+        <p class="module-desc">Registro centralizado, trazabilidad y gestión del ciclo de vida de los 14 hallazgos de seguridad técnica bajo estándares <strong>OWASP Top 10 y CIS Benchmarks</strong>. Incorpora ordenamiento prioritario descendente por código (de últimos a primeros), filtros reactivos por severidad y estado, y diálogo modal para documentar e inspeccionar la <strong>solución técnica aplicada</strong> (mitigación <code>nginx2root</code> con Nginx rootless, CIS 5.25 <code>no-new-privileges:true</code>, protección BOLA/BFLA e IdP RS256/JWKS).</p>
+        <div class="image-wrapper">
+          <img src="imagenes/16_vulnerabilidades_seguridad.png" alt="Auditoría de Vulnerabilidades y Seguridad Defensiva" loading="lazy">
+        </div>
+        <div class="image-wrapper" style="margin-top: 1.5rem">
+          <img src="imagenes/16b_vulnerabilidad_detalle_modal.png" alt="Modal de Detalle y Solución Técnica Aplicada" loading="lazy">
         </div>
       </section>
 

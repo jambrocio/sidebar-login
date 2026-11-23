@@ -42,6 +42,20 @@
       </span>
     </div>
 
+    <!-- Pastilla Estratégica de Versión y Estado del Sistema COTIC -->
+    <button
+      type="button"
+      class="version-status-pill"
+      (click)="versionService.openSupportModal()"
+      title="COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS • v{{ versionService.appVersion() }} • Clic para Información de Soporte Técnico"
+      aria-label="Abrir información de soporte técnico"
+    >
+      <span class="pulse-dot-online" title="Sistema en línea y sincronizado"></span>
+      <span class="version-brand-label">COTIC</span>
+      <span class="version-tag-pill">v{{ versionService.appVersion() }}</span>
+      <i class="bi bi-info-circle version-info-icon" aria-hidden="true"></i>
+    </button>
+
     <!-- Contenedor del Menú de Notificaciones (Estilo idéntico a Opciones de Usuario) -->
     <div class="notifications-menu">
       <button
@@ -276,6 +290,30 @@
               </div>
               <span class="theme-pill" [class.dark]="isDarkMode()">
                 {{ isDarkMode() ? 'Oscuro' : 'Claro' }}
+              </span>
+            </button>
+          </li>
+
+          <li class="dropdown-divider"></li>
+          <li class="menu-section-label">Sistema y Soporte</li>
+
+          <!-- Opción de Soporte Técnico y Versión -->
+          <li>
+            <button
+              type="button"
+              class="theme-option-btn support-menu-btn"
+              (click)="versionService.openSupportModal(); closeDropdown()"
+              title="Información de versión y soporte técnico"
+            >
+              <span class="menu-icon">
+                <i class="bi bi-shield-check"></i>
+              </span>
+              <div class="menu-text">
+                <span class="title">COTIC: SISTEMA POS</span>
+                <span class="desc">v{{ versionService.appVersion() }} • Soporte Técnico</span>
+              </div>
+              <span class="theme-pill status-pill">
+                En línea
               </span>
             </button>
           </li>

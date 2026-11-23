@@ -283,3 +283,129 @@ Antes de entregar cualquier requerimiento, el código debe cumplir con este chec
 - [ ] **Resiliencia ante Fallos**: Todos los endpoints HTTP cuentan con gestión de errores (alertas de usuario legibles, no bloqueos de pantalla).
 - [ ] **Accesibilidad (A11y)**: Etiquetas `aria-label`, contraste de colores conforme a WCAG AA, navegación completa por teclado.
 - [ ] **Rendimiento**: Carga diferida (*lazy loading*) de rutas, imágenes optimizadas, sin reflows ni repaints innecesarios.
+- [ ] **Homologación Visual y Respeto al Sistema de Diseño**: Toda nueva funcionalidad utiliza estrictamente las clases, tokens de color (`var(--...)`), fuentes y jerarquías de botones preexistentes en el sistema, garantizando paridad visual idéntica tanto en Modo Claro como en Modo Oscuro.
+
+---
+
+## 7. Protocolo Obligatorio de Versionado Semántico, Cache-Busting y Despliegue Transparente [MANDATORIO]
+
+Queda terminantemente prohibido indicar a los usuarios finales o administradores instrucciones manuales como `"Presione Ctrl + F5 para refrescar la caché y ver los cambios"`. Toda aplicación frontend empresarial debe incorporar resiliencia nativa ante despliegues continuos:
+
+### 7.1. Sincronización Automática de Versión ante Cada Cambio
+- **Hook de Compilación (`prebuild`)**: Todo build (`npm run build`, `ng build`) ejecuta de forma obligatoria el script `scripts/update-version.js`.
+- **Artefactos Sincronizados**:
+  1. `public/version.json`: Mantiene la versión semántica (`version`), fecha (`buildDate`), hora local (`buildTime`), código de entrega (`release`) y nombre oficial del sistema (**COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS**).
+  2. `src/environments/environment*.ts`: Sincroniza `version` y `buildDate` en los perfiles `development`, `qa` y `production`.
+  3. `package.json`: Mantiene alineado el atributo `"version"`.
+
+### 7.2. Encabezados de Red y Anti-Caché Estricto (Nginx & Service Worker)
+- **Archivos No Cacheables (`no-store`)**:
+  `index.html`, `version.json`, `sw.js` y `manifest.webmanifest` deben servirse con:
+  ```http
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0
+  Pragma: no-cache
+  Expires: 0
+  ```
+- **Activos Inmutables**:
+  Exclusivamente los bundles con hash de contenido generado por Angular (`chunk-*.js`, `styles-*.css`) pueden utilizar `Cache-Control: public, max-age=31536000, immutable`.
+- **Bypass de Service Worker**:
+  El Service Worker nunca debe interceptar ni cachear peticiones a `version.json`, `sw.js` ni a la API REST.
+
+### 7.3. Detección Proactiva y Manejo de Chunks Desfasados
+- **`AppVersionService`**: Realiza sondeo periódico en segundo plano (cada 45s) y en cada evento `NavigationEnd`. Al detectar una versión remota diferente, ofrece actualización inmediata o la aplica purgando `CacheStorage` sin destruir las credenciales del usuario.
+- **`AppErrorHandler`**: Captura excepciones de tipo `ChunkLoadError` o `Failed to fetch dynamically imported module` y recarga automáticamente la aplicación sin interrumpir el flujo del usuario.
+
+### 7.4. Ubicación Estratégica de Versión y Soporte Técnico
+- **Pastilla de Versión en Navbar**: Ubicada en la barra superior junto al selector de sedes, con semáforo verde pulsante (`Online`) y acceso directo al modal de soporte técnico.
+- **Badge en Cabecera de Sidebar**: Visible junto al título del sistema en el panel lateral.
+- **Modal de Diagnóstico**: Diseñado con las variables de tema (Claro/Oscuro), con botón de 1 clic para copiar la información completa de diagnóstico al portapapeles.
+
+### 7.5. Estandarización Universal de Diálogos y Alertas (`AppDialogService`)
+- **Prohibición de `window.alert()` y `window.confirm()`**: Quedan erradicadas todas las alertas nativas bloqueantes del navegador.
+- **Servicio `AppDialogService`**:
+  - Implementa promesas asíncronas (`confirm()` y `alert()`).
+  - Provee variantes semánticas: `danger`, `warning`, `info`, `primary`, `success`.
+  - Diseñado con altura estándar de 42px en botones, bordes redondeados (10px), iconos y sombras sutiles, 100% adaptable a modo Claro y Oscuro.
+  - Aplicado obligatoriamente en: Cierre de Sesión, Restablecimiento de Contraseña ("Reset Clave"), Bloqueo de Sesiones/Usuarios y operaciones destructivas.
+
+---
+
+## 8. Homologación Visual Obligatoria y Respeto al Sistema de Diseño (Design System Enforcement) [MANDATORIO]
+
+Para garantizar una experiencia de usuario profesional, predecible y coherente, **toda nueva funcionalidad, módulo, componente o refactorización que se incorpore a la aplicación debe respetar de forma estricta los estilos, patrones visuales y componentes ya definidos en el sistema**.
+
+Queda terminantemente prohibido introducir estilos ad-hoc, clases inventadas, tipografías discordantes o botones sin contraste que rompan la armonía visual de la plataforma.
+
+### 8.1. Principio de Cero-Dispersión Visual (Zero-Drift UI)
+- **Reutilización antes de invención**: Si el sistema ya cuenta con un patrón para formularios, tablas, tarjetas, toolbars, badges o botones, es **obligatorio reutilizarlo**.
+- **Consistencia de Marca**: Toda interfaz debe respetar la identidad corporativa (**COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS**), su paleta de colores institucional y la tipografía base definida (`Plus Jakarta Sans` / `JetBrains Mono`).
+
+### 8.2. Catálogo Oficial de Componentes y Patrones Homologados
+
+#### A. Contenedores de Vistas y Tablas de Datos
+- **Estructura Estándar de Página**:
+  ```html
+  <div class="page-wrapper">
+    <div class="card">
+      <div class="toolbar">
+        <h2 class="section-title">Título del Módulo</h2>
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Buscar..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Encabezado</th>...</tr>
+          </thead>
+          <tbody>
+            <tr><td>Dato</td>...</tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  ```
+
+#### B. Estándar Universal de Botones
+Toda nueva acción debe encajar exactamente en una de las dos jerarquías oficiales:
+1. **Botón de Acción Principal (`.btn-primary` o `.btn-corporate-action`)**:
+   - Altura estándar: `42px` (o compacta con `.btn-sm`).
+   - Radio de borde: `8px` a `10px`.
+   - Peso tipográfico: `600` o `700`.
+   - Gradiente de color según variante semántica (`primary`, `danger`, `warning`, `success`, `info`).
+   - Sombra cromática suave con elevación en hover (`transform: translateY(-1.5px)`).
+   - Siempre incluye icono ilustrativo de Bootstrap Icons con margen `me-1`.
+
+2. **Botón Secundario / Cancelar / Volver (`.btn-corporate-secondary` o `.btn-secondary`)**:
+   - **Regla Estricta**: Jamás debe renderizarse como texto plano sin bordes ni fondo perceptible.
+   - Altura estándar: `42px` (o `32px` con `.btn-sm`).
+   - Borde visible de alto contraste: `1.5px solid var(--btn-secondary-border, #cbd5e1)` en Claro y `#475569` en Oscuro.
+   - Fondo diferenciado: `var(--btn-secondary-bg, #f1f5f9)` en Claro y `#334155` en Oscuro.
+   - Tipografía contrastada: `var(--btn-secondary-text, #1e293b)` en Claro y `#f8fafc` en Oscuro con peso `700`.
+   - Estados interactivos: En `hover`, oscurece el fondo a `#e2e8f0` (Claro) o `#475569` (Oscuro) con elevación sutil.
+   - Icono contextual: `bi-x-circle`, `bi-shield-check`, `bi-arrow-left`, etc.
+
+#### C. Formularios y Entradas de Datos
+- Todos los inputs, selects y textareas deben utilizar:
+  - Borde estándar: `1px solid var(--border-color)`.
+  - Radio: `8px`.
+  - Altura: proporcional con padding `0.58rem 0.85rem`.
+  - Resaltado en foco: `border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15)`.
+  - Acciones de formulario agrupadas al final con la clase `.form-actions`.
+
+#### D. Modales y Diálogos de Confirmación
+- Toda ventana modal o diálogo interactivo debe acoplarse al servicio `AppDialogService` o implementar la estructura de `.app-dialog-card` y `.support-modal-dialog`:
+  - **Cabecera**: Título en negrita, subtítulo corporativo y badge redondeado con icono temático.
+  - **Cuerpo**: Mensaje claro y directo; si implica riesgo de pérdida de datos o revocación de acceso, incluir un `.dialog-warning-callout`.
+  - **Pie**: `.dialog-footer` con botón secundario ("Cancelar" / "Permanecer") a la izquierda o en primer término móvil, y botón de acción principal a la derecha.
+
+### 8.3. Soporte Reactivo de Temas (Claro y Oscuro Obligatorio)
+- **Cero colores fijos incompatibles**: Queda prohibido el uso de `#fff` o `#000` hardcodeados en fondos o textos que no respondan al cambio de tema.
+- **Uso estricto de variables CSS**:
+  - Fondos de tarjetas: `var(--card-bg)`.
+  - Textos principales: `var(--text-color)`.
+  - Textos secundarios/muted: `var(--text-muted-color)`.
+  - Bordes y divisores: `var(--border-color)`.
+- **Verificación en ambos temas**: Antes de entregar una funcionalidad, debe comprobarse visualmente alternando el interruptor de tema del Navbar entre **Modo Claro** y **Modo Oscuro** (`body[data-theme="dark"]`). Todos los elementos deben mantener un contraste conforme al estándar **WCAG AA (ratio mínimo 4.5:1)**.

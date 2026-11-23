@@ -2,6 +2,7 @@ package com.auth.identity.web.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -19,8 +20,12 @@ public record ChangePasswordRequest(
         @NotBlank(message = "La contraseña actual es obligatoria")
         String currentPassword,
 
-        @Schema(description = "Nueva contraseña con longitud mínima de 8 caracteres")
+        @Schema(description = "Nueva contraseña con longitud mínima de 8 caracteres y complejidad")
         @NotBlank(message = "La nueva contraseña es obligatoria")
-        @Size(min = 8, message = "La nueva contraseña debe contener al menos 8 caracteres")
+        @Size(min = 8, max = 100, message = "La nueva contraseña debe contener entre 8 y 100 caracteres")
+        @Pattern(
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&._\\-#]).{8,}$",
+                message = "La nueva contraseña debe contener al menos una letra mayúscula, una minúscula, un número y un carácter especial (@$!%*?&._-#)"
+        )
         String newPassword
 ) {}

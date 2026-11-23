@@ -380,10 +380,19 @@
           <span class="item-badge badge-seq">Sequence</span>
         </div>
       </button>
+
+      <!-- Item 10 -->
+      <button class="diagram-item" onclick="selectDiagram(9)">
+        <i class="bi bi-arrow-repeat item-icon"></i>
+        <div class="item-content">
+          <div class="item-title">10. Auto-Version, Cache-Busting & Diálogos</div>
+          <span class="item-badge badge-seq">Sequence</span>
+        </div>
+      </button>
     </div>
 
     <div class="sidebar-footer">
-      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 9 Diagramas Listos</span>
+      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 10 Diagramas Listos</span>
       <span style="font-family: 'JetBrains Mono', monospace;">100% Pasaron Gates</span>
     </div>
   </aside>
@@ -483,6 +492,13 @@
         badgeClass: "badge-seq",
         desc: "Autenticación centralizada en dev-auth-service (:8081), emisión JWT, resolución dinámica de tenant y sedes en dev-backend (:8080) e inicialización en Angular SPA.",
         url: "09_secuencia_autenticacion_centralizada_multitenant.html"
+      },
+      {
+        title: "10. Secuencia: Versionado Automático, Cache-Busting y Diálogos Temáticos",
+        badge: "Sequence",
+        badgeClass: "badge-seq",
+        desc: "Sincronización continua de versión en prebuild, headers no-store en Nginx, auto-recuperación de chunks, banner reactivo y diálogos corporativos homologados.",
+        url: "10_secuencia_versionado_cache_busting_y_dialogos.html"
       }
     ];
 

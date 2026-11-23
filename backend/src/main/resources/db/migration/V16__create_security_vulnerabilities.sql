@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS core.vulnerabilidades_seguridad (
     descripcion TEXT NOT NULL,
     impacto_estimado TEXT,
     plan_remediacion TEXT NOT NULL,
+    solucion_aplicada TEXT,
     reportado_por_usuario_id UUID NOT NULL REFERENCES auth.usuarios(id) ON DELETE RESTRICT,
     mitigado_por_usuario_id UUID REFERENCES auth.usuarios(id) ON DELETE SET NULL,
     fecha_deteccion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -36,6 +37,7 @@ COMMENT ON COLUMN core.vulnerabilidades_seguridad.severidad IS 'Nivel de riesgo:
 COMMENT ON COLUMN core.vulnerabilidades_seguridad.estado IS 'Ciclo de vida: ABIERTO, EN_PROCESO, MITIGADO, FALSO_POSITIVO o ACEPTADO';
 COMMENT ON COLUMN core.vulnerabilidades_seguridad.componente_afectado IS 'Servicio, contenedor o archivo específico afectado';
 COMMENT ON COLUMN core.vulnerabilidades_seguridad.plan_remediacion IS 'Estrategia de hardening y corrección recomendada para mitigar el riesgo';
+COMMENT ON COLUMN core.vulnerabilidades_seguridad.solucion_aplicada IS 'Descripción técnica de la solución o fix implementado para mitigar el problema reportado';
 
 -- 2. Índices para acelerar auditorías y filtrados
 CREATE INDEX IF NOT EXISTS idx_vuln_empresa_estado ON core.vulnerabilidades_seguridad(empresa_id, estado);

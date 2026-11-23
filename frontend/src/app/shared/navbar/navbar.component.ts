@@ -16,6 +16,7 @@ import { BreadcrumbComponent } from './breadcrumbs/breadcrumb.component';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AuthApiService } from '../../core/services/auth-api.service';
 import { AdminApiService } from '../../core/services/admin-api.service';
+import { AppVersionService } from '../../core/services/app-version.service';
 import { NotificationItem } from './notifications-sidebar.component';
 
 /**
@@ -49,6 +50,7 @@ export class NavbarComponent implements OnInit {
   private readonly dummyData = inject(DummyDataService);
   private readonly authApi = inject(AuthApiService);
   private readonly adminApi = inject(AdminApiService);
+  readonly versionService = inject(AppVersionService);
 
   /** Datos del Negocio Matriz cargado desde `json/business-and-branches.json` */
   readonly businessInfo = this.dummyData.businessInfo;
@@ -242,7 +244,7 @@ export class NavbarComponent implements OnInit {
    */
   onLogout(): void {
     this.closeDropdown();
-    this.authApi.logout();
+    this.authApi.requestLogout();
   }
 
   /**

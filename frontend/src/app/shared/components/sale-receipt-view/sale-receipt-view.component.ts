@@ -101,6 +101,8 @@ export class SaleReceiptViewComponent {
     iframe.style.width = '0';
     iframe.style.height = '0';
     iframe.style.border = '0';
+    iframe.setAttribute('title', 'Ticket de Venta Seguro');
+    iframe.setAttribute('sandbox', 'allow-modals allow-same-origin allow-scripts');
     document.body.appendChild(iframe);
 
     const doc = iframe.contentWindow?.document;
@@ -251,6 +253,8 @@ export class SaleReceiptViewComponent {
     iframe.style.width = '0';
     iframe.style.height = '0';
     iframe.style.border = '0';
+    iframe.setAttribute('title', 'Ticket de Venta Seguro');
+    iframe.setAttribute('sandbox', 'allow-modals allow-same-origin allow-scripts');
     document.body.appendChild(iframe);
 
     const doc = iframe.contentWindow?.document;

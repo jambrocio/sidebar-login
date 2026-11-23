@@ -22,12 +22,11 @@ sidebar-login/
 │   └── README.md               # Guía técnica de integración para aplicaciones satélites
 │
 ├── frontend/                   # Aplicación Web & PWA en Angular 21 (Standalone + Signals)
-│   ├── .agents/                # Reglas de actualización automática y Skills de arquitectura
-│   ├── json/                   # 11 Archivos JSON con datos dummy desacoplados
-│   ├── public/                 # Manifiesto PWA (manifest.webmanifest) y Service Worker (sw.js)
-│   ├── src/app/                # 16 Interfaces modulares (1 componente standalone por vista)
+│   ├── scripts/update-version.js # Versionado semántico automático en prebuild (v2.4.1)
+│   ├── public/                 # version.json, manifest PWA y Service Worker anti-caché
+│   ├── src/app/                # 16 Interfaces modulares, AppVersionService y AppDialogService
 │   ├── angular.json
-│   ├── package.json
+│   ├── package.json            # Script "prebuild": "node scripts/update-version.js"
 │   └── README.md               # Guía de instalación y ejecución del Frontend
 │
 ├── backend/                    # Backend REST API en Spring Boot 4.0 (Java 21 LTS + Hilos Virtuales)
@@ -52,13 +51,17 @@ sidebar-login/
 │   │   └── ARQUITECTURA_CLOUD_AZURE_GCP_Y_COSTOS.md # Guía técnica y cuadro de costos FinOps
 │   │
 │   ├── diagrams/               # Diagramas Técnicos de Software (Archify Showcase v3.2.0)
-│   │   ├── index.html          # Visor interactivo integrado en la misma pestaña
+│   │   ├── index.html          # Visor interactivo integrado en la misma pestaña (10 Diagramas)
 │   │   ├── 01_arquitectura_sistema.html       # C4 Contenedores y Red Docker
 │   │   ├── 02_secuencia_emision_venta.html    # Secuencia: Emisión de Venta POS y Cupones
 │   │   ├── 03_secuencia_monitoreo_sesiones.html # Secuencia: Auditoría NOC y Kill Session
 │   │   ├── 04_secuencia_menu_dinamico_rbac.html # Secuencia: Menú Dinámico y Resolución RBAC
 │   │   ├── 05_flujo_operativo_negocio.html    # Flujo Operativo End-to-End (Workflow Trace)
-│   │   └── 06_modelo_datos_erd.html           # Modelo Relacional ERD (19 Tablas en Español)
+│   │   ├── 06_modelo_datos_erd.html           # Modelo Relacional ERD (19 Tablas en Español)
+│   │   ├── 07_c4_interconexion_ops_aplicaciones.html # C4 Ops, Frontend, Backend y BD
+│   │   ├── 08_c4_pipeline_cicd_homelab.html   # C4 CI/CD GitHub & Homelab
+│   │   ├── 09_secuencia_autenticacion_centralizada_multitenant.html # Autenticación Centralizada IdP
+│   │   └── 10_secuencia_versionado_cache_busting_y_dialogos.html # Auto-Version, Cache-Busting & Diálogos
 │   │
 │   ├── presentacion/           # Presentación Comercial para Clientes Finales
 │   │   ├── video_demo_modulos_persona.html # Demo con Presentadora Virtual (Sofía - 65s) en MP4
@@ -324,6 +327,8 @@ docker compose down
 
 ### Endpoints de la Aplicación Core:
 - **Frontend Angular 21 (Nginx SPA):** [http://localhost:4200](http://localhost:4200) (o vía Traefik en [https://localhost](https://localhost))
+- **Módulo de Vulnerabilidades & Hardening:** [http://localhost:4200/dashboard/vulnerabilities](http://localhost:4200/dashboard/vulnerabilities)
+- **Identity Provider Centralizado (auth-service):** [http://localhost:8081](http://localhost:8081) (JWKS: `/.well-known/jwks.json`)
 - **Backend REST API (Spring Boot 4):** [http://localhost:8080/api/v1](http://localhost:8080/api/v1) (o vía Traefik en [https://localhost/api/v1](https://localhost/api/v1))
 - **Swagger UI (OpenAPI 3.1):** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 - **Actuator Health Check:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
@@ -335,12 +340,13 @@ docker compose down
 - **Traefik Dashboard (Seguridad Ingress & Middlewares):** [http://localhost:8088/dashboard/](http://localhost:8088/dashboard/)
 
 ### Credenciales de Acceso al Sistema:
-| Rol | Usuario | Contraseña |
-| :--- | :--- | :--- |
-| **Administrador General** | `agarcia` | `AdminRoble2026#` |
-| **Administrador de Sede** | `jquispe` | `SedeRoble2026#` |
-| **Supervisor de Ventas** | `cmendoza` | `SuperRoble2026#` |
-| **Cajero Mayorista** | `ltorres` | `CajaRoble2026#` |
+| Rol | Usuario | Contraseña | Empresa Asignada |
+| :--- | :--- | :--- | :--- |
+| **Administrador General** | `agarcia` | `AdminRoble2026#` | Distribuidora El Roble S.A.C. |
+| **Administrador de Negocio (COTIC)** | `rambrocio` | `AdminRoble2026#` | COTIC S.A.C. |
+| **Administrador de Sede** | `jquispe` | `SedeRoble2026#` | Distribuidora El Roble S.A.C. |
+| **Supervisor de Ventas** | `cmendoza` | `SuperRoble2026#` | Distribuidora El Roble S.A.C. |
+| **Cajero Mayorista** | `ltorres` | `CajaRoble2026#` | Distribuidora El Roble S.A.C. |
 
 ---
 
@@ -350,7 +356,7 @@ docker compose down
 * 📹 **[Opción 1: Spot Comercial Oficial en Video HD (`docs/presentacion/video_promocional_bevadmin.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/video_promocional_bevadmin.html)**
 * 👩‍💼 **[Opción 2: Demo con Presentadora Sofía (`docs/presentacion/video_demo_modulos_persona.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/video_demo_modulos_persona.html)**
 * 🎨 **[Presentación Interactiva a Clientes y Simulador POS (`docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/presentacion/PRESENTACION_INTERACTIVA_USUARIO.html)**
-* 🌐 **[Portal de Diagramas Técnicos de Software (`docs/diagrams/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/diagrams/index.html)**
+* 🌐 **[Portal de Diagramas Técnicos de Software (`docs/diagrams/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/diagrams/index.html)** *(10 Diagramas interactivos listos, 100% pasaron gates)*
 * ☁️ **[Portal de Arquitecturas Cloud y Costos (`docs/cloud/index.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/index.html)**
 * 🛡️ **[Diagrama Arquitectura VPS Hardened con Docker (`docs/cloud/03_arquitectura_cloud_vps.html`)](file:///D:/tools/Proyectos/sidebar-login/docs/cloud/03_arquitectura_cloud_vps.html)**
 
@@ -378,6 +384,41 @@ docker compose down
 - **Fechas Unificadas:** Formato estandarizado `YYYY-MM-DD HH:mm:ss` en todas las tablas y comprobantes.
 - **Montos Numéricos:** Separador de miles por comas y decimales por punto (`1,234.56`).
 - **Validación Visual Reactiva:** Los campos obligatorios sin completar se resaltan en rojo con advertencia visual al intentar guardar; limpieza automática de campos al ingresar o tras registrar/actualizar.
+
+### 🛡️ Módulo de Auditoría de Vulnerabilidades y Hardening de Seguridad Defensiva
+- **Registro Centralizado y Trazabilidad:** Monitoreo y gestión de 14 hallazgos de seguridad técnica (`SEC-2026-001` a `SEC-2026-014`) clasificados según estándares OWASP Top 10 y CIS Benchmarks.
+- **Ordenamiento Descendente Prioritario:** Tabla ordenada automáticamente de **últimos a primeros por código** (`SEC-2026-014`, `SEC-2026-013` ...) con comparación numérica natural en frontend y backend.
+- **Solución Aplicada Documentada:** Cada hallazgo cuenta con su descripción, impacto, plan de remediación y la **solución técnica aplicada** (`solucion_aplicada`), editable e inspeccionable vía modal interactivo.
+- **Hardening de Contenedores y Mitigación `nginx2root`:**
+  - `dev-frontend`: Contenedor Nginx configurado en modo **rootless** (`USER nginx`), con capacidad de Linux acotada (`setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx`, `cap_drop: ALL`, `cap_add: NET_BIND_SERVICE`).
+  - **CIS Docker Benchmark 5.25:** Directiva `security_opt: [no-new-privileges:true]` activada en todos los servicios de `docker-compose.yml` para evitar escalamiento de privilegios vía SUID/SGID.
+- **Blindaje de Identidad y APIs:**
+  - IdP Centralizado (`auth-service`) con firmas asimétricas RS256/JWKS, historial de contraseñas (anti-reuso), validación regex de complejidad y protección contra BOLA/BFLA en endpoints multi-inquilino.
+  - Cabeceras HTTP de seguridad estrictas (HSTS, CSP con origen IdP, X-Frame-Options, X-Content-Type-Options) y sandboxing estricto de iframes en tickets POS (`sandbox="allow-scripts allow-same-origin"`).
+
+### 🚀 Protocolo de Versionado Semántico y Anti-Caché Transparente (Zero `Ctrl + F5`)
+- **Hook de Compilación (`prebuild`)**: Todo build (`docker compose build dev-frontend`, `npm run build`) ejecuta obligatoriamente `scripts/update-version.js`, sincronizando la versión semántica (**v2.4.1**), release (**20261123-02**) y fecha de build en `public/version.json`, `package.json` y perfiles de entorno Angular.
+- **Servicio `AppVersionService`**: Realiza sondeo periódico en background (45s) y en cada navegación. Al detectar una versión más reciente en el servidor, presenta un banner flotante reactivo permitiendo actualizar con 1 clic sin perder sesión, o aplica purga transparente de `CacheStorage` preservando tokens JWT en `sessionStorage`.
+- **`AppErrorHandler`**: Captura errores de desfasaje de bundles (`ChunkLoadError` o `Failed to fetch dynamically imported module`) recargando limpiamente la aplicación sin fricción para el usuario.
+- **Ubicación Estratégica de Versión**:
+  - Pastilla verde pulsante (`Online`) en el Navbar (`COTIC v2.4.1`) con acceso directo al modal corporativo de soporte técnico.
+  - Badge en la cabecera del Sidebar junto a la marca oficial: **`COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS`**.
+  - Modal de diagnóstico integral con copiado en 1 clic de informe técnico para soporte y botón secundario de verificación manual.
+
+### 🔔 Sistema Universal de Diálogos y Confirmaciones Corporativas (`AppDialogService`)
+- **Erradicación de Alertas Nativas**: Eliminación absoluta de `window.alert()` y `window.confirm()` bloqueantes.
+- **Servicio Asíncrono no Bloqueante**: Basado en `Promise<boolean>`, renderiza modales temáticos con variantes semánticas (`danger`, `warning`, `info`, `primary`, `success`).
+- **Botones Corporativos Homologados**:
+  - Botón de Acción Principal (`.btn-corporate-action` con variantes de color, gradientes, sombra y elevación).
+  - Botón Secundario de Alto Contraste (`.btn-corporate-secondary` con altura 42px, radio 10px, padding 1.35rem, peso 700, bordes sólidos `#cbd5e1` / `#475569`, fondos slate con contraste accesible e iconos contextuales `bi-x-circle` y `bi-shield-check`).
+- **Despliegue Transversal**:
+  - **Cierre de Sesión**: Confirmación de salida con resguardo de operaciones no guardadas ("Sí, Cerrar Sesión" vs "Permanecer en el Sistema").
+  - **Administración de Usuarios**: "¿Restablecer Contraseña?" con asignación de clave default institucional `Cotic2026#` ("Restablecer Clave" vs "Cancelar").
+  - **Seguridad & Sesiones**: "¿Bloquear Cuenta de Usuario?" ante detección de accesos no autorizados ("Sí, Bloquear Cuenta" vs "Cancelar").
+
+### 🌐 Certificación y Pruebas Multi-Navegador Automatizadas
+- **Validación Multi-Browser**: Certificación automática mediante script CDP (`scripts/verify_cross_browser.js`) ejecutado sobre **Google Chrome**, **Microsoft Edge** y **Mozilla Firefox**.
+- **Inspección de Computed Styles**: Confirmación programática del cálculo de estilos (`42px`, `#f1f5f9` / `#334155`, bordes sólidos visibles) y generación de capturas de alta definición en `docs/manual/imagenes/`.
 
 * 🗄️ **[Diccionario de Base de Datos en Español (`docs/sql/README.md`)](file:///D:/tools/Proyectos/sidebar-login/docs/sql/README.md)**
 * 🗺️ **[Mapeo Técnico de Interfaces (`docs/technical_frontend_interfaces_and_database_mapping.md`)](file:///D:/tools/Proyectos/sidebar-login/docs/technical_frontend_interfaces_and_database_mapping.md)**

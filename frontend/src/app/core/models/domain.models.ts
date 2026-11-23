@@ -381,6 +381,7 @@ export interface SecurityVulnerability {
   description: string;
   estimatedImpact?: string;
   remediationPlan: string;
+  appliedSolution?: string;
   reportedByUser?: string;
   mitigatedByUser?: string;
   detectionDate?: string;

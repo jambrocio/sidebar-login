@@ -10,5 +10,6 @@ export const environment = {
   authUrl: '/api/v1/auth',
   healthEndpoint: '/api/v1/auth/health',
   actuatorEndpoint: '/actuator/health',
-  version: '1.0.0-prod',
+  version: '2.4.1',
+  buildDate: '2026-11-23',
 };

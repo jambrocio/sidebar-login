@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AdminApiService } from '../../core/services/admin-api.service';
+import { AppDialogService } from '../../core/services/app-dialog.service';
 import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
 import { AppDatePipe } from '../../shared/pipes/app-date.pipe';
 import {
@@ -32,6 +33,7 @@ import {
 export class UsersManagementComponent implements OnInit {
   private readonly dummyData = inject(DummyDataService);
   private readonly adminApi = inject(AdminApiService);
+  private readonly dialog = inject(AppDialogService);
 
   readonly businessInfo = this.dummyData.businessInfo;
   readonly businesses = this.dummyData.businesses;
@@ -495,16 +497,23 @@ export class UsersManagementComponent implements OnInit {
   }
 
   /**
-   * Restablece la contraseña del usuario a la clave estándar por default ('Cotic2026#').
+   * Restablece la contraseña del usuario a la clave estándar por default ('Cotic2026#')
+   * solicitando confirmación con el sistema corporativo de alertas temáticas.
    */
-  resetUserPasswordToDefault(user: SystemUser): void {
+  async resetUserPasswordToDefault(user: SystemUser): Promise<void> {
     if (!user) return;
 
-    const confirmed = window.confirm(
-      `¿Desea restablecer la contraseña del usuario @${user.username} (${user.name})?\n\n` +
-      `Se le asignará la clave estándar institucional por default: Cotic2026#\n` +
-      `La cuenta quedará activa y se resetearán los intentos fallidos.`
-    );
+    const confirmed = await this.dialog.confirm({
+      title: '¿Restablecer Contraseña?',
+      subtitle: 'COTIC: ADMINISTRACIÓN DE USUARIOS',
+      message: `¿Desea restablecer la contraseña del usuario @${user.username} (${user.name})?`,
+      warningText: 'Se le asignará la clave estándar institucional por default (Cotic2026#). La cuenta quedará activa y se resetearán los intentos fallidos.',
+      icon: 'bi-key-fill',
+      type: 'warning',
+      confirmText: 'Restablecer Clave',
+      cancelText: 'Cancelar',
+      cancelIcon: 'bi-x-circle'
+    });
 
     if (!confirmed) return;
 

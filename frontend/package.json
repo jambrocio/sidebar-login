@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prebuild": "node scripts/update-version.js",
+    "version:sync": "node scripts/update-version.js",
     "start": "ng serve",
     "start:dev": "ng serve --configuration=development",
     "start:qa": "ng serve --configuration=qa",

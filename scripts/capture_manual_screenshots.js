@@ -157,7 +157,8 @@ async function main() {
       { path: '/dashboard/branches', file: '12_negocio_sedes.png', name: 'Negocio y Gestión de Sedes' },
       { path: '/dashboard/users', file: '13_usuarios.png', name: 'Control de Usuarios del Sistema' },
       { path: '/dashboard/roles', file: '14_roles_permisos.png', name: 'Roles y Permisos RBAC' },
-      { path: '/dashboard/sessions', file: '15_sesiones_activas.png', name: 'Monitoreo de Sesiones Activas' }
+      { path: '/dashboard/sessions', file: '15_sesiones_activas.png', name: 'Monitoreo de Sesiones Activas' },
+      { path: '/dashboard/vulnerabilities', file: '16_vulnerabilidades_seguridad.png', name: 'Auditoría de Vulnerabilidades y Seguridad Defensiva' }
     ];
 
     for (let i = 0; i < routes.length; i++) {
@@ -165,10 +166,109 @@ async function main() {
       console.log(`Navegando a [${r.file}] -> http://localhost:4200${r.path}...`);
       await cdp.send('Page.navigate', { url: `http://localhost:4200${r.path}` });
       await sleep(2200); // Esperar carga de Angular y peticiones API
+
+      // Captura estándar de la pantalla
       screenshot = await cdp.send('Page.captureScreenshot', { format: 'png' });
       const targetFile = path.join(OUTPUT_DIR, r.file);
       fs.writeFileSync(targetFile, Buffer.from(screenshot.data, 'base64'));
       console.log(`  Guardado: ${r.file} (${(fs.statSync(targetFile).size / 1024).toFixed(1)} KB)`);
+
+      // CASO ESPECIAL: Inventario -> Filtrar Piscano (PRD-118) y abrir su histórico
+      if (r.file === '05_inventario_productos.png') {
+        try {
+          console.log('  Filtrando por "Piscano" (PRD-118) para abrir histórico de movimientos...');
+          const searchEval = await cdp.send('Runtime.evaluate', {
+            expression: `
+              (() => {
+                const input = document.querySelector('.search-box input');
+                if (input) {
+                  input.value = 'Piscano';
+                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                  return 'filtro piscano aplicado';
+                }
+                return 'input no encontrado';
+              })()
+            `,
+            returnByValue: true
+          });
+          console.log('    Resultado filtro:', searchEval.result?.value);
+          await sleep(1500);
+
+          const clickEval = await cdp.send('Runtime.evaluate', {
+            expression: `
+              (() => {
+                const btn = document.querySelector('button.btn-history');
+                if (btn) {
+                  btn.click();
+                  return 'btn-history clickeado';
+                }
+                return 'btn-history no encontrado';
+              })()
+            `,
+            returnByValue: true
+          });
+          console.log('    Resultado click histórico:', clickEval.result?.value);
+          await sleep(2000); // Esperar que carguen compras y ventas del histórico
+
+          const modalShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+          const modalFile = path.join(OUTPUT_DIR, '05b_historico_producto_modal.png');
+          fs.writeFileSync(modalFile, Buffer.from(modalShot.data, 'base64'));
+          console.log(`  Guardado modal: 05b_historico_producto_modal.png (${(fs.statSync(modalFile).size / 1024).toFixed(1)} KB)`);
+
+          // Volver al inventario
+          await cdp.send('Runtime.evaluate', {
+            expression: `
+              (() => {
+                const backBtn = document.querySelector('button.btn-back-inventory');
+                if (backBtn) backBtn.click();
+              })()
+            `
+          });
+          await sleep(800);
+        } catch (e) {
+          console.warn('  Aviso: no se pudo capturar 05b_historico_producto_modal:', e.message);
+        }
+      }
+
+      // CASO ESPECIAL: Vulnerabilidades -> Abrir modal de solución aplicada
+      if (r.file === '16_vulnerabilidades_seguridad.png') {
+        try {
+          console.log('  Abriendo modal de detalle y solución técnica...');
+          const modalEval = await cdp.send('Runtime.evaluate', {
+            expression: `
+              (() => {
+                const btn = document.querySelector('.actions-group button.btn-edit-solution, .actions-group button.btn-mitigate, table tbody tr button');
+                if (btn) {
+                  btn.click();
+                  return 'clickeado botón: ' + btn.className;
+                }
+                return 'no se encontró botón de acción';
+              })()
+            `,
+            returnByValue: true
+          });
+          console.log('    Resultado click modal vulnerabilidad:', modalEval.result?.value);
+          await sleep(1500);
+
+          const modalShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+          const modalFile = path.join(OUTPUT_DIR, '16b_vulnerabilidad_detalle_modal.png');
+          fs.writeFileSync(modalFile, Buffer.from(modalShot.data, 'base64'));
+          console.log(`  Guardado modal: 16b_vulnerabilidad_detalle_modal.png (${(fs.statSync(modalFile).size / 1024).toFixed(1)} KB)`);
+
+          // Cerrar modal
+          await cdp.send('Runtime.evaluate', {
+            expression: `
+              (() => {
+                const closeBtn = document.querySelector('.btn-close-modal, .modal-footer-custom button.btn-secondary');
+                if (closeBtn) closeBtn.click();
+              })()
+            `
+          });
+          await sleep(500);
+        } catch (e) {
+          console.warn('  Aviso: no se pudo capturar 16b_vulnerabilidad_detalle_modal:', e.message);
+        }
+      }
     }
 
     cdp.close();

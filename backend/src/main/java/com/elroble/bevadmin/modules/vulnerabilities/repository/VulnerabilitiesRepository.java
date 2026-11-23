@@ -39,6 +39,7 @@ public class VulnerabilitiesRepository {
                        v.descripcion AS description,
                        v.impacto_estimado AS "estimatedImpact",
                        v.plan_remediacion AS "remediationPlan",
+                       v.solucion_aplicada AS "appliedSolution",
                        (u.nombre_completo || ' (' || u.nombre_usuario || ')') AS "reportedByUser",
                        (m.nombre_completo || ' (' || m.nombre_usuario || ')') AS "mitigatedByUser",
                        TO_CHAR(v.fecha_deteccion, 'YYYY-MM-DD HH24:MI:SS') AS "detectionDate",
@@ -47,14 +48,7 @@ public class VulnerabilitiesRepository {
                 INNER JOIN auth.usuarios u ON u.id = v.reportado_por_usuario_id
                 LEFT JOIN auth.usuarios m ON m.id = v.mitigado_por_usuario_id
                 WHERE (:isSuperAdmin = TRUE OR v.empresa_id = :businessId)
-                ORDER BY CASE v.severidad
-                            WHEN 'CRITICA' THEN 1
-                            WHEN 'ALTA' THEN 2
-                            WHEN 'MEDIA' THEN 3
-                            WHEN 'BAJA' THEN 4
-                            ELSE 5
-                         END,
-                         v.fecha_deteccion DESC
+                ORDER BY v.codigo DESC
                 """)
                 .param("businessId", businessId)
                 .param("isSuperAdmin", isSuperAdmin)
@@ -93,11 +87,11 @@ public class VulnerabilitiesRepository {
         jdbcClient.sql("""
                 INSERT INTO core.vulnerabilidades_seguridad (
                     empresa_id, codigo, titulo, categoria, severidad, estado,
-                    componente_afectado, descripcion, impacto_estimado, plan_remediacion,
+                    componente_afectado, descripcion, impacto_estimado, plan_remediacion, solucion_aplicada,
                     reportado_por_usuario_id, fecha_deteccion
                 ) VALUES (
                     :businessId, :code, :title, :category, :severity, 'ABIERTO',
-                    :affectedComponent, :description, :estimatedImpact, :remediationPlan,
+                    :affectedComponent, :description, :estimatedImpact, :remediationPlan, :appliedSolution,
                     :userId, now()
                 )
                 """)
@@ -110,6 +104,7 @@ public class VulnerabilitiesRepository {
                 .param("description", req.description().trim())
                 .param("estimatedImpact", req.estimatedImpact() != null ? req.estimatedImpact().trim() : null)
                 .param("remediationPlan", req.remediationPlan().trim())
+                .param("appliedSolution", req.appliedSolution() != null && !req.appliedSolution().isBlank() ? req.appliedSolution().trim() : null)
                 .param("userId", userId)
                 .update();
     }
@@ -117,24 +112,31 @@ public class VulnerabilitiesRepository {
     /**
      * Actualiza el estado de ciclo de vida de un hallazgo (ej. de ABIERTO a MITIGADO o EN_PROCESO).
      *
-     * @param businessId   UUID del negocio matriz
-     * @param userId       UUID del usuario que ejecuta la acción
-     * @param id           UUID de la vulnerabilidad
-     * @param status       nuevo estado
-     * @param isSuperAdmin si el usuario es Administrador General
+     * @param businessId      UUID del negocio matriz
+     * @param userId          UUID del usuario que ejecuta la acción
+     * @param id              UUID de la vulnerabilidad
+     * @param status          nuevo estado
+     * @param mitigationNotes solución técnica o notas de remediación aplicadas
+     * @param isSuperAdmin    si el usuario es Administrador General
      */
-    public int updateStatus(UUID businessId, UUID userId, UUID id, String status, boolean isSuperAdmin) {
+    public int updateStatus(UUID businessId, UUID userId, UUID id, String status, String mitigationNotes, boolean isSuperAdmin) {
         boolean isMitigated = "MITIGADO".equalsIgnoreCase(status);
         return jdbcClient.sql("""
                 UPDATE core.vulnerabilidades_seguridad
                 SET estado = :status,
                     mitigado_por_usuario_id = CASE WHEN :isMitigated THEN :userId ELSE mitigado_por_usuario_id END,
                     fecha_mitigacion = CASE WHEN :isMitigated THEN now() ELSE fecha_mitigacion END,
+                    solucion_aplicada = CASE 
+                                            WHEN :isMitigated AND :mitigationNotes IS NOT NULL AND TRIM(:mitigationNotes) <> '' 
+                                            THEN :mitigationNotes 
+                                            ELSE solucion_aplicada 
+                                        END,
                     fecha_modificacion = now()
                 WHERE (:isSuperAdmin = TRUE OR empresa_id = :businessId) AND id = :id
                 """)
                 .param("status", status.trim().toUpperCase())
                 .param("isMitigated", isMitigated)
+                .param("mitigationNotes", mitigationNotes != null && !mitigationNotes.isBlank() ? mitigationNotes.trim() : null)
                 .param("userId", userId)
                 .param("businessId", businessId)
                 .param("isSuperAdmin", isSuperAdmin)

@@ -5,7 +5,7 @@
 > **Rol Asignado:** Administrador de Negocio (`ADMIN_NEGOCIO`)  
 > **Versión del Sistema:** COTIC Pro v2.4 (Enterprise Multi-Empresa & Multi-Sede)  
 > **Fecha de Actualización:** Noviembre 2026  
-> **Descarga en PDF:** [📄 **Descargar Manual Oficial Completo en PDF (3.1 MB)**](MANUAL_DE_USUARIO_COTIC.pdf) | [🌐 **Ver Manual Interactivo Web**](index.html)  
+> **Descarga en PDF:** [📄 **Descargar Manual Oficial Completo en PDF (1.9 MB)**](MANUAL_DE_USUARIO_COTIC.pdf) | [🌐 **Ver Manual Interactivo Web**](index.html)  
 
 ---
 
@@ -42,6 +42,7 @@ COTIC es una plataforma integral diseñada para la gestión comercial, control e
 13. [Módulo 13: Administración de Usuarios y Operadores](#módulo-13-administración-de-usuarios-y-operadores)
 14. [Módulo 14: Matriz de Roles y Control de Acceso RBAC](#módulo-14-matriz-de-roles-y-control-de-acceso-rbac)
 15. [Módulo 15: Monitoreo de Sesiones y Desconexión Forzada (Kill-Session)](#módulo-15-monitoreo-de-sesiones-y-desconexión-forzada-kill-session)
+16. [Módulo 16: Auditoría de Vulnerabilidades y Seguridad Defensiva](#módulo-16-auditoría-de-vulnerabilidades-y-seguridad-defensiva)
 
 ---
 
@@ -332,6 +333,38 @@ Supervisar en vivo los accesos simultáneos a la plataforma con control de acces
   - Dirección IP de origen y navegador / sistema operativo cliente.
   - Hora de inicio de sesión y hora del último latido de actividad.
 - **Botón "Kill Session":** Cierra inmediatamente el token JWT del usuario sospechoso o inactivo, impidiendo cualquier operación posterior y redirigiéndolo al `/login`.
+
+---
+
+## Módulo 16: Auditoría de Vulnerabilidades y Seguridad Defensiva
+
+![Auditoría de Vulnerabilidades y Seguimiento](imagenes/16_vulnerabilidades_seguridad.png)
+
+### Propósito
+Centralizar el registro, trazabilidad y gestión del ciclo de vida de los hallazgos de seguridad técnica, auditorías de código (SAST/DAST), cumplimiento de estándares OWASP Top 10 y hardening de infraestructura de contenedores. Permite documentar la solución técnica aplicada para cada vulnerabilidad y auditar las mitigaciones en tiempo real.
+
+### Especificación Operativa
+- **Ruta de Acceso:** `/dashboard/vulnerabilities`
+- **Ícono en Menú:** `bi-shield-check` (🛡️ Escudo de Seguridad Defensiva)
+- **Ordenamiento Natural de la Tabla:**
+  - La tabla principal se encuentra ordenada **descendentemente por código de últimos a primeros** (`SEC-2026-014`, `SEC-2026-013` ... hasta `SEC-2026-001`), permitiendo que los hallazgos y auditorías más recientes aparezcan siempre en la parte superior para una revisión prioritaria inmediata.
+- **Filtros Reactivos y Búsqueda:**
+  - *Filtro por Severidad:* Todos (`ALL`), Crítica (`CRITICA`), Alta (`ALTA`), Media (`MEDIA`), Baja (`BAJA`), Informativa (`INFO`).
+  - *Filtro por Estado:* Todos (`ALL`), Abierto (`ABIERTO`), En Proceso (`EN_PROCESO`), Mitigado (`MITIGADO`), Falso Positivo (`FALSO_POSITIVO`), Riesgo Aceptado (`ACEPTADO`).
+  - *Búsqueda en Vivo:* Búsqueda por código, título, componente afectado, categoría o usuario auditor.
+- **Campos Principales de la Tabla:**
+  1. **Código:** Identificador único normalizado (ej. `SEC-2026-013`).
+  2. **Severidad:** Badge con coloración de riesgo (Rojo = Crítica, Naranja = Alta, Amarillo = Media, Azul = Baja, Gris = Informativa).
+  3. **Título y Categoría:** Nombre del hallazgo y clasificación técnica (ej. *OWASP A01: Broken Object Level Authorization*, *CIS Docker Benchmark 5.25*, *OWASP A05: Security Misconfiguration*).
+  4. **Componente Afectado:** Servicio, endpoint o archivo vulnerable (ej. `dev-frontend / Nginx`, `auth-service / SecurityConfig`, `OrganizationController`).
+  5. **Estado de Remediación:** Estado actual dentro del ciclo de vida del hallazgo.
+  6. **Solución Aplicada:** Resumen de la solución técnica implementada para mitigar el riesgo.
+  7. **Acciones:** Botón de inspección detallada (`bi-eye`) para ver el detalle completo y actualizar la remediación.
+- **Ventana Modal de Detalle y Remediación:**
+  - Al pulsar el botón de inspección, se abre un diálogo interactivo donde se visualiza la descripción completa del vector de ataque, impacto estimado, plan de remediación y la **solución técnica aplicada**.
+  - Si el usuario cuenta con permisos de administrador o auditor, puede cambiar el estado a `MITIGADO` e ingresar la solución técnica implementada, la cual queda registrada con sello de tiempo y firma del usuario auditor.
+
+![Modal de Detalle y Solución Aplicada](imagenes/16b_vulnerabilidad_detalle_modal.png)
 
 ---
 

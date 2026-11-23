@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { DummyDataService } from '../../core/services/dummy-data.service';
 import { AuthApiService } from '../../core/services/auth-api.service';
+import { AppVersionService } from '../../core/services/app-version.service';
 
 /**
  * Representa un nodo dentro del árbol de navegación del Sidebar (`json/sidebar-menu.json`).
@@ -48,7 +49,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private readonly dummyData = inject(DummyDataService);
   private readonly authApi = inject(AuthApiService);
   private readonly router = inject(Router);
+  readonly versionService = inject(AppVersionService);
+
   private routerSub?: Subscription;
+
+  /** Estado reactivo de feedback al copiar datos de soporte */
+  readonly copyFeedback = signal<boolean>(false);
+
+  /** Control del modal de soporte técnico */
+  readonly showSupportModal = signal<boolean>(false);
 
   constructor() {
     // Si cambian los navItems, auto-expandir los padres de la ruta activa
@@ -61,10 +70,40 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cierra completamente la sesión y redirige al login.
+   * Copia los datos de soporte técnico al portapapeles y activa el feedback visual.
+   */
+  async copySupportInfo(): Promise<void> {
+    const ok = await this.versionService.copyDiagnosticToClipboard();
+    if (ok) {
+      this.copyFeedback.set(true);
+      setTimeout(() => this.copyFeedback.set(false), 2500);
+    }
+  }
+
+  /** Abre la ventana modal de soporte técnico */
+  openSupportModal(): void {
+    this.showSupportModal.set(true);
+  }
+
+  /** Cierra la ventana modal de soporte técnico */
+  closeSupportModal(): void {
+    this.showSupportModal.set(false);
+  }
+
+  /** Fuerza una comprobación inmediata de nueva versión en el servidor */
+  async checkUpdatesNow(): Promise<void> {
+    const updated = await this.versionService.checkForUpdates();
+    if (!updated) {
+      this.copyFeedback.set(true);
+      setTimeout(() => this.copyFeedback.set(false), 2000);
+    }
+  }
+
+  /**
+   * Cierra completamente la sesión y redirige al login solicitando confirmación previa.
    */
   onLogout(): void {
-    this.authApi.logout();
+    this.authApi.requestLogout();
   }
 
   /** Estado reactivo que indica si el sidebar se encuentra en modo compacto (78px) */

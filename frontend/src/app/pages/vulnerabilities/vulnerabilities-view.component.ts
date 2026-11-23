@@ -75,7 +75,14 @@ export class VulnerabilitiesViewComponent implements OnInit {
     description: '',
     estimatedImpact: '',
     remediationPlan: '',
+    appliedSolution: '',
   };
+
+  /** Vulnerabilidad seleccionada para registrar/editar la solución de mitigación */
+  readonly selectedVulnForMitigation = signal<SecurityVulnerability | null>(null);
+
+  /** Texto temporal de la solución de mitigación en el modal */
+  mitigationSolutionText = '';
 
   /** KPIs reactivos de postura de seguridad */
   readonly totalCount = computed(() => this.vulnerabilitiesList().length);
@@ -116,18 +123,19 @@ export class VulnerabilitiesViewComponent implements OnInit {
       list = list.filter(v => v.status === st);
     }
 
-    if (!q) {
-      return list;
+    if (q) {
+      list = list.filter(
+        v =>
+          (v.code && v.code.toLowerCase().includes(q)) ||
+          (v.title && v.title.toLowerCase().includes(q)) ||
+          (v.category && v.category.toLowerCase().includes(q)) ||
+          (v.affectedComponent && v.affectedComponent.toLowerCase().includes(q)) ||
+          (v.reportedByUser && v.reportedByUser.toLowerCase().includes(q))
+      );
     }
 
-    return list.filter(
-      v =>
-        (v.code && v.code.toLowerCase().includes(q)) ||
-        (v.title && v.title.toLowerCase().includes(q)) ||
-        (v.category && v.category.toLowerCase().includes(q)) ||
-        (v.affectedComponent && v.affectedComponent.toLowerCase().includes(q)) ||
-        (v.reportedByUser && v.reportedByUser.toLowerCase().includes(q))
-    );
+    // Ordenar por código de últimos a primeros (descendente numérico natural)
+    return [...list].sort((a, b) => (b.code || '').localeCompare(a.code || '', undefined, { numeric: true }));
   });
 
   /** Listado paginado a 15 elementos por página */
@@ -166,6 +174,7 @@ export class VulnerabilitiesViewComponent implements OnInit {
       description: '',
       estimatedImpact: '',
       remediationPlan: '',
+      appliedSolution: '',
     };
   }
 
@@ -216,18 +225,22 @@ export class VulnerabilitiesViewComponent implements OnInit {
       return;
     }
 
+    const hasSolution = !!this.newVuln.appliedSolution.trim();
     const payload: SecurityVulnerability = {
       code: cleanCode,
       title: cleanTitle,
       category: this.newVuln.category,
       severity: this.newVuln.severity,
-      status: 'ABIERTO',
+      status: hasSolution ? 'MITIGADO' : 'ABIERTO',
       affectedComponent: cleanComponent,
       description: cleanDesc,
       estimatedImpact: this.newVuln.estimatedImpact.trim() || undefined,
       remediationPlan: cleanRemediation,
+      appliedSolution: hasSolution ? this.newVuln.appliedSolution.trim() : undefined,
       reportedByUser: this.currentSessionUser(),
+      mitigatedByUser: hasSolution ? this.currentSessionUser() : undefined,
       detectionDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      mitigationDate: hasSolution ? new Date().toISOString().replace('T', ' ').substring(0, 19) : undefined,
     };
 
     this.dummyData.addVulnerability(
@@ -249,11 +262,67 @@ export class VulnerabilitiesViewComponent implements OnInit {
     );
   }
 
+  /**
+   * Abre el modal para capturar o editar la solución técnica implementada para mitigar el hallazgo.
+   */
+  openMitigateModal(vuln: SecurityVulnerability): void {
+    this.selectedVulnForMitigation.set(vuln);
+    this.mitigationSolutionText = vuln.appliedSolution || '';
+  }
+
+  /**
+   * Cierra el modal de solución de mitigación.
+   */
+  closeMitigateModal(): void {
+    this.selectedVulnForMitigation.set(null);
+    this.mitigationSolutionText = '';
+  }
+
+  /**
+   * Confirma y persiste en la base de datos la solución técnica implementada marcando el hallazgo como MITIGADO.
+   */
+  confirmMitigation(): void {
+    const vuln = this.selectedVulnForMitigation();
+    if (!vuln || !vuln.id) return;
+    const cleanSolution = this.mitigationSolutionText.trim();
+    if (!cleanSolution) {
+      this.feedbackMessage.set({
+        text: 'Por favor detalla cuál fue la solución técnica implementada para mitigar este hallazgo.',
+        type: 'warning',
+      });
+      return;
+    }
+
+    this.dummyData.updateVulnerabilityStatus(
+      vuln.id,
+      'MITIGADO',
+      cleanSolution,
+      () => {
+        this.feedbackMessage.set({
+          text: `El hallazgo ${vuln.code} fue blindado y mitigado exitosamente. Se registró la solución técnica aplicada.`,
+          type: 'success',
+        });
+        this.closeMitigateModal();
+      },
+      (err: any) => {
+        this.feedbackMessage.set({
+          text: `Error al registrar mitigación: ${err?.error?.detail || err?.message}`,
+          type: 'error',
+        });
+      }
+    );
+  }
+
   changeStatus(vuln: SecurityVulnerability, newStatus: 'ABIERTO' | 'EN_PROCESO' | 'MITIGADO' | 'FALSO_POSITIVO'): void {
     if (!vuln.id) return;
+    if (newStatus === 'MITIGADO') {
+      this.openMitigateModal(vuln);
+      return;
+    }
     this.dummyData.updateVulnerabilityStatus(
       vuln.id,
       newStatus,
+      undefined,
       () => {
         this.feedbackMessage.set({
           text: `El hallazgo ${vuln.code} cambió su estado a "${newStatus}".`,

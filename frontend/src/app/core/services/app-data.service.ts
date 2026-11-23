@@ -1459,13 +1459,20 @@ export class AppDataService {
   updateVulnerabilityStatus(
     id: string,
     status: 'ABIERTO' | 'EN_PROCESO' | 'MITIGADO' | 'FALSO_POSITIVO' | 'ACEPTADO',
+    mitigationNotes?: string,
     onSuccess?: () => void,
     onError?: (err: any) => void
   ): void {
-    this.adminApi.updateVulnerabilityStatus(id, status).subscribe({
+    this.adminApi.updateVulnerabilityStatus(id, status, mitigationNotes).subscribe({
       next: () => {
         this.vulnerabilitiesList.update(list =>
-          list.map(v => (v.id === id ? { ...v, status } : v))
+          list.map(v => (v.id === id ? {
+            ...v,
+            status,
+            appliedSolution: mitigationNotes && mitigationNotes.trim() ? mitigationNotes.trim() : v.appliedSolution,
+            mitigationDate: status === 'MITIGADO' ? new Date().toISOString().replace('T', ' ').substring(0, 19) : v.mitigationDate,
+            mitigatedByUser: status === 'MITIGADO' ? this.currentSessionUser() : v.mitigatedByUser
+          } : v))
         );
         if (onSuccess) onSuccess();
       },

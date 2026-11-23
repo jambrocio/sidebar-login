@@ -35,6 +35,14 @@
   --sidebar-active-text: #ffffff;
   --sidebar-submenu-bg: rgba(0, 0, 0, 0.025);
   --sidebar-footer-text: #dc3545;
+
+  /* Tokens de Botones Secundarios / Cancelar / Diálogos Corporativos (Modo Claro) */
+  --btn-secondary-bg: #f1f5f9;
+  --btn-secondary-border: #cbd5e1;
+  --btn-secondary-text: #1e293b;
+  --btn-secondary-hover-bg: #e2e8f0;
+  --btn-secondary-hover-border: #94a3b8;
+  --btn-secondary-hover-text: #0f172a;
 }
 
 body[data-theme="dark"] {
@@ -68,6 +76,14 @@ body[data-theme="dark"] {
   --sidebar-active-text: #ffffff;
   --sidebar-submenu-bg: rgba(255, 255, 255, 0.03);
   --sidebar-footer-text: #ff6b6b;
+
+  /* Tokens de Botones Secundarios / Cancelar / Diálogos Corporativos (Modo Oscuro) */
+  --btn-secondary-bg: #334155;
+  --btn-secondary-border: #475569;
+  --btn-secondary-text: #f8fafc;
+  --btn-secondary-hover-bg: #475569;
+  --btn-secondary-hover-border: #64748b;
+  --btn-secondary-hover-text: #ffffff;
 }
 
 /* Reseteo global para evitar márgenes y barras de scroll inesperadas */
@@ -241,6 +257,92 @@ input:-webkit-autofill:active {
   &.btn-sm {
     padding: 0.35rem 0.7rem;
     font-size: 0.78rem;
+  }
+}
+
+/* --- Botón Secundario Corporativo Universal COTIC (Cancelar / Permanecer / Soporte) --- */
+.btn-corporate-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  height: 42px;
+  padding: 0 1.35rem;
+  min-width: 130px;
+  background: var(--btn-secondary-bg, #f1f5f9);
+  border: 1.5px solid var(--btn-secondary-border, #cbd5e1);
+  color: var(--btn-secondary-text, #1e293b);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  text-decoration: none;
+  outline: none;
+
+  i {
+    font-size: 1.05rem;
+    color: var(--text-muted-color, #64748b);
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--btn-secondary-hover-bg, #e2e8f0);
+    border-color: var(--btn-secondary-hover-border, #94a3b8);
+    color: var(--btn-secondary-hover-text, #0f172a);
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+
+    i {
+      color: var(--btn-secondary-hover-text, #0f172a);
+      transform: scale(1.08);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(0.985);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color, #0284c7);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+body[data-theme="dark"] .btn-corporate-secondary {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+
+  i {
+    color: #94a3b8;
+  }
+
+  &:hover:not(:disabled) {
+    background: #475569;
+    border-color: #64748b;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+
+    i {
+      color: #ffffff;
+    }
+  }
+
+  &:active:not(:disabled) {
+    background: #1e293b;
   }
 }
 

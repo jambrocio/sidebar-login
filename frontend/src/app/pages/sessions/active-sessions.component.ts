@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService, ActiveSessionDto } from '../../core/services/admin-api.service';
 import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
+import { AppDialogService } from '../../core/services/app-dialog.service';
 
 /**
  * Componente Smart/Container para la Auditoría de Conexiones de Red y Sesiones (NOC).
@@ -24,6 +25,7 @@ import { TablePaginationComponent } from '../../shared/components/pagination/tab
 })
 export class ActiveSessionsComponent implements OnInit, OnDestroy {
   private readonly adminApi = inject(AdminApiService);
+  private readonly dialog = inject(AppDialogService);
 
   /** Lista completa de sesiones recuperadas desde el backend */
   readonly sessions = signal<ActiveSessionDto[]>([]);
@@ -325,13 +327,21 @@ export class ActiveSessionsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Bloquea la cuenta del usuario en PostgreSQL y revoca todas sus conexiones activas.
+   * Bloquea la cuenta del usuario en PostgreSQL y revoca todas sus conexiones activas
+   * solicitando confirmación con el sistema centralizado de diálogos temáticos.
    */
-  lockUserInfiltrator(session: ActiveSessionDto): void {
-    const confirmLock = confirm(
-      `¿Está completamente seguro de BLOQUEAR la cuenta de "${session.fullName}" (@${session.username})?\n\n` +
-      `Se revocará inmediatamente su acceso y quedará impedido de iniciar sesión hasta que un administrador lo desbloquee.`
-    );
+  async lockUserInfiltrator(session: ActiveSessionDto): Promise<void> {
+    const confirmLock = await this.dialog.confirm({
+      title: '¿Bloquear Cuenta de Usuario?',
+      subtitle: 'COTIC: SEGURIDAD Y SESIONES ACTIVAS',
+      message: `¿Está seguro de BLOQUEAR la cuenta de "${session.fullName}" (@${session.username})?`,
+      warningText: 'Se revocará inmediatamente su acceso y quedará impedido de iniciar sesión hasta que un administrador lo desbloquee.',
+      icon: 'bi-shield-slash-fill',
+      type: 'danger',
+      confirmText: 'Sí, Bloquear Cuenta',
+      cancelText: 'Cancelar',
+      cancelIcon: 'bi-x-circle'
+    });
 
     if (!confirmLock) return;
 

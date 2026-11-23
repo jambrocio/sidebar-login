@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Secuencia: Versionado Automático, Cache-Busting y Sistema Universal de Diálogos Temáticos",
+    "locale": "es",
+    "output": "docs/diagrams/10_secuencia_versionado_cache_busting_y_dialogos.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "Usuario Operador", "sublabel": "Navegador Web" },
+    { "id": "spa", "type": "frontend", "label": "Angular 21 SPA", "sublabel": "Signals & VersionService" },
+    { "id": "nginx", "type": "cloud", "label": "Nginx & Cache", "sublabel": "dev-frontend :80" },
+    { "id": "dialog", "type": "frontend", "label": "AppDialogService", "sublabel": "Diálogos Temáticos" },
+    { "id": "backend", "type": "backend", "label": "Backend Spring Boot", "sublabel": "dev-backend :8080" },
+    { "id": "db", "type": "database", "label": "PostgreSQL 17", "sublabel": "auth.usuarios" }
+  ],
+  "segments": [
+    { "from": 130, "to": 260, "label": "1. Sincronización Automática de Versión y Cache-Busting" },
+    { "from": 280, "to": 440, "label": "2. Detección en Vivo de Entrega y Purgado Transparente de Caché" },
+    { "from": 460, "to": 700, "label": "3. Confirmación Temática Universal (Cierre de Sesión / Reset Clave)" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "spa", "to": "nginx", "y": 170, "label": "GET /version.json?t={epoch} (Polling 45s / NavigationEnd)", "variant": "emphasis" },
+    { "id": "m2", "from": "nginx", "to": "spa", "y": 215, "label": "200 OK (no-store: { version: '2.4.1', release: '20261123-02' })", "variant": "return" },
+    { "id": "m3", "from": "spa", "to": "user", "y": 305, "label": "Banner reactivo: ¡Nueva versión disponible (v2.4.1)!", "variant": "return" },
+    { "id": "m4", "from": "user", "to": "spa", "y": 345, "label": "Clic en 'Actualizar Ahora' (sincroniza sin perder sesión)", "variant": "default" },
+    { "id": "m5", "from": "spa", "to": "nginx", "y": 385, "label": "Purga CacheStorage selectivo (preserva JWT y sessionStorage)", "variant": "emphasis" },
+    { "id": "m6", "from": "nginx", "to": "spa", "y": 420, "label": "Entrega nuevos bundles inmutables (chunk-*.js)", "variant": "return" },
+    { "id": "m7", "from": "user", "to": "spa", "y": 485, "label": "Acción crítica: Clic en 'Reset Clave' o 'Cerrar Sesión'", "variant": "default" },
+    { "id": "m8", "from": "spa", "to": "dialog", "y": 525, "label": "dialogService.confirm({ type: 'warning'/'danger', cancelText, cancelIcon })", "variant": "emphasis" },
+    { "id": "m9", "from": "dialog", "to": "user", "y": 565, "label": "Renderiza Diálogo Temático con botones homologados de 42px", "variant": "return" },
+    { "id": "m10", "from": "user", "to": "dialog", "y": 605, "label": "Clic en 'Restablecer Clave' (Confirmar)", "variant": "emphasis" },
+    { "id": "m11", "from": "dialog", "to": "backend", "y": 635, "label": "PUT /api/v1/users/{id}/reset-password", "variant": "emphasis" },
+    { "id": "m12", "from": "backend", "to": "db", "y": 665, "label": "UPDATE auth.usuarios SET hash=default (Cotic2026#)", "variant": "emphasis" },
+    { "id": "m13", "from": "backend", "to": "spa", "y": 690, "label": "200 OK + Feedback exitoso sin recargas de página", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "spa", "from": 170, "to": 425, "type": "frontend" },
+    { "participant": "nginx", "from": 170, "to": 220, "type": "cloud" },
+    { "participant": "dialog", "from": 525, "to": 610, "type": "frontend" },
+    { "participant": "backend", "from": 635, "to": 695, "type": "backend" },
+    { "participant": "db", "from": 665, "to": 675, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Protocolo Anti-Caché Transparente (Zero Ctrl + F5)",
+      "items": [
+        "prebuild autoincrementa version.json y sincroniza perfiles de entorno",
+        "Nginx sirve index.html y version.json con directivas no-store, no-cache y max-age=0",
+        "AppErrorHandler captura y recupera automáticamente ChunkLoadError ante despliegues"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Estandarización Universal de Diálogos Corporativos",
+      "items": [
+        "Erradicación total de window.alert() y confirm() nativos bloqueantes",
+        "Botones homologados: .btn-corporate-action y .btn-corporate-secondary de alto contraste",
+        "Soporte temático reactivo (Modo Claro / Modo Oscuro) y accesibilidad WCAG AA"
+      ]
+    }
+  ]
+}

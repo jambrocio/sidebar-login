@@ -1,5 +1,5 @@
 # PLAN MAESTRO DE ARQUITECTURA Y DESARROLLO FULL-STACK (BASE PARA AGENTES E IA)
-> **Versión:** 1.0.0  
+> **Versión:** 2.4.1 (Release 20261123-02)  
 > **Ámbito de Aplicación:** Plataformas Web Empresariales, Sistemas Transaccionales, E-Commerce, ERP / POS Multisede.  
 > **Compatibilidad de Modelos IA:** ChatGPT (GPT-4o/o1), Claude 3.5/3.7 Sonnet, Google Gemini 1.5/2.0 Pro, DeepSeek V3/R1, Antigravity, Mistral, Cursor / Copilot.
 
@@ -22,7 +22,7 @@ No introduzcas desviaciones arbitrarias de stack, convenciones o seguridad sin j
 
 ## 2. Principios y Reglas Inviolables (Golden Rules)
 
-Cualquier sistema desarrollado a partir de esta base debe respetar las siguientes 7 reglas maestras:
+Cualquier sistema desarrollado a partir de esta base debe respetar las siguientes 10 reglas maestras:
 
 | # | Dominio | Regla Inviolable | Explicación / Justificación |
 |---|---|---|---|
@@ -30,9 +30,12 @@ Cualquier sistema desarrollado a partir de esta base debe respetar las siguiente
 | **R2** | **Arquitectura Backend** | **Clean Architecture + Java 21 LTS** | Spring Boot 3.2+ / 4.x con **Hilos Virtuales** (`spring.threads.virtual.enabled=true`). Separación estricta en capas: `config`, `common`, `security`, `audit` y `modules/<dominio>` (`domain`, `repository`, `service`, `controller`, `dto`, `mapper`). |
 | **R3** | **Seguridad REST** | **Stateless JWT + RBAC + ProblemDetail RFC 9457** | Autenticación basada en tokens JWT con expiración estricta. Autorización jerárquica por roles y permisos granulares. Respuestas de error estandarizadas según RFC 9457 (`application/problem+json`). |
 | **R4** | **Frontend Moderno** | **Angular 17+ Standalone + Signals** | Cero `NgModules`. Cada vista es un `Component` standalone con `ChangeDetectionStrategy.OnPush`. Gestión reactiva de estado usando **Signals** (`signal()`, `computed()`, `effect()`). Formularios con `ReactiveFormsModule` tipado. |
-| **R5** | **Diseño & UX** | **Tema Claro Corporativo (Light Mode)** | Las interfaces de usuario, presentaciones ejecutivas y videos deben mantener una paleta luminosa de alta legibilidad (`#ffffff`, `#f8fafc`, acentos en azul eléctrico `#2563eb`, cian `#0284c7` y verde `#10b981`). Prohibido generar interfaces oscuras por defecto salvo solicitud explícita del usuario. |
+| **R5** | **Diseño & UX** | **Tema Claro Corporativo y Adaptación Oscura** | Las interfaces deben mantener un diseño corporativo pulcro de alta legibilidad (`#ffffff`, `#f8fafc`, acentos en `#0284c7`, `#2563eb`), complementado con soporte reactivo a Modo Oscuro (`data-theme="dark"`) con tokens de contraste accesibles conforme a WCAG AA. |
 | **R6** | **Menús y Navegación** | **RBAC Dinámico sin Iconos Huérfanos** | Los menús se resuelven recursivamente desde la base de datos según los roles del usuario. Si un ítem de menú **no tiene hijos** (`submenus.length === 0`), **nunca debe renderizar el chevron/flecha de despliegue** ni abrir contenedores vacíos. |
-| **R7** | **DevSecOps** | **Contenedores Seguros sin Root + Healthchecks** | Dockerfiles multi-stage con imágenes base ligeras (Alpine / Eclipse Temurin). Ejecución bajo usuario no privilegiado (`appuser:10001`). `docker-compose.yml` con healthchecks obligatorios (`pg_isready`, `curl actuator/health`) y redes aisladas. |
+| **R7** | **DevSecOps & Hardening** | **Contenedores Rootless + CIS Docker Benchmark + Healthchecks** | Dockerfiles multi-stage ligeros (Alpine / Temurin). Mitigación estricta de `nginx2root` mediante Nginx **rootless** (`USER nginx` + `setcap`). Aplicación universal de **CIS Docker Benchmark 5.25** (`no-new-privileges:true`), eliminación de capacidades (`cap_drop: ALL`), healthchecks obligatorios y redes puente aisladas (`app-network`, `data-network`). |
+| **R8** | **Ciberseguridad Continua** | **Auditoría de Vulnerabilidades y Trazabilidad de Remediación** | Registro centralizado en `core.vulnerabilidades_seguridad` con códigos normalizados `SEC-YYYY-NNN`, ordenamiento descendente natural (últimos a primeros), documentación obligatoria de la solución técnica aplicada (`solucion_aplicada`), IdP con llaves asimétricas RS256/JWKS y protección contra BOLA/BFLA. |
+| **R9** | **Versionado & Cache-Busting** | **Protocolo Anti-Caché Transparente (Zero `Ctrl + F5`)** | Queda prohibido exigir recargas manuales forzadas al usuario. Cada build ejecuta `prebuild` (`scripts/update-version.js`), Nginx sirve `index.html` y `version.json` con `no-store`, `AppVersionService` sondea en segundo plano (45s), `AppErrorHandler` autorecupera `ChunkLoadError` y el purgado de `CacheStorage` preserva tokens y sesión activa. |
+| **R10** | **Diálogos Universales** | **Erradicación de `window.alert()` y `window.confirm()`** | Quedan erradicadas las alertas nativas bloqueantes del navegador. Todo diálogo confirmatorio crítico (Logout, Reset Clave, Bloqueo de Cuentas) debe ser no-bloqueante (`AppDialogService` Promise-based) con botones homologados de 42px (`.btn-corporate-action` y `.btn-corporate-secondary` de alto contraste) y diseño adaptativo a temas. |
 
 ---
 
@@ -44,7 +47,9 @@ flowchart TD
         UI["Standalone Components (OnPush)"]
         SIG["Reactive State (Angular Signals)"]
         ROUT["Guards RBAC + Interceptors JWT"]
-        STYLE["Tailwind CSS + SCSS Tokens (Light Theme)"]
+        STYLE["Tailwind CSS + SCSS Tokens (Claro / Oscuro)"]
+        VERSION["VersionManager (Zero Ctrl+F5) + Anti-Cache"]
+        DIALOG["Universal Themed Dialogs (AppDialogService)"]
     end
 
     subgraph Backend["Backend Layer (Spring Boot 3/4 + Java 21 LTS)"]
@@ -62,12 +67,14 @@ flowchart TD
     end
 
     subgraph DevOps["DevSecOps & Cloud Packaging"]
-        DOCK["Multi-Stage Dockerfiles (Non-root)"]
-        DC["Docker Compose (Healthcheck Orchestration)"]
+        DOCK["Multi-Stage Dockerfiles (Rootless Nginx / Temurin)"]
+        DC["Docker Compose (Healthcheck Orchestration + CIS 5.25)"]
         CLOUD["Azure Container Apps / GCP Cloud Run (Terraform IaC)"]
     end
 
     UI --> SIG --> ROUT -->|HTTPS / JSON| REST
+    UI --> VERSION
+    UI --> DIALOG
     REST --> SEC --> SRV --> AOP --> JPA
     JPA -->|JDBC Connection Pool HikariCP| SCH
 ```
@@ -112,16 +119,20 @@ nombre-del-proyecto/
 │   └── pom.xml
 │
 ├── frontend/                     # Módulo Frontend Angular
+│   ├── scripts/
+│   │   └── update-version.js     # Script de incremento semántico prebuild (v2.4.1)
 │   ├── src/app/
-│   │   ├── core/                 # AuthInterceptor, ErrorInterceptor, AuthGuard, RoleGuard
+│   │   ├── core/
+│   │   │   ├── handlers/         # AppErrorHandler (Recuperación transparente de ChunkLoadError)
+│   │   │   ├── services/         # AppVersionService (Zero Ctrl+F5) y AppDialogService (Diálogos Temáticos)
+│   │   │   └── guards/           # AuthGuard, RoleGuard
 │   │   ├── models/               # Interfaces TypeScript sincronizadas con DTOs backend
-│   │   ├── services/             # Servicios HTTP con Signals para estado global
-│   │   ├── shared/               # Componentes compartidos (Botones, Modales, Tablas)
-│   │   ├── layout/               # Sidebar dinámico RBAC, Navbar, Footer
+│   │   ├── shared/               # Componentes compartidos (Botones homologados 42px, Modales, Tablas)
+│   │   ├── layout/               # Sidebar dinámico RBAC, Navbar con pastilla de versión activa
 │   │   └── views/                # Vistas principales (1 componente standalone por ruta)
-│   ├── Dockerfile                # Multi-stage Node.js build + Nginx Alpine
-│   ├── nginx.conf                # Nginx con seguridad (X-Frame-Options, CSP, Gzip)
-│   └── package.json
+│   ├── Dockerfile                # Multi-stage Node.js build + Nginx Alpine Rootless
+│   ├── nginx.conf                # Nginx anti-caché (no-store en index.html/version.json)
+│   └── package.json              # Hook prebuild: node scripts/update-version.js
 │
 └── docs/                         # Documentación Centralizada y Artefactos
     ├── technical_frontend_interfaces_and_database_mapping.md # Mapeo técnico completo
@@ -130,7 +141,10 @@ nombre-del-proyecto/
     │   ├── 02_seed_dummy_data.sql
     │   └── README.md             # Diccionario de datos
     ├── cloud/                    # Blueprints Cloud (Azure & GCP), FinOps, CI/CD
-    ├── diagrams/                 # Diagramas de Software (Archify / Mermaid)
+    ├── diagrams/                 # 10 Diagramas de Software (Archify Showcase v3.2.0)
+    │   ├── index.html            # Catálogo interactivo en la misma pestaña
+    │   ├── 01_arquitectura_sistema.html ... 09_secuencia_autenticacion_centralizada_multitenant.html
+    │   └── 10_secuencia_versionado_cache_busting_y_dialogos.html # Auto-Version, Cache-Busting & Diálogos
     └── presentacion/             # Pitch Decks HTML, simuladores interactivos y videos
 ```
 
@@ -279,19 +293,41 @@ nombre-del-proyecto/
 
 ---
 
-### 5.4. Capa DevSecOps y Contenedores
+### 5.4. Capa DevSecOps, Hardening de Contenedores y Ciberseguridad
 
-1. **Dockerfile Multi-Stage para Backend**:
-   - Etapa 1: Maven + OpenJDK 21 para compilar el JAR.
+1. **Dockerfile Multi-Stage para Backend e IdP (`auth-service` / `backend`)**:
+   - Etapa 1: Maven + OpenJDK 21 para compilar el JAR ejecutable.
    - Etapa 2: Eclipse Temurin JRE 21 Alpine mínima.
-   - Creación de usuario no root: `adduser -D -u 10001 appuser`.
-2. **Dockerfile Multi-Stage para Frontend**:
-   - Etapa 1: Node.js Alpine para `npm run build`.
-   - Etapa 2: Nginx Unprivileged Alpine. Copia del `dist/` a `/usr/share/nginx/html`.
-3. **Orquestación en `docker-compose.yml`**:
+   - Creación de usuario de sistema sin privilegios: `adduser -D -u 10001 appuser`.
+   - Eliminación total de capacidades Linux en Compose: `cap_drop: [ALL]`.
+   - Restricción de escalamiento de privilegios CIS 5.25: `security_opt: [no-new-privileges:true]`.
+
+2. **Dockerfile Multi-Stage para Frontend (Mitigación Defensiva `nginx2root`)**:
+   - Etapa 1: Node.js Alpine para `npm run build` en modo producción.
+   - Etapa 2: Nginx 1.27 Alpine con hardening rootless:
+     - Instalación de `libcap` y `tzdata`.
+     - Otorgamiento de capacidad de socket privilegiado al binario: `setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx`.
+     - Concesión de propiedad al usuario del sistema: `chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d /usr/share/nginx/html`.
+     - Ejecución forzada como usuario no root: `USER nginx`.
+   - En Compose: `cap_drop: [ALL]`, `cap_add: [NET_BIND_SERVICE]`, `security_opt: [no-new-privileges:true]`.
+
+3. **Arquitectura de Identidad Centralizada (IAM / IdP) & Mitigación OWASP**:
+   - Microservicio `auth-service` con Spring Boot 3.4 y Java 21 LTS.
+   - Firma asimétrica de tokens JWT con par de claves RSA 2048-bit (**RS256**) y proveedor JWKS estándar RFC 7517 (`/.well-known/jwks.json`).
+   - Políticas de contraseña seguras: validación regex de complejidad (mayúscula, minúscula, número, caracter especial) e historial de no-reutilización de las últimas 3 claves (`auth.historial_contrasenas`).
+   - Mitigación BOLA/BFLA: validación estricta de pertenencia de negocio (`empresa_id`) en consultas y mutaciones.
+   - Headers HTTP de seguridad perimetral (HSTS, CSP con origen IdP, X-Frame-Options) y sandboxing de iframes POS.
+
+4. **Registro y Auditoría de Vulnerabilidades (`core.vulnerabilidades_seguridad`)**:
+   - Cada hallazgo o auditoría técnica se registra con código único `SEC-YYYY-NNN`, severidad, categoría OWASP/CIS, componente afectado, descripción, impacto, plan de remediación y **solución técnica aplicada** (`solucion_aplicada`).
+   - El módulo visual (`/dashboard/vulnerabilities`) ordena la información de **últimos a primeros por código** mediante comparación numérica natural, facilitando la auditoría continua.
+
+5. **Orquestación en `docker-compose.yml`**:
    - Healthcheck en PostgreSQL (`pg_isready -U postgres`).
+   - Healthcheck en APIs (`wget -qO- http://127.0.0.1:8080/api/v1/auth/health`).
    - `depends_on` con condición `service_healthy`.
    - Parámetros de reinicio: `restart: unless-stopped`.
+   - Redes segmentadas en tres capas: `app-network`, `data-network`, `ops-network`.
 
 ---
 
@@ -394,9 +430,11 @@ Antes de considerar concluido cualquier desarrollo realizado por una IA, se debe
 - [ ] **Backend**: ¿Se están utilizando Java Records para los DTOs y ProblemDetail RFC 9457 para excepciones?
 - [ ] **Backend**: ¿Los endpoints validan los permisos de rol mediante Spring Security?
 - [ ] **Frontend**: ¿El componente es Standalone y maneja su estado mediante Signals?
-- [ ] **Frontend**: ¿La interfaz es en Tema Claro y el menú no muestra flechas de desplegable en ítems sin hijos?
-- [ ] **DevOps**: ¿Los contenedores compilan y levantan con `healthcheck` en estado `healthy`?
-- [ ] **Documentación**: ¿Se actualizó la matriz de mapeo frontend <-> backend <-> base de datos?
+- [ ] **Frontend**: ¿La interfaz es en Tema Claro con adaptación a Tema Oscuro y el menú no muestra flechas en ítems sin hijos?
+- [ ] **Frontend**: ¿Se erradicó el uso de `window.alert()` y `window.confirm()`, utilizando `AppDialogService` con botones corporativos homologados de 42px?
+- [ ] **Frontend**: ¿La aplicación cuenta con auto-versionado y anti-caché transparente (Zero `Ctrl + F5`) mediante `prebuild` y `AppVersionService`?
+- [ ] **DevOps**: ¿Los contenedores compilan y levantan con `healthcheck` en estado `healthy` y mitigación `nginx2root`?
+- [ ] **Documentación**: ¿Se actualizó la matriz de mapeo frontend <-> backend <-> base de datos y el catálogo de diagramas técnicos?
 
 ---
 

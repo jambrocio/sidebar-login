@@ -30,8 +30,8 @@ FROM nginx:1.27-alpine AS runner
 LABEL maintainer="Equipo BevAdmin <dev@elroble.com>"
 LABEL description="Contenedor Frontend Nginx para BevAdmin Angular 21"
 
-# Configuración de zona horaria America/Lima (Perú)
-RUN apk add --no-cache tzdata && \
+# Configuración de zona horaria America/Lima (Perú) y utilidades de privilegios mínimos
+RUN apk add --no-cache tzdata libcap && \
     cp /usr/share/zoneinfo/America/Lima /etc/localtime && \
     echo "America/Lima" > /etc/timezone
 
@@ -46,9 +46,17 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copiar los artefactos estáticos compilados desde la etapa de construcción
 COPY --from=builder /app/dist/futuristic-login/browser /usr/share/nginx/html
 
-# Asignar permisos adecuados
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
+# Hardening Defensivo (Mitigación de Vulnerabilidad nginx2root / CIS Docker Benchmark 4.1):
+# 1. Configurar directorios de caché, logs y PID con permisos para el usuario 'nginx' (UID 101)
+# 2. Otorgar capability cap_net_bind_service para bind en puerto 80 sin requerir root
+# 3. Forzar ejecución no privilegiada mediante USER nginx
+RUN touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html && \
+    setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx
+
+# Mitigación Definitiva nginx2root: Ejecución bajo usuario sin privilegios 'nginx'
+USER nginx
 
 # Exponer el puerto HTTP del servidor Nginx
 EXPOSE 80

@@ -155,7 +155,7 @@ Para organizaciones o escenarios donde se prioriza el **control total de costos 
                  │                                                                                               │
                  ▼                                                                                               ▼
       [ Contenedor Frontend ]                                                                         [ Contenedor Backend ]
-      (Angular 21 + Nginx Alpine)                                                                     (Spring Boot 4 / Java 21)
+      (Angular 21 + Nginx Alpine Rootless)                                                            (Spring Boot 4 + auth-service IdP)
       Puerto interno :80 (No 0.0.0.0)                                                                 Puerto interno :8080 (No 0.0.0.0)
                  │                                                                                               │
                  │                                                                                               ▼
@@ -271,10 +271,44 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    security_opt:
+      - no-new-privileges:true
     networks:
       - bevadmin-network
 
-  # 3. Backend REST API Spring Boot 4 + Java 21
+  # 3. Identity Provider Centralizado (auth-service) Spring Boot 3.4 + Java 21
+  dev-auth-service:
+    image: dev-auth-service:latest
+    container_name: dev-auth-service
+    restart: unless-stopped
+    environment:
+      - DB_URL=jdbc:postgresql://dev-postgres:5432/${DB_NAME:-admin_dashboard_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      dev-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/api/v1/auth/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=Host(`auth.bevadmin.com`)"
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.tls.certresolver=letsencrypt"
+      - "traefik.http.services.auth.loadbalancer.server.port=8081"
+      - "autoheal=true"
+    networks:
+      - bevadmin-network
+
+  # 4. Backend REST API Spring Boot 4 + Java 21
   dev-backend:
     image: dev-backend:latest
     container_name: dev-backend
@@ -293,6 +327,10 @@ services:
       interval: 15s
       timeout: 3s
       retries: 3
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`api.bevadmin.com`)"
@@ -303,7 +341,7 @@ services:
     networks:
       - bevadmin-network
 
-  # 4. Frontend SPA Angular 21 (Nginx Alpine)
+  # 4. Frontend SPA Angular 21 (Nginx Alpine Rootless - Mitigación nginx2root)
   dev-frontend:
     image: dev-frontend:latest
     container_name: dev-frontend
@@ -316,6 +354,12 @@ services:
       interval: 15s
       timeout: 3s
       retries: 3
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.bevadmin.com`)"

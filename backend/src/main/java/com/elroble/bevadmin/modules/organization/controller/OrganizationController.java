@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,13 +63,14 @@ public class OrganizationController {
             description = "Consulta la tabla 'businesses'. Si el usuario es Administrador General devuelve todos los negocios; si es usuario de negocio, lista exclusivamente el suyo."
     )
     @ApiResponse(responseCode = "200", description = "Listado de negocios obtenido correctamente.")
-    public List<Map<String, Object>> listBusinesses(Authentication authentication) {
-        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
-            if (!user.isSuperAdmin()) {
-                return organizationService.listBusinesses().stream()
-                        .filter(b -> user.businessCode() != null && user.businessCode().equalsIgnoreCase((String) b.get("code")))
-                        .toList();
-            }
+    public List<Map<String, Object>> listBusinesses(@AuthenticationPrincipal AuthenticatedUserPrincipal user) {
+        if (user == null) {
+            return List.of();
+        }
+        if (!user.isSuperAdmin()) {
+            return organizationService.listBusinesses().stream()
+                    .filter(b -> user.businessCode() != null && user.businessCode().equalsIgnoreCase((String) b.get("code")))
+                    .toList();
         }
         return organizationService.listBusinesses();
     }
@@ -111,15 +113,13 @@ public class OrganizationController {
     )
     @ApiResponse(responseCode = "200", description = "Listado de locales devuelto correctamente.")
     public List<Map<String, Object>> listBranches(
-            Authentication authentication,
+            @AuthenticationPrincipal AuthenticatedUserPrincipal user,
             @Parameter(description = "Código opcional del Negocio Matriz para filtrar sus locales", example = "BIZ-001")
             @RequestParam(required = false) String businessCode) {
-        String effectiveBusinessCode = businessCode;
-        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
-            if (!user.isSuperAdmin()) {
-                effectiveBusinessCode = user.businessCode();
-            }
+        if (user == null) {
+            return List.of();
         }
+        String effectiveBusinessCode = user.isSuperAdmin() ? businessCode : user.businessCode();
         return organizationService.listBranches(effectiveBusinessCode);
     }
 

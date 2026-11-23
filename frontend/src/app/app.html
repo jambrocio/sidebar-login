@@ -1,2 +1,222 @@
-<!-- src/app/app.component.html -->
+<!-- src/app/app.html -->
 <router-outlet></router-outlet>
+
+<!-- Banner reactivo flotante de actualización automática de versión -->
+<aside
+  *ngIf="versionService.updateAvailable()"
+  class="app-update-banner"
+  role="alert"
+  aria-live="assertive"
+>
+  <div class="update-banner-content">
+    <div class="update-icon-pulse">
+      <i class="bi bi-arrow-repeat"></i>
+    </div>
+    <div class="update-text">
+      <strong class="update-title">¡Nueva versión disponible (v{{ versionService.newVersion() }})!</strong>
+      <span class="update-desc">El sistema ha sido actualizado en el servidor. Aplica los cambios para sincronizar tu sesión.</span>
+    </div>
+    <div class="update-actions">
+      <button
+        type="button"
+        class="btn-update-now"
+        (click)="versionService.applyUpdate()"
+        title="Actualizar ahora sin perder sesión"
+      >
+        <i class="bi bi-lightning-charge-fill"></i>
+        <span>Actualizar Ahora</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- Modal Corporativo de Diagnóstico y Soporte Técnico (Adaptable al Tema de Interfaz) -->
+<div
+  class="support-modal-backdrop"
+  *ngIf="versionService.showSupportModal()"
+  (click)="versionService.closeSupportModal()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="supportModalTitle"
+>
+  <div class="support-modal-dialog" (click)="$event.stopPropagation()">
+    <!-- Cabecera del Modal -->
+    <div class="support-modal-header">
+      <div class="modal-brand-header">
+        <div class="modal-icon-badge">
+          <i class="bi bi-box-seam-fill"></i>
+        </div>
+        <div>
+          <h5 id="supportModalTitle" class="modal-title">Información de Soporte Técnico</h5>
+          <span class="modal-subtitle">COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn-close-modal"
+        (click)="versionService.closeSupportModal()"
+        title="Cerrar ventana de soporte"
+        aria-label="Cerrar modal"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Cuerpo del Modal -->
+    <div class="support-modal-body">
+      <!-- Rejilla de Métricas de Diagnóstico -->
+      <div class="diagnostic-grid">
+        <div class="diag-card">
+          <div class="diag-meta">
+            <span class="diag-label">Versión del Sistema</span>
+            <span class="diag-tag">Frontend SPA</span>
+          </div>
+          <div class="diag-value-row">
+            <span class="version-chip">v{{ versionService.appVersion() }}</span>
+            <span class="build-subtext">Build {{ versionService.buildDate() }}</span>
+          </div>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-meta">
+            <span class="diag-label">Estado de Caché</span>
+            <span class="diag-tag tag-success">Optimizado</span>
+          </div>
+          <div class="diag-value-row">
+            <span class="status-indicator-live">
+              <span class="pulse-dot-green"></span>
+              Auto-Busting Activo
+            </span>
+            <span class="status-note">(Sin requerir Ctrl + F5)</span>
+          </div>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-meta">
+            <span class="diag-label">Sincronización en Vivo</span>
+            <span class="diag-tag tag-info">En línea</span>
+          </div>
+          <div class="diag-value-row">
+            <span class="status-indicator-sync">
+              <i class="bi bi-arrow-repeat"></i>
+              Polling Activo (45s)
+            </span>
+            <span class="status-note">Detección de nuevas entregas</span>
+          </div>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-meta">
+            <span class="diag-label">Ecosistema & Seguridad</span>
+            <span class="diag-tag tag-shield">OWASP Hardened</span>
+          </div>
+          <div class="diag-value-row">
+            <span class="status-indicator-shield">
+              <i class="bi bi-shield-check"></i>
+              Microservicios Seguros
+            </span>
+            <span class="status-note">Auth + Backend + Nginx</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Acciones con Botones Corporativos Mejorados -->
+      <div class="diag-footer-actions">
+        <p class="diag-instruction">
+          <i class="bi bi-info-circle-fill me-1"></i>
+          Hacé clic en el botón principal para copiar la información diagnóstica completa y compartirla con el equipo de soporte técnico.
+        </p>
+
+        <div class="action-buttons-row">
+          <button
+            type="button"
+            class="btn-corporate-primary"
+            (click)="versionService.copySupportInfo()"
+            title="Copiar informe de diagnóstico detallado al portapapeles"
+          >
+            <i class="bi" [ngClass]="versionService.copyFeedback() ? 'bi-check2' : 'bi-clipboard-check-fill'"></i>
+            <span>{{ versionService.copyFeedback() ? '¡Copiado con Éxito!' : 'Copiar Diagnóstico para Soporte' }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn-corporate-secondary"
+            (click)="versionService.checkUpdatesNow()"
+            [disabled]="versionService.isChecking()"
+            title="Verificar si existe una versión más reciente en el servidor"
+          >
+            <i class="bi bi-arrow-clockwise" [class.spin-icon]="versionService.isChecking()"></i>
+            <span>{{ versionService.isChecking() ? 'Buscando...' : 'Verificar Versión' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Diálogo / Alerta / Confirmación Universal COTIC (Adaptable al Tema Claro / Oscuro) -->
+<div
+  class="app-dialog-backdrop"
+  *ngIf="dialogService.currentDialog() as dialog"
+  (click)="dialogService.handleCancel()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="appDialogTitle"
+>
+  <div class="app-dialog-card" [ngClass]="'variant-' + dialog.type" (click)="$event.stopPropagation()">
+    <!-- Cabecera del Diálogo -->
+    <div class="dialog-header">
+      <div class="dialog-icon-badge" [ngClass]="'badge-' + dialog.type">
+        <i class="bi" [ngClass]="dialog.icon || 'bi-exclamation-triangle-fill'"></i>
+      </div>
+      <div class="dialog-title-box">
+        <h5 id="appDialogTitle" class="dialog-title">{{ dialog.title }}</h5>
+        <span class="dialog-subtitle">{{ dialog.subtitle || 'COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS' }}</span>
+      </div>
+      <button
+        type="button"
+        class="btn-close-modal"
+        (click)="dialogService.handleCancel()"
+        title="Cerrar diálogo"
+        aria-label="Cerrar modal"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Cuerpo del Diálogo -->
+    <div class="dialog-body">
+      <p class="dialog-message">{{ dialog.message }}</p>
+
+      <div class="dialog-warning-callout" *ngIf="dialog.warningText">
+        <i class="bi" [ngClass]="dialog.type === 'danger' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill'"></i>
+        <span>{{ dialog.warningText }}</span>
+      </div>
+    </div>
+
+    <!-- Acciones con Botones Corporativos -->
+    <div class="dialog-footer">
+      <button
+        *ngIf="!dialog.isAlertOnly"
+        type="button"
+        class="btn-corporate-secondary"
+        (click)="dialogService.handleCancel()"
+        title="Cancelar operación"
+      >
+        <i class="bi" [ngClass]="dialog.cancelIcon || 'bi-x-circle'" class="me-1"></i>
+        <span>{{ dialog.cancelText || 'Cancelar' }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn-corporate-action"
+        [ngClass]="'btn-action-' + dialog.type"
+        (click)="dialogService.handleConfirm()"
+        title="Confirmar operación"
+      >
+        <i class="bi" [ngClass]="dialog.type === 'success' ? 'bi-check2' : 'bi-check2-circle'" class="me-1"></i>
+        <span>{{ dialog.confirmText || 'Confirmar' }}</span>
+      </button>
+    </div>
+  </div>
+</div>

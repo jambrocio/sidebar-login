@@ -23,6 +23,8 @@ services:
       timeout: 3s
       retries: 10
       start_period: 2s
+    security_opt:
+      - no-new-privileges:true
     networks:
       - bevadmin-data-network
 
@@ -51,6 +53,10 @@ services:
       timeout: 3s
       retries: 15
       start_period: 10s
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     networks:
       - bevadmin-app-network
       - bevadmin-data-network
@@ -83,6 +89,10 @@ services:
       timeout: 3s
       retries: 15
       start_period: 10s
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     networks:
       - bevadmin-app-network
       - bevadmin-data-network
@@ -101,6 +111,12 @@ services:
       - TZ=${TZ:-America/Lima}
     ports:
       - "${FRONTEND_PORT_MAPPING:-4200:80}"
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       dev-postgres:
         condition: service_healthy

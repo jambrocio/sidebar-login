@@ -5740,6 +5740,18 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <li>Script diario en cron para exportar dump de PostgreSQL cifrado y enviarlo a almacenamiento S3/Cloud Storage externo (Disaster Recovery).</li>
         </ul>
       </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot purple"></div>
+          <h3>Hardening de Contenedores (CIS Benchmark &amp; nginx2root)</h3>
+        </div>
+        <ul>
+          <li><strong>Mitigación nginx2root:</strong> Nginx se ejecuta como usuario no root (<code>USER nginx</code>) con capacidad de enlace acotada (<code>setcap &#39;cap_net_bind_service=+ep&#39;</code>) y <code>cap_drop: ALL</code>.</li>
+          <li><strong>CIS Docker Benchmark 5.25:</strong> Directiva <code>security_opt: [no-new-privileges:true]</code> en todos los contenedores para neutralizar escalamiento de privilegios vía SUID/SGID.</li>
+          <li><strong>IAM / IdP Centralizado:</strong> Servicio <code>auth-service</code> con firmas RS256/JWKS, historial de claves y aislamiento de red en tres capas.</li>
+        </ul>
+      </div>
     </div>
     <nav class="node-outline no-print" id="node-outline" hidden aria-labelledby="node-outline-title">
       <div class="node-outline-head">

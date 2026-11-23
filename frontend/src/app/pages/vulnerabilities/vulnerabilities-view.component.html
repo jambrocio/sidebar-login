@@ -211,6 +211,22 @@
           ></textarea>
           <small class="field-hint">Guía técnica de solución preventiva para el equipo de desarrollo</small>
         </div>
+
+        <!-- 8. Solución Técnica Aplicada / Fix Implementado (Opcional) -->
+        <div class="form-group full-width">
+          <label>
+            8. Solución Técnica Aplicada / Fix Implementado (Opcional)
+            <span class="badge-optional"><i class="bi bi-info-circle"></i> Opcional</span>
+          </label>
+          <textarea
+            name="vlSolution"
+            [(ngModel)]="newVuln.appliedSolution"
+            rows="2"
+            placeholder="Si el problema ya fue mitigado previamente, detalla aquí cuál fue la solución técnica implementada (directiva configurada, refactorización de código, etc.)..."
+            class="textarea-control"
+          ></textarea>
+          <small class="field-hint">Si ingresas una solución aplicada, el hallazgo se registrará automáticamente en estado MITIGADO</small>
+        </div>
       </div>
 
       <!-- Acciones del Formulario -->
@@ -289,7 +305,7 @@
             <th style="width: 170px">Categoría</th>
             <th style="width: 120px">Severidad</th>
             <th style="width: 130px">Estado</th>
-            <th>Plan de Remediación</th>
+            <th style="min-width: 280px">Plan de Remediación y Solución Aplicada</th>
             <th>Registrado Por</th>
             <th>Fecha Registro</th>
             <th style="width: 170px; text-align: center">Acciones de Mitigación</th>
@@ -355,11 +371,19 @@
               </span>
             </td>
 
-            <!-- Plan de Remediación -->
+            <!-- Plan de Remediación y Solución Aplicada -->
             <td>
               <div class="remediation-snippet" [title]="v.remediationPlan">
                 <i class="bi bi-wrench-adjustable-circle"></i>
-                <span>{{ v.remediationPlan }}</span>
+                <span><strong>Plan:</strong> {{ v.remediationPlan }}</span>
+              </div>
+              <div *ngIf="v.appliedSolution" class="solution-snippet" [title]="v.appliedSolution">
+                <i class="bi bi-patch-check-fill text-success"></i>
+                <span><strong>Solución:</strong> {{ v.appliedSolution }}</span>
+              </div>
+              <div *ngIf="v.status === 'MITIGADO' && !v.appliedSolution" class="solution-pending-snippet">
+                <i class="bi bi-exclamation-circle text-warning"></i>
+                <span class="text-muted"><em>Solución aplicada pendiente de detallar</em></span>
               </div>
             </td>
 
@@ -380,10 +404,20 @@
                   *ngIf="v.status !== 'MITIGADO'"
                   type="button"
                   class="btn-action btn-mitigate"
-                  (click)="changeStatus(v, 'MITIGADO')"
-                  title="Marcar como Mitigado"
+                  (click)="openMitigateModal(v)"
+                  title="Registrar Solución y Mitigar Hallazgo"
                 >
-                  <i class="bi bi-check-lg"></i> Mitigar
+                  <i class="bi bi-shield-check"></i> Mitigar
+                </button>
+
+                <button
+                  *ngIf="v.status === 'MITIGADO'"
+                  type="button"
+                  class="btn-action btn-edit-solution"
+                  (click)="openMitigateModal(v)"
+                  title="Ver o editar la solución técnica aplicada"
+                >
+                  <i class="bi bi-pencil-square"></i> Solución
                 </button>
 
                 <button
@@ -427,5 +461,76 @@
       [currentPage]="currentPage()"
       (pageChange)="currentPage.set($event)"
     ></app-table-pagination>
+  </div>
+
+  <!-- MODAL PARA REGISTRAR O EDITAR LA SOLUCIÓN TÉCNICA DE MITIGACIÓN -->
+  <div *ngIf="selectedVulnForMitigation()" class="modal-backdrop-custom" (click)="closeMitigateModal()">
+    <div class="modal-dialog-custom" (click)="$event.stopPropagation()">
+      <div class="modal-header-custom">
+        <div class="modal-title-box">
+          <div class="modal-icon-badge">
+            <i class="bi bi-shield-fill-check"></i>
+          </div>
+          <div>
+            <h3 class="modal-title">Registrar Solución Técnica de Mitigación</h3>
+            <p class="modal-subtitle">
+              Hallazgo: <strong>{{ selectedVulnForMitigation()?.code }}</strong> — {{ selectedVulnForMitigation()?.title }}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" (click)="closeMitigateModal()" title="Cerrar modal">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body-custom">
+        <!-- Resumen del Problema y Componente -->
+        <div class="vuln-summary-card">
+          <div class="summary-row">
+            <span class="summary-label"><i class="bi bi-hdd-network"></i> Componente Afectado:</span>
+            <code class="summary-value">{{ selectedVulnForMitigation()?.affectedComponent }}</code>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label"><i class="bi bi-shield-exclamation"></i> Categoría:</span>
+            <span class="summary-value">{{ selectedVulnForMitigation()?.category }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label"><i class="bi bi-wrench-adjustable-circle"></i> Plan Recomendado:</span>
+            <span class="summary-value plan-text">{{ selectedVulnForMitigation()?.remediationPlan }}</span>
+          </div>
+        </div>
+
+        <!-- Campo de Solución Aplicada -->
+        <div class="form-group modal-form-group">
+          <label>
+            ¿Cuál fue la solución técnica implementada para mitigar el problema? <span class="required-indicator">*</span>
+          </label>
+          <textarea
+            [(ngModel)]="mitigationSolutionText"
+            rows="4"
+            class="required-input textarea-control modal-textarea"
+            placeholder="Describe con precisión qué fix, directiva o refactorización solucionó la vulnerabilidad (ej: Se configuró Content-Security-Policy en nginx.conf, se implementó validación en service, se restringieron permisos en BD, etc.)..."
+          ></textarea>
+          <small class="field-hint">
+            <i class="bi bi-person-check"></i> Esta solución quedará registrada en auditoría vinculada al usuario <strong>{{ currentSessionUser() }}</strong> con marca de tiempo.
+          </small>
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button type="button" class="btn-secondary" (click)="closeMitigateModal()">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-primary btn-confirm-mitigation"
+          [disabled]="!mitigationSolutionText.trim()"
+          (click)="confirmMitigation()"
+        >
+          <i class="bi bi-patch-check-fill"></i>
+          <span>Guardar Solución y Marcar Mitigado</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>

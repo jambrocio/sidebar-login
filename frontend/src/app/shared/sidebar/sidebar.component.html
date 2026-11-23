@@ -5,7 +5,16 @@
       <i class="bi bi-box-seam-fill"></i>
     </div>
     <div class="brand-text" *ngIf="!isCollapsed()">
-      <h2 class="system-title">COTIC</h2>
+      <div class="brand-title-row">
+        <h2 class="system-title">COTIC</h2>
+        <span
+          class="brand-version-badge"
+          (click)="versionService.openSupportModal()"
+          title="COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS • v{{ versionService.appVersion() }} • Clic para Información de Soporte Técnico"
+        >
+          v{{ versionService.appVersion() }}
+        </span>
+      </div>
       <span class="system-subtitle">SISTEMA POS & GESTIÓN DE PRODUCTOS</span>
       <div class="business-indicator" [title]="businessInfo().commercialName">
         <i class="bi bi-buildings-fill"></i>

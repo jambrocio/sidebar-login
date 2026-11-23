@@ -1,9 +1,9 @@
 /**
- * Service Worker PWA — BevAdmin Pro (Multi-Tienda & Arqueo de Caja)
- * Provee caché de activos estáticos exclusivamente para el App Shell del Frontend.
+ * Service Worker PWA — COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS
+ * Provee soporte offline básico sin interferir con la actualización de versiones ni la API.
  */
-const CACHE_NAME = 'bevadmin-pwa-v2';
-const APP_SHELL_ASSETS = ['/', '/index.html', '/manifest.webmanifest', '/favicon.ico'];
+const CACHE_NAME = 'cotic-pwa-v2.4.1';
+const APP_SHELL_ASSETS = ['/manifest.webmanifest', '/favicon.ico'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -32,21 +32,30 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(event.request.url);
 
-  // 1. NUNCA interceptar peticiones a la API del backend, actuador, healthcheck o puertos de microservicios
+  // 1. NUNCA interceptar peticiones al backend, actuator, health, ni a la verificación de versión o sw
   if (
     url.port === '8080' ||
+    url.port === '8081' ||
     url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/auth/') ||
     url.pathname.startsWith('/actuator/') ||
     url.pathname.includes('/health') ||
+    url.pathname === '/version.json' ||
+    url.pathname === '/sw.js' ||
+    url.pathname === '/' ||
+    url.pathname === '/index.html' ||
     url.origin !== self.location.origin
   ) {
-    return;
+    return; // Bypass total al navegador y al servidor Nginx
   }
 
-  // 2. Manejo de activos estáticos del frontend
+  // 2. Para otros recursos estáticos (fuentes, iconos): Cache con fallback a red
   event.respondWith(
-    fetch(event.request)
-      .then(networkResponse => {
+    caches.match(event.request).then(cached => {
+      if (cached) {
+        return cached;
+      }
+      return fetch(event.request).then(networkResponse => {
         if (networkResponse && networkResponse.status === 200) {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -54,17 +63,7 @@ self.addEventListener('fetch', event => {
           });
         }
         return networkResponse;
-      })
-      .catch(() =>
-        caches.match(event.request).then(cached => {
-          if (cached) {
-            return cached;
-          }
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-          return new Response('Offline', { status: 503, statusText: 'Offline' });
-        })
-      )
+      });
+    })
   );
 });
