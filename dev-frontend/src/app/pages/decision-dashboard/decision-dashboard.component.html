@@ -1,0 +1,231 @@
+<section class="page-wrapper">
+  <header class="page-header">
+    <div>
+      <h1>Dashboard Ejecutivo para la Toma de Decisiones</h1>
+      <p class="subtitle">
+        Consolidado financiero, rotación de inventario, desempeño por sede y alertas accionables en tiempo real.
+      </p>
+    </div>
+
+    <div class="header-controls">
+      <div class="period-pills" role="group" aria-label="Ventana temporal">
+        <button type="button" class="pill-btn" [class.active]="selectedDays() === 7" (click)="changePeriod(7)">7 días</button>
+        <button type="button" class="pill-btn" [class.active]="selectedDays() === 30" (click)="changePeriod(30)">30 días</button>
+        <button type="button" class="pill-btn" [class.active]="selectedDays() === 90" (click)="changePeriod(90)">90 días</button>
+        <button type="button" class="pill-btn" [class.active]="selectedDays() === 365" (click)="changePeriod(365)">1 año</button>
+      </div>
+
+      <select
+        *ngIf="isGeneralAdmin()"
+        class="biz-select"
+        [ngModel]="selectedBusinessCode()"
+        (ngModelChange)="changeBusiness($event)"
+        aria-label="Filtrar por negocio"
+      >
+        <option value="ALL">Todos los Negocios ({{ businesses().length }})</option>
+        <option *ngFor="let biz of businesses()" [value]="biz.id">
+          {{ biz.commercialName }} ({{ biz.id }})
+        </option>
+      </select>
+
+      <button type="button" class="btn-outline" (click)="loadDashboard()" [disabled]="isLoading()">
+        <i class="bi" [ngClass]="isLoading() ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>
+        <span>Actualizar</span>
+      </button>
+
+      <button type="button" class="btn-primary" (click)="exportExecutiveCsv()" [disabled]="!dashboard()">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+        <span>Exportar CSV</span>
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="errorMessage()" class="alert-error" role="alert">
+    <i class="bi bi-exclamation-octagon-fill"></i>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <ng-container *ngIf="dashboard() as data">
+    <!-- 1. KPIs Estratégicos -->
+    <div class="kpi-grid">
+      <div class="card kpi-card kpi-revenue">
+        <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Ingresos del Período</span>
+          <strong class="kpi-value">{{ currencySymbol() }} {{ data.kpis.totalRevenue | number:'1.2-2' }}</strong>
+          <span class="kpi-trend">{{ data.kpis.totalSales }} ventas emitidas</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card kpi-margin">
+        <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Margen Bruto Estimado</span>
+          <strong class="kpi-value">{{ currencySymbol() }} {{ data.kpis.estimatedMargin | number:'1.2-2' }}</strong>
+          <span class="kpi-trend">Rentabilidad: {{ data.kpis.marginPercent }}%</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card kpi-ticket">
+        <div class="kpi-icon"><i class="bi bi-receipt"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Ticket Promedio</span>
+          <strong class="kpi-value">{{ currencySymbol() }} {{ data.kpis.averageTicket | number:'1.2-2' }}</strong>
+          <span class="kpi-trend">Por comprobante emitido</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card kpi-purchases">
+        <div class="kpi-icon"><i class="bi bi-cart-check-fill"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Compras / Abastecimiento</span>
+          <strong class="kpi-value">{{ currencySymbol() }} {{ data.kpis.totalPurchasesAmount | number:'1.2-2' }}</strong>
+          <span class="kpi-trend">{{ data.kpis.totalPurchases }} órdenes registradas</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card" [class.kpi-alert]="data.kpis.criticalStockCount > 0">
+        <div class="kpi-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Alertas Stock Crítico</span>
+          <strong class="kpi-value">{{ data.kpis.criticalStockCount }} SKUs</strong>
+          <span class="kpi-trend">Inventario valorizado: {{ currencySymbol() }} {{ data.kpis.inventoryValuation | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Recomendaciones Accionables -->
+    <div class="card recommendations-card" *ngIf="recommendations().length > 0">
+      <h2 class="section-title"><i class="bi bi-lightbulb-fill"></i> Recomendaciones para Toma de Decisiones</h2>
+      <div class="rec-grid">
+        <div *ngFor="let rec of recommendations()" class="rec-item" [ngClass]="'rec-' + rec.severity">
+          <div class="rec-body">
+            <strong>{{ rec.title }}</strong>
+            <p>{{ rec.detail }}</p>
+          </div>
+          <a [routerLink]="rec.route" class="rec-link">
+            <span>{{ rec.actionLabel }}</span>
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Gráficos Comparativos: Tendencia Diaria y Rendimiento por Local -->
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-head">
+          <h2 class="section-title"><i class="bi bi-bar-chart-fill"></i> Tendencia Ventas vs Compras (Últimos {{ data.dailyTrend.length }} días)</h2>
+          <div class="legend-inline">
+            <span class="dot-sales"></span> Ventas
+            <span class="dot-purchases"></span> Compras
+          </div>
+        </div>
+        <div class="bar-chart" *ngIf="data.dailyTrend.length > 0">
+          <div *ngFor="let d of data.dailyTrend" class="bar-day" [title]="d.date + ' — Ventas: ' + currencySymbol() + ' ' + d.sales + ' | Compras: ' + currencySymbol() + ' ' + d.purchases">
+            <div class="bars-pair">
+              <div class="bar bar-sales" [style.height.%]="barHeightPercent(d.sales, maxTrendValue())"></div>
+              <div class="bar bar-purchases" [style.height.%]="barHeightPercent(d.purchases, maxTrendValue())"></div>
+            </div>
+            <span class="bar-label">{{ d.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title"><i class="bi bi-shop-window"></i> Desempeño por Local / Sucursal</h2>
+        <div class="progress-list" *ngIf="data.branchPerformance.length > 0; else emptyBranches">
+          <div *ngFor="let br of data.branchPerformance" class="progress-row">
+            <div class="progress-meta">
+              <strong>{{ br.name }} <small>({{ br.code }})</small></strong>
+              <span>{{ currencySymbol() }} {{ br.revenue | number:'1.2-2' }} · {{ br.salesCount }} vtas</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="barHeightPercent(br.revenue, maxBranchRevenue())"></div>
+            </div>
+          </div>
+        </div>
+        <ng-template #emptyBranches>
+          <p class="empty-note">Sin sedes activas para el filtro seleccionado.</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- 4. Tablas de Decisión: Top Productos y Stock Crítico -->
+    <div class="tables-grid">
+      <div class="card">
+        <h2 class="section-title"><i class="bi bi-trophy-fill"></i> Top Productos por Ingreso</h2>
+        <div class="table-responsive" *ngIf="data.topProducts.length > 0; else emptyTop">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Unidades</th>
+                <th>Ingresos</th>
+                <th>Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of data.topProducts">
+                <td><strong>{{ p.name }}</strong><br /><small class="text-muted">{{ p.sku }}</small></td>
+                <td><span class="badge badge-info">{{ p.category }}</span></td>
+                <td>{{ p.unitsSold }}</td>
+                <td><strong>{{ currencySymbol() }} {{ p.revenue | number:'1.2-2' }}</strong></td>
+                <td>{{ p.currentStock }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #emptyTop>
+          <p class="empty-note">Aún no hay ventas registradas en este período.</p>
+        </ng-template>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title"><i class="bi bi-box-seam-fill"></i> Productos en Stock Crítico (Reposición)</h2>
+        <div class="table-responsive" *ngIf="data.criticalStock.length > 0; else emptyCritical">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Negocio</th>
+                <th>Actual</th>
+                <th>Mínimo</th>
+                <th>Costo Unit.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of data.criticalStock">
+                <td><strong>{{ c.name }}</strong><br /><small class="text-muted">{{ c.sku }}</small></td>
+                <td><code>{{ c.businessCode }}</code></td>
+                <td><span class="badge badge-danger">{{ c.currentStock }}</span></td>
+                <td>{{ c.minStock }}</td>
+                <td>{{ currencySymbol() }} {{ c.unitCost | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #emptyCritical>
+          <p class="empty-note">No hay productos con stock por debajo del mínimo.</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- 5. Participación por Categoría -->
+    <div class="card" *ngIf="data.categoryBreakdown.length > 0">
+      <h2 class="section-title"><i class="bi bi-pie-chart-fill"></i> Ventas por Categoría</h2>
+      <div class="progress-list">
+        <div *ngFor="let cat of data.categoryBreakdown" class="progress-row">
+          <div class="progress-meta">
+            <strong>{{ cat.category }}</strong>
+            <span>{{ currencySymbol() }} {{ cat.revenue | number:'1.2-2' }} · {{ cat.units }} uds</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill cat-fill" [style.width.%]="barHeightPercent(cat.revenue, maxCategoryRevenue())"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</section>

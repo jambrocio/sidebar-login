@@ -36,6 +36,17 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'decision-dashboard',
+        loadComponent: () =>
+          import('./pages/decision-dashboard/decision-dashboard.component').then(
+            m => m.DecisionDashboardComponent
+          ),
+        data: {
+          title: 'Dashboard Ejecutivo para Toma de Decisiones',
+          breadcrumb: 'Toma de Decisiones',
+        },
+      },
+      {
         path: 'sales',
         loadComponent: () =>
           import('./pages/sales/sales-pos.component').then(m => m.SalesPosComponent),

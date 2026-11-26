@@ -2,7 +2,7 @@
  * Service Worker PWA — COTIC: SISTEMA POS & GESTIÓN DE PRODUCTOS
  * Provee soporte offline básico sin interferir con la actualización de versiones ni la API.
  */
-const CACHE_NAME = 'cotic-pwa-v2.4.2';
+const CACHE_NAME = 'cotic-pwa-v2.4.4';
 const APP_SHELL_ASSETS = ['/manifest.webmanifest', '/favicon.ico'];
 
 self.addEventListener('install', event => {

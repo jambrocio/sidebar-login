@@ -1024,5 +1024,83 @@ export class AdminApiService {
       { headers: this.getHeaders() }
     );
   }
+
+  // =========================================================================
+  // 13. ANALÍTICA EJECUTIVA Y TOMA DE DECISIONES
+  // =========================================================================
+
+  /**
+   * Obtiene el tablero consolidado de métricas ejecutivas para la toma de decisiones.
+   *
+   * @param days Ventana temporal en días (7, 30, 90, 365).
+   * @param businessCode Código opcional de negocio matriz (solo Superusuario).
+   * @returns Observable con KPIs, tendencia diaria, ranking de sedes, top productos y stock crítico.
+   */
+  getDecisionDashboard(days = 30, businessCode?: string): Observable<DecisionDashboardResponseDto> {
+    let params = new HttpParams().set('days', String(days));
+    if (businessCode && businessCode !== 'ALL') {
+      params = params.set('businessCode', businessCode);
+    }
+    return this.http.get<DecisionDashboardResponseDto>(`${this.baseUrl}/analytics/decision-dashboard`, {
+      headers: this.getHeaders(),
+      params,
+    });
+  }
+}
+
+/**
+ * Contrato de respuesta del endpoint `/api/v1/analytics/decision-dashboard`.
+ */
+export interface DecisionDashboardResponseDto {
+  days: number;
+  businessCode: string;
+  kpis: {
+    totalSales: number;
+    totalRevenue: number;
+    averageTicket: number;
+    totalPurchases: number;
+    totalPurchasesAmount: number;
+    estimatedMargin: number;
+    marginPercent: number;
+    totalProducts: number;
+    criticalStockCount: number;
+    inventoryValuation: number;
+  };
+  dailyTrend: Array<{
+    date: string;
+    label: string;
+    sales: number;
+    salesCount: number;
+    purchases: number;
+  }>;
+  branchPerformance: Array<{
+    code: string;
+    name: string;
+    businessCode: string;
+    salesCount: number;
+    revenue: number;
+    avgTicket: number;
+  }>;
+  topProducts: Array<{
+    sku: string;
+    name: string;
+    category: string;
+    unitsSold: number;
+    revenue: number;
+    currentStock: number;
+  }>;
+  criticalStock: Array<{
+    sku: string;
+    name: string;
+    businessCode: string;
+    currentStock: number;
+    minStock: number;
+    unitCost: number;
+  }>;
+  categoryBreakdown: Array<{
+    category: string;
+    units: number;
+    revenue: number;
+  }>;
 }
 

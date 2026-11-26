@@ -450,11 +450,21 @@ export class Login implements OnInit, OnDestroy {
           '¡Contraseña actualizada exitosamente en el Backend! Tu nueva clave tiene vigencia por 90 días.'
         );
 
-        // Sincronizar también el formulario de Login con la nueva contraseña actualizada
+        // Sincronizar también el formulario de Login con el usuario y la nueva contraseña actualizada
         this.loginForm.patchValue({
-          email: response.user.username || email,
+          email: response.user?.username || email.trim(),
           password: newPassword,
         });
+
+        // Limpiar el formulario de cambio de clave y regresar automáticamente a la pestaña de Iniciar Sesión
+        this.changePasswordForm.reset({
+          email: '',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        this.showNewPassword.set(false);
+        this.activeViewMode.set('LOGIN');
       },
       error: (err: ProblemDetailError) => {
         this.isSubmitting.set(false);
