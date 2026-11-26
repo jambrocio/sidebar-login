@@ -47,4 +47,19 @@ public interface SessionService {
      * Bloquea la cuenta del usuario en PostgreSQL y revoca todas sus sesiones activas inmediatamente.
      */
     Map<String, Object> lockUserAndRevokeSessions(UUID userId, String adminUsername, String reason);
+
+    /**
+     * Revoca todas las sesiones activas de un usuario tras cambio o rotación de contraseña.
+     */
+    void revokeAllSessionsOnPasswordChange(UUID userId);
+
+    /**
+     * Verifica que la sesión pertenezca al negocio matriz del administrador solicitante (anti-BOLA).
+     */
+    void validateSessionBelongsToBusiness(UUID sessionId, UUID businessId);
+
+    /**
+     * Verifica que el usuario pertenezca al negocio matriz del administrador solicitante (anti-BOLA).
+     */
+    void validateUserBelongsToBusiness(UUID userId, UUID businessId);
 }

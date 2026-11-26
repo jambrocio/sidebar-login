@@ -1,5 +1,6 @@
 package com.elroble.bevadmin.modules.auth.service;
 
+import com.elroble.bevadmin.common.exception.BusinessRuleException;
 import com.elroble.bevadmin.modules.auth.dto.ChangePasswordRequest;
 import com.elroble.bevadmin.modules.auth.dto.LoginRequest;
 import com.elroble.bevadmin.modules.auth.dto.LoginResponse;
@@ -105,10 +106,10 @@ public class AuthServiceImpl implements AuthService {
             throw new DisabledException("La cuenta de usuario se encuentra inactiva en el sistema.");
         }
 
-        // 4. Valida la coincidencia de la contraseña (BCrypt o credencial simulada en entorno de pruebas)
-        boolean passwordMatches = passwordEncoder.matches(request.password(), secRecord.passwordHash())
-                || request.password().equals(secRecord.passwordHash())
-                || isKnownTestPasswordMatch(request.username(), request.password());
+        // 4. Valida exclusivamente mediante verificación criptográfica BCrypt (sin comparaciones en texto plano ni claves maestras)
+        boolean passwordMatches = secRecord.passwordHash() != null
+                && secRecord.passwordHash().startsWith("$2")
+                && passwordEncoder.matches(request.password(), secRecord.passwordHash());
 
         if (!passwordMatches) {
             int currentAttempts = authRepository.recordFailedLoginAttempt(secRecord.id());
@@ -180,16 +181,37 @@ public class AuthServiceImpl implements AuthService {
                 .findSecurityRecordByLogin(request.username())
                 .orElseThrow(() -> new BadCredentialsException("Usuario no encontrado o credenciales inválidas."));
 
-        // Valida que la contraseña actual coincida con el hash BCrypt o contraseña almacenada
-        boolean matches = passwordEncoder.matches(request.currentPassword(), secRecord.passwordHash())
-                || request.currentPassword().equals(secRecord.passwordHash())
-                || isKnownTestPasswordMatch(request.username(), request.currentPassword());
+        if ("LOCKED".equalsIgnoreCase(secRecord.status()) || secRecord.failedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
+            throw new LockedException("La cuenta de usuario se encuentra bloqueada por motivos de seguridad. Contacte con el administrador.");
+        }
+
+        if ("INACTIVE".equalsIgnoreCase(secRecord.status())) {
+            throw new DisabledException("La cuenta de usuario se encuentra inactiva en el sistema.");
+        }
+
+        // Valida exclusivamente contra el hash BCrypt almacenado
+        boolean matches = secRecord.passwordHash() != null
+                && secRecord.passwordHash().startsWith("$2")
+                && passwordEncoder.matches(request.currentPassword(), secRecord.passwordHash());
 
         if (!matches) {
+            int currentAttempts = authRepository.recordFailedLoginAttempt(secRecord.id());
+            if (currentAttempts >= MAX_FAILED_ATTEMPTS) {
+                throw new LockedException("Su cuenta ha sido bloqueada tras " + MAX_FAILED_ATTEMPTS +
+                        " intentos fallidos consecutivos. Contacte con el área de soporte.");
+            }
             throw new BadCredentialsException("La contraseña actual proporcionada es incorrecta.");
         }
 
-        // Genera el nuevo hash BCrypt, extiende la vigencia 90 días, desbloquea la cuenta y guarda en BD
+        if (request.newPassword().equals(request.currentPassword())
+                || passwordEncoder.matches(request.newPassword(), secRecord.passwordHash())) {
+            throw new BusinessRuleException("La nueva contraseña debe ser diferente a la contraseña actual.");
+        }
+
+        // Revoca todas las sesiones activas previas antes de emitir la nueva credencial (OWASP A07)
+        sessionService.revokeAllSessionsOnPasswordChange(secRecord.id());
+
+        // Genera el nuevo hash BCrypt, extiende la vigencia 90 días y guarda en BD
         String newHash = passwordEncoder.encode(request.newPassword());
         authRepository.updatePasswordHash(secRecord.id(), newHash);
 
@@ -200,7 +222,7 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtTokenService.generateAccessToken(principal);
 
-        // 8. Registra la sesión activa con auditoría de red (IP, User-Agent, Ubicación)
+        // Registra la nueva sesión activa con auditoría de red
         sessionService.recordLoginSession(
                 principal.userId(),
                 principal.assignedBranchId(),
@@ -217,20 +239,5 @@ public class AuthServiceImpl implements AuthService {
                 LocalDate.now().plusDays(90).toString(),
                 false
         );
-    }
-
-    /**
-     * Valida contraseñas de casos de prueba definidos en frontend/json/auth-test-users.json.
-     */
-    private boolean isKnownTestPasswordMatch(String username, String rawPassword) {
-        return switch (username.toLowerCase().trim()) {
-            case "agarcia", "ana.garcia@empresa.com" -> "Admin123*".equals(rawPassword);
-            case "ltorres", "lucia.torres@empresa.com" -> "Cajero123*".equals(rawPassword);
-            case "cmendoza", "carlos.mendoza@empresa.com" -> "Tienda123*".equals(rawPassword);
-            case "mparedes", "mparedes@andinadrinks.com" -> "Andina123*".equals(rawPassword);
-            case "rdiaz", "roberto.diaz@empresa.com" -> "Temporal2026*".equals(rawPassword);
-            case "jquispe", "juan.quispe@empresa.com" -> "Bloqueado123*".equals(rawPassword);
-            default -> false;
-        };
     }
 }

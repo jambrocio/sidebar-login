@@ -40,8 +40,8 @@
 }
 
 .badge-secondary {
-  background-color: rgba(100, 116, 139, 0.15);
-  color: #475569;
+  background-color: var(--bg-hover);
+  color: var(--text-muted-color);
   padding: 0.25rem 0.6rem;
   border-radius: 9999px;
   font-size: 0.78rem;
@@ -49,9 +49,9 @@
 }
 
 .badge-light {
-  background-color: #f1f5f9;
-  color: #334155;
-  border: 1px solid #cbd5e1;
+  background-color: var(--bg-hover);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
   padding: 0.2rem 0.55rem;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -380,7 +380,7 @@
     padding: 0;
 
     &:hover {
-      color: #0f172a;
+      color: var(--text-color);
     }
   }
 }

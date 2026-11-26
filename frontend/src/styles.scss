@@ -43,6 +43,15 @@
   --btn-secondary-hover-bg: #e2e8f0;
   --btn-secondary-hover-border: #94a3b8;
   --btn-secondary-hover-text: #0f172a;
+
+  /* Alias semánticos para compatibilidad transversal entre módulos */
+  --bg-card: var(--card-bg);
+  --bg-surface: var(--card-bg);
+  --bg-hover: #f1f5f9;
+  --bg-surface-elevated: #f8fafc;
+  --input-bg: #ffffff;
+  --text-primary: var(--text-color);
+  --text-secondary: var(--text-muted-color);
 }
 
 body[data-theme="dark"] {
@@ -84,6 +93,15 @@ body[data-theme="dark"] {
   --btn-secondary-hover-bg: #475569;
   --btn-secondary-hover-border: #64748b;
   --btn-secondary-hover-text: #ffffff;
+
+  /* Alias semánticos para compatibilidad transversal entre módulos */
+  --bg-card: var(--card-bg);
+  --bg-surface: var(--card-bg);
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-surface-elevated: #2b3035;
+  --input-bg: #1a1a2e;
+  --text-primary: var(--text-color);
+  --text-secondary: var(--text-muted-color);
 }
 
 /* Reseteo global para evitar márgenes y barras de scroll inesperadas */

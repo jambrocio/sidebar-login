@@ -88,11 +88,11 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--text-muted-color);
     margin-bottom: 1rem;
 
     i {
-      color: #0284c7;
+      color: var(--primary-color);
       font-size: 1rem;
     }
   }
@@ -100,15 +100,15 @@
 
 /* Tarjeta Estilo Ticket de Cupón */
 .coupon-ticket {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.14);
   overflow: hidden;
   position: relative;
 
   .ticket-top {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover-color) 100%);
     color: #ffffff;
     padding: 0.75rem 1rem;
     display: flex;
@@ -146,7 +146,7 @@
       .discount-num {
         font-size: 2.2rem;
         font-weight: 900;
-        color: #0284c7;
+        color: var(--primary-color);
         line-height: 1;
         letter-spacing: -0.03em;
       }
@@ -154,14 +154,14 @@
       .discount-off {
         font-size: 1rem;
         font-weight: 800;
-        color: #64748b;
+        color: var(--text-muted-color);
       }
     }
 
     .ticket-code-box {
       margin-top: 0.85rem;
-      background: rgba(2, 132, 199, 0.06);
-      border: 1px dashed #0284c7;
+      background: rgba(var(--primary-rgb), 0.08);
+      border: 1px dashed var(--primary-color);
       border-radius: 8px;
       padding: 0.45rem 0.75rem;
 
@@ -169,7 +169,7 @@
         display: block;
         font-size: 0.65rem;
         font-weight: 700;
-        color: #0284c7;
+        color: var(--primary-color);
         letter-spacing: 0.08em;
       }
 
@@ -177,7 +177,7 @@
         font-size: 1.15rem;
         font-weight: 800;
         letter-spacing: 0.08em;
-        color: #0f172a;
+        color: var(--text-color);
       }
     }
   }
@@ -190,15 +190,15 @@
 
     .dashed-line {
       width: 100%;
-      border-bottom: 2px dashed #cbd5e1;
+      border-bottom: 2px dashed var(--border-color);
     }
 
     .notch {
       position: absolute;
       width: 18px;
       height: 18px;
-      background: rgba(248, 250, 252, 1);
-      border: 1px solid #cbd5e1;
+      background: var(--background-color);
+      border: 1px solid var(--border-color);
       border-radius: 50%;
       top: 50%;
       transform: translateY(-50%);
@@ -215,7 +215,7 @@
 
   .ticket-footer {
     padding: 0.85rem 1rem 1.1rem;
-    background: #fafafa;
+    background: var(--background-color);
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
@@ -226,12 +226,12 @@
       font-size: 0.76rem;
 
       .detail-label {
-        color: #64748b;
+        color: var(--text-muted-color);
         font-weight: 500;
       }
 
       .detail-val {
-        color: #1e293b;
+        color: var(--text-color);
         font-weight: 600;
         text-align: right;
         max-width: 170px;
@@ -299,7 +299,7 @@
       align-items: center;
 
       &:hover {
-        color: #475569;
+        color: var(--text-color);
       }
     }
   }
@@ -367,7 +367,7 @@
   .usage-progress-bar {
     width: 90px;
     height: 6px;
-    background: #e2e8f0;
+    background: var(--border-color);
     border-radius: 9999px;
     overflow: hidden;
 
@@ -455,9 +455,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: rgba(100, 116, 139, 0.12);
-  color: #475569;
-  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: var(--bg-hover);
+  color: var(--text-muted-color);
+  border: 1px solid var(--border-color);
   border-radius: 9999px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -488,9 +488,9 @@
 
   .readonly-code-input {
     padding-left: 2.35rem !important;
-    background-color: rgba(241, 245, 249, 0.85) !important;
-    border-color: #cbd5e1 !important;
-    color: #1e293b !important;
+    background-color: var(--bg-hover) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
     font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -605,8 +605,9 @@
 .min-purchase-badge {
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
-  color: #0f172a;
-  background: #f1f5f9;
+  color: var(--text-color);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.82rem;
@@ -626,10 +627,10 @@
   gap: 0.35rem;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-color);
 
   i {
-    color: #0284c7;
+    color: var(--primary-color);
     font-size: 0.95rem;
   }
 }
@@ -642,7 +643,7 @@
   .audit-author {
     font-size: 0.82rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text-color);
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -655,7 +656,7 @@
 
   .audit-date {
     font-size: 0.74rem;
-    color: #64748b;
+    color: var(--text-muted-color);
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -663,5 +664,133 @@
     i {
       font-size: 0.72rem;
     }
+  }
+}
+
+.btn-coupon-sales {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--primary-rgb), 0.25);
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary-color);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(var(--primary-rgb), 0.18);
+  }
+}
+
+.coupon-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1.5rem;
+}
+
+.coupon-modal-dialog {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 880px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+
+  .coupon-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-color);
+
+    .coupon-modal-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-color);
+      }
+    }
+
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: var(--text-muted-color);
+      font-size: 1.05rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 6px;
+
+      &:hover {
+        color: var(--text-color);
+        background: var(--bg-hover);
+      }
+    }
+  }
+
+  .coupon-modal-body {
+    padding: 1.25rem 1.4rem;
+    overflow-y: auto;
+    flex: 1;
+
+    .coupon-modal-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      font-size: 0.84rem;
+      color: var(--text-color);
+      background: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .coupon-sales-empty {
+      text-align: center;
+      padding: 2.25rem 1rem;
+      color: var(--text-muted-color);
+
+      i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        opacity: 0.6;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .coupon-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.9rem 1.4rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--background-color);
   }
 }

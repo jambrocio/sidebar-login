@@ -21,6 +21,13 @@ logging:
     root: WARN
     com.elroble.bevadmin: INFO
 
+# Desactivar documentación interactiva OpenAPI/Swagger en entorno productivo (OWASP A05 / API9)
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 bevadmin:
   environment: produccion
   security:

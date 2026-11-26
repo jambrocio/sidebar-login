@@ -21,13 +21,11 @@ public class VulnerabilitiesRepository {
     }
 
     /**
-     * Lista todos los hallazgos de vulnerabilidad registrados para el negocio matriz o toda la plataforma (Superusuario).
+     * Lista todos los hallazgos de vulnerabilidad registrados a nivel de todo el sistema.
      *
-     * @param businessId   UUID del negocio matriz
-     * @param isSuperAdmin si el usuario en sesión es Administrador General (Superusuario)
      * @return lista de vulnerabilidades con datos del autor del reporte
      */
-    public List<Map<String, Object>> findByBusinessId(UUID businessId, boolean isSuperAdmin) {
+    public List<Map<String, Object>> findAll() {
         return jdbcClient.sql("""
                 SELECT v.id,
                        v.codigo AS code,
@@ -47,29 +45,24 @@ public class VulnerabilitiesRepository {
                 FROM core.vulnerabilidades_seguridad v
                 INNER JOIN auth.usuarios u ON u.id = v.reportado_por_usuario_id
                 LEFT JOIN auth.usuarios m ON m.id = v.mitigado_por_usuario_id
-                WHERE (:isSuperAdmin = TRUE OR v.empresa_id = :businessId)
                 ORDER BY v.codigo DESC
                 """)
-                .param("businessId", businessId)
-                .param("isSuperAdmin", isSuperAdmin)
                 .query()
                 .listOfRows();
     }
 
     /**
-     * Comprueba si ya existe una vulnerabilidad registrada con el código proporcionado dentro del negocio.
+     * Comprueba si ya existe una vulnerabilidad registrada con el código proporcionado en el catálogo del sistema.
      *
-     * @param businessId UUID del negocio matriz
-     * @param code       código del hallazgo (ej. SEC-2026-001)
+     * @param code código del hallazgo (ej. SEC-2026-001)
      * @return {@code true} si existe duplicado, {@code false} en caso contrario
      */
-    public boolean existsByCode(UUID businessId, String code) {
+    public boolean existsByCode(String code) {
         Integer count = jdbcClient.sql("""
                 SELECT COUNT(1)
                 FROM core.vulnerabilidades_seguridad
-                WHERE empresa_id = :businessId AND UPPER(TRIM(codigo)) = :code
+                WHERE UPPER(TRIM(codigo)) = :code
                 """)
-                .param("businessId", businessId)
                 .param("code", code.trim().toUpperCase())
                 .query(Integer.class)
                 .single();
@@ -77,25 +70,23 @@ public class VulnerabilitiesRepository {
     }
 
     /**
-     * Inserta un nuevo registro de vulnerabilidad en la base de datos.
+     * Inserta un nuevo registro de vulnerabilidad de sistema en la base de datos.
      *
-     * @param businessId UUID del negocio matriz
-     * @param userId     UUID del usuario auditor o administrador que reporta
-     * @param req        datos del hallazgo de seguridad
+     * @param userId UUID del usuario auditor o administrador que reporta
+     * @param req    datos del hallazgo de seguridad
      */
-    public void insertVulnerability(UUID businessId, UUID userId, CreateVulnerabilityRequest req) {
+    public void insertVulnerability(UUID userId, CreateVulnerabilityRequest req) {
         jdbcClient.sql("""
                 INSERT INTO core.vulnerabilidades_seguridad (
-                    empresa_id, codigo, titulo, categoria, severidad, estado,
+                    codigo, titulo, categoria, severidad, estado,
                     componente_afectado, descripcion, impacto_estimado, plan_remediacion, solucion_aplicada,
                     reportado_por_usuario_id, fecha_deteccion
                 ) VALUES (
-                    :businessId, :code, :title, :category, :severity, 'ABIERTO',
+                    :code, :title, :category, :severity, 'ABIERTO',
                     :affectedComponent, :description, :estimatedImpact, :remediationPlan, :appliedSolution,
                     :userId, now()
                 )
                 """)
-                .param("businessId", businessId)
                 .param("code", req.code().trim().toUpperCase())
                 .param("title", req.title().trim())
                 .param("category", req.category().trim())
@@ -112,14 +103,13 @@ public class VulnerabilitiesRepository {
     /**
      * Actualiza el estado de ciclo de vida de un hallazgo (ej. de ABIERTO a MITIGADO o EN_PROCESO).
      *
-     * @param businessId      UUID del negocio matriz
      * @param userId          UUID del usuario que ejecuta la acción
      * @param id              UUID de la vulnerabilidad
      * @param status          nuevo estado
      * @param mitigationNotes solución técnica o notas de remediación aplicadas
-     * @param isSuperAdmin    si el usuario es Administrador General
+     * @return cantidad de filas actualizadas
      */
-    public int updateStatus(UUID businessId, UUID userId, UUID id, String status, String mitigationNotes, boolean isSuperAdmin) {
+    public int updateStatus(UUID userId, UUID id, String status, String mitigationNotes) {
         boolean isMitigated = "MITIGADO".equalsIgnoreCase(status);
         return jdbcClient.sql("""
                 UPDATE core.vulnerabilidades_seguridad
@@ -132,14 +122,12 @@ public class VulnerabilitiesRepository {
                                             ELSE solucion_aplicada 
                                         END,
                     fecha_modificacion = now()
-                WHERE (:isSuperAdmin = TRUE OR empresa_id = :businessId) AND id = :id
+                WHERE id = :id
                 """)
                 .param("status", status.trim().toUpperCase())
                 .param("isMitigated", isMitigated)
                 .param("mitigationNotes", mitigationNotes != null && !mitigationNotes.isBlank() ? mitigationNotes.trim() : null)
                 .param("userId", userId)
-                .param("businessId", businessId)
-                .param("isSuperAdmin", isSuperAdmin)
                 .param("id", id)
                 .update();
     }

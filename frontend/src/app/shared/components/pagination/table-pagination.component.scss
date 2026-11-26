@@ -5,19 +5,19 @@
   flex-wrap: wrap;
   gap: 1rem;
   padding: 0.9rem 1.25rem;
-  border-top: 1px solid var(--border-color, #e2e8f0);
-  background: var(--bg-card, #ffffff);
+  border-top: 1px solid var(--border-color);
+  background: var(--card-bg);
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
   font-size: 0.875rem;
 }
 
 .pagination-info {
-  color: var(--text-muted-color, #64748b);
+  color: var(--text-muted-color);
   font-weight: 500;
 
   .highlight {
-    color: var(--text-color, #1e293b);
+    color: var(--text-color);
     font-weight: 700;
   }
 }
@@ -36,31 +36,31 @@
   height: 34px;
   padding: 0 0.5rem;
   border-radius: 6px;
-  border: 1px solid var(--border-color, #cbd5e1);
-  background: var(--bg-card, #ffffff);
-  color: var(--text-color, #334155);
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 
   &:hover:not(:disabled) {
-    background: rgba(37, 99, 235, 0.08);
-    border-color: #2563eb;
-    color: #2563eb;
+    background: rgba(var(--primary-rgb), 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
   }
 
   &.active {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
     color: #ffffff;
-    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 1px 3px rgba(var(--primary-rgb), 0.3);
   }
 
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    border-color: var(--border-color, #e2e8f0);
+    border-color: var(--border-color);
   }
 }
 
@@ -70,7 +70,7 @@
 
 .page-ellipsis {
   padding: 0 0.4rem;
-  color: var(--text-muted-color, #94a3b8);
+  color: var(--text-muted-color);
   font-weight: 700;
   user-select: none;
 }

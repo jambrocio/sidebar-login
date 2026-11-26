@@ -52,6 +52,8 @@
         <table class="data-table">
           <thead>
             <tr>
+              <th style="text-align: center;">Acciones</th>
+              <th>Estado</th>
               <th>SKU</th>
               <th *ngIf="isGeneralAdmin()">Negocio</th>
               <th>Producto</th>
@@ -62,12 +64,31 @@
               <th>Stock Cajas</th>
               <th>Registrado Por</th>
               <th>Fecha Registro</th>
-              <th>Estado</th>
-              <th style="text-align: center;">Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let prod of pagedProducts()">
+              <td style="text-align: center;">
+                <button
+                  type="button"
+                  class="btn-history"
+                  (click)="openProductHistory(prod)"
+                  title="Ver Historial Completo de Movimientos (Kardex)"
+                >
+                  <i class="bi bi-clock-history"></i>
+                  <span>Histórico</span>
+                </button>
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-success]="prod.status === 'En Stock'"
+                  [class.badge-warning]="prod.status === 'Stock Bajo'"
+                  [class.badge-danger]="prod.status === 'Agotado'"
+                >
+                  {{ prod.status }}
+                </span>
+              </td>
               <td>
                 <code *ngIf="prod.sku">{{ prod.sku }}</code>
                 <span *ngIf="!prod.sku" class="text-muted">—</span>
@@ -85,30 +106,9 @@
               <td>{{ prod.stockBoxes }} cajas ({{ prod.stockUnits }} und.)</td>
               <td><code>{{ prod.registeredByUser }}</code></td>
               <td class="text-muted"><i class="bi bi-clock-history"></i> {{ prod.createdAt || '2026-10-20 09:30:00' }}</td>
-              <td>
-                <span
-                  class="badge"
-                  [class.badge-success]="prod.status === 'En Stock'"
-                  [class.badge-warning]="prod.status === 'Stock Bajo'"
-                  [class.badge-danger]="prod.status === 'Agotado'"
-                >
-                  {{ prod.status }}
-                </span>
-              </td>
-              <td style="text-align: center;">
-                <button
-                  type="button"
-                  class="btn-history"
-                  (click)="openProductHistory(prod)"
-                  title="Ver Historial Completo de Movimientos (Kardex)"
-                >
-                  <i class="bi bi-clock-history"></i>
-                  <span>Histórico</span>
-                </button>
-              </td>
             </tr>
             <tr *ngIf="filteredProducts().length === 0">
-              <td [attr.colspan]="isGeneralAdmin() ? 12 : 11" style="text-align: center; padding: 2rem; color: #64748b">
+              <td [attr.colspan]="isGeneralAdmin() ? 12 : 11" style="text-align: center; padding: 2rem; color: var(--text-muted-color)">
                 <i class="bi bi-inbox" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem"></i>
                 No se encontraron productos registrados para este negocio en el catálogo maestro.
               </td>

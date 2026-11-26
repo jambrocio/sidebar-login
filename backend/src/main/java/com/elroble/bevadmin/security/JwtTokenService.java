@@ -61,6 +61,9 @@ public class JwtTokenService {
     public Optional<AuthenticatedUserPrincipal> parseAndValidateToken(String token) {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
+            if (!JWSAlgorithm.HS256.equals(signedJWT.getHeader().getAlgorithm())) {
+                return Optional.empty();
+            }
             boolean validSignature = signedJWT.verify(new MACVerifier(jwtSecret.getBytes(StandardCharsets.UTF_8)));
             if (!validSignature) {
                 return Optional.empty();

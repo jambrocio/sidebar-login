@@ -18,19 +18,40 @@ import java.util.List;
 @Configuration
 public class CorsAndWebConfig {
 
-    @Value("${bevadmin.security.cors.allowed-origin-patterns:http://localhost*,https://localhost*,http://127.0.0.1*,https://127.0.0.1*,http://*.bevadmin.com*,https://*.bevadmin.com*}")
+    @Value("${bevadmin.security.cors.allowed-origin-patterns:http://localhost:[*],https://localhost:[*],http://127.0.0.1:[*],https://127.0.0.1:[*],https://*.bevadmin.com,https://bevadmin.com}")
     private List<String> allowedOriginPatterns;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // Soporta comodines y puertos dinámicos de forma compatible con allowCredentials(true)
-        List<String> patterns = new ArrayList<>(allowedOriginPatterns);
-        if (!patterns.contains("http://localhost*")) patterns.add("http://localhost*");
-        if (!patterns.contains("https://localhost*")) patterns.add("https://localhost*");
-        if (!patterns.contains("http://127.0.0.1*")) patterns.add("http://127.0.0.1*");
-        if (!patterns.contains("https://127.0.0.1*")) patterns.add("https://127.0.0.1*");
+        // Soporta puertos dinámicos locales mediante :[*] sin permitir sufijos de dominio arbitrarios (ej. localhost.evil.com)
+        List<String> patterns = new ArrayList<>();
+        for (String raw : allowedOriginPatterns) {
+            String normalized = raw == null ? "" : raw.trim();
+            if (normalized.isEmpty() || "*".equals(normalized)) {
+                continue;
+            }
+            normalized = normalized
+                    .replace("http://localhost*", "http://localhost:[*]")
+                    .replace("https://localhost*", "https://localhost:[*]")
+                    .replace("http://127.0.0.1*", "http://127.0.0.1:[*]")
+                    .replace("https://127.0.0.1*", "https://127.0.0.1:[*]")
+                    .replace("http://*.bevadmin.com*", "http://*.bevadmin.com")
+                    .replace("https://*.bevadmin.com*", "https://*.bevadmin.com");
+            if (!patterns.contains(normalized)) {
+                patterns.add(normalized);
+            }
+        }
+        for (String localPattern : List.of(
+                "http://localhost:[*]",
+                "https://localhost:[*]",
+                "http://127.0.0.1:[*]",
+                "https://127.0.0.1:[*]")) {
+            if (!patterns.contains(localPattern)) {
+                patterns.add(localPattern);
+            }
+        }
 
         config.setAllowedOriginPatterns(patterns);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));

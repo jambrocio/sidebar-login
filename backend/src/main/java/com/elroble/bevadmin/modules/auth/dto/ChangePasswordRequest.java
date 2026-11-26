@@ -2,6 +2,7 @@ package com.elroble.bevadmin.modules.auth.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -9,20 +10,26 @@ import jakarta.validation.constraints.Size;
  *
  * @param username        nombre de usuario o correo electrónico
  * @param currentPassword contraseña actual o vencida
- * @param newPassword     nueva contraseña (mínimo 8 caracteres)
+ * @param newPassword     nueva contraseña (8 a 128 caracteres con mayúscula, número y símbolo)
  */
 @Schema(description = "Solicitud para renovar la contraseña de acceso (por expiración o cambio voluntario)")
 public record ChangePasswordRequest(
         @Schema(description = "Nombre de usuario o correo electrónico corporativo", example = "lucia.torres@empresa.com")
         @NotBlank(message = "El usuario o correo es obligatorio")
+        @Size(max = 120, message = "El usuario o correo no puede exceder 120 caracteres")
         String username,
 
         @Schema(description = "Contraseña actual o expirada", example = "Cajero123*")
         @NotBlank(message = "La contraseña actual es obligatoria")
+        @Size(max = 128, message = "La contraseña actual excede la longitud máxima permitida")
         String currentPassword,
 
         @Schema(description = "Nueva contraseña segura", example = "RobleSegura2026#")
         @NotBlank(message = "La nueva contraseña es obligatoria")
-        @Size(min = 8, message = "La nueva contraseña debe tener al menos 8 caracteres")
+        @Size(min = 8, max = 128, message = "La nueva contraseña debe tener entre 8 y 128 caracteres")
+        @Pattern(
+                regexp = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).+$",
+                message = "La nueva contraseña debe incluir al menos una letra mayúscula, un número y un carácter especial"
+        )
         String newPassword
 ) {}

@@ -89,6 +89,10 @@ public class SessionController {
             @RequestBody(required = false) RevokeSessionRequest request,
             @AuthenticationPrincipal AuthenticatedUserPrincipal adminUser) {
 
+        if (adminUser != null && !adminUser.isSuperAdmin()) {
+            sessionService.validateSessionBelongsToBusiness(sessionId, adminUser.businessId());
+        }
+
         String adminName = (adminUser != null) ? adminUser.username() : "admin_sistema";
         String reason = (request != null) ? request.reason() : null;
         return sessionService.revokeSession(sessionId, adminName, reason);
@@ -109,6 +113,10 @@ public class SessionController {
             @Parameter(description = "UUID del usuario a bloquear") @PathVariable UUID userId,
             @RequestBody(required = false) RevokeSessionRequest request,
             @AuthenticationPrincipal AuthenticatedUserPrincipal adminUser) {
+
+        if (adminUser != null && !adminUser.isSuperAdmin()) {
+            sessionService.validateUserBelongsToBusiness(userId, adminUser.businessId());
+        }
 
         String adminName = (adminUser != null) ? adminUser.username() : "admin_sistema";
         String reason = (request != null) ? request.reason() : "Bloqueo por presunta infiltración de seguridad";

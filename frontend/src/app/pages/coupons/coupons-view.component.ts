@@ -1,8 +1,9 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AppDataService } from '../../core/services/app-data.service';
 import { DummyDataService } from '../../core/services/dummy-data.service';
-import { CommercialCustomer, DiscountCoupon, FeedbackNotification, resolveCurrencySymbol } from '../../core/models/domain.models';
+import { BeverageSale, CommercialCustomer, DiscountCoupon, FeedbackNotification, resolveCurrencySymbol } from '../../core/models/domain.models';
 import { TablePaginationComponent } from '../../shared/components/pagination/table-pagination.component';
 import { AppAmountPipe } from '../../shared/pipes/app-amount.pipe';
 
@@ -25,15 +26,27 @@ import { AppAmountPipe } from '../../shared/pipes/app-amount.pipe';
 })
 export class CouponsViewComponent implements OnInit {
   private readonly dummyData = inject(DummyDataService);
+  private readonly appData = inject(AppDataService);
 
   readonly businessInfo = this.dummyData.businessInfo;
   readonly currentSessionUser = this.dummyData.currentSessionUser;
   readonly currentUserProfile = this.dummyData.currentUserProfile;
   readonly couponsList = this.dummyData.couponsList;
+  readonly salesList = this.appData.salesList;
   readonly categories = this.dummyData.categories;
   readonly customers = this.dummyData.customers;
   readonly feedbackMessage = signal<FeedbackNotification | null>(null);
   readonly formSubmitted = signal<boolean>(false);
+
+  /** Cupón seleccionado para auditar las ventas donde fue canjeado */
+  readonly selectedCouponForSales = signal<DiscountCoupon | null>(null);
+
+  /** Ventas vinculadas al cupón seleccionado en el modal de auditoría */
+  readonly selectedCouponSales = computed<BeverageSale[]>(() => {
+    const coupon = this.selectedCouponForSales();
+    if (!coupon) return [];
+    return this.getSalesForCoupon(coupon.code);
+  });
 
   /** Código del negocio activo en sesión */
   readonly activeBusinessCode = computed<string>(() => {
@@ -369,5 +382,33 @@ export class CouponsViewComponent implements OnInit {
 
   toggleCouponStatus(coupon: DiscountCoupon): void {
     this.dummyData.toggleCouponStatus(coupon.code);
+  }
+
+  /**
+   * Obtiene la lista de ventas emitidas en las que se aplicó el código de cupón indicado.
+   *
+   * @param code Código único del cupón a consultar.
+   * @returns Arreglo de ventas asociadas al cupón.
+   */
+  getSalesForCoupon(code: string): BeverageSale[] {
+    const normalized = (code || '').trim().toUpperCase();
+    if (!normalized) return [];
+    return this.salesList().filter(s => (s.couponCode || '').trim().toUpperCase() === normalized);
+  }
+
+  /**
+   * Abre el modal de auditoría mostrando las ventas donde fue utilizado el cupón.
+   *
+   * @param coupon Cupón seleccionado desde la tabla.
+   */
+  openCouponSalesModal(coupon: DiscountCoupon): void {
+    this.selectedCouponForSales.set(coupon);
+  }
+
+  /**
+   * Cierra el modal de auditoría de ventas por cupón.
+   */
+  closeCouponSalesModal(): void {
+    this.selectedCouponForSales.set(null);
   }
 }

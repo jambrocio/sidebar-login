@@ -126,8 +126,8 @@
 }
 
 .business-selector-locked {
-  background-color: #f1f5f9 !important;
-  color: #475569 !important;
+  background-color: var(--bg-hover) !important;
+  color: var(--text-muted-color) !important;
   cursor: not-allowed !important;
   opacity: 0.85;
 }
@@ -136,8 +136,9 @@
   display: inline-block;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
-  background: #e2e8f0;
-  color: #334155;
+  background: var(--bg-hover);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
   font-size: 0.75rem;
   font-weight: 700;
 }

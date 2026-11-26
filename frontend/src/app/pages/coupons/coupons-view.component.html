@@ -427,6 +427,16 @@
                     [style.width.%]="(cp.usedCount / cp.maxUses) * 100"
                   ></div>
                 </div>
+                <button
+                  *ngIf="getSalesForCoupon(cp.code).length > 0 || cp.usedCount > 0"
+                  type="button"
+                  class="btn-coupon-sales"
+                  (click)="openCouponSalesModal(cp)"
+                  title="Ver las ventas donde se utilizó este cupón"
+                >
+                  <i class="bi bi-receipt"></i>
+                  <span>Ver ventas ({{ getSalesForCoupon(cp.code).length }})</span>
+                </button>
               </div>
             </td>
 
@@ -480,5 +490,87 @@
       [currentPage]="currentPage()"
       (pageChange)="currentPage.set($event)"
     ></app-table-pagination>
+  </div>
+
+  <!-- MODAL DE AUDITORÍA: VENTAS DONDE SE UTILIZÓ EL CUPÓN -->
+  <div
+    *ngIf="selectedCouponForSales() as selectedCoupon"
+    class="coupon-modal-backdrop"
+    (click)="closeCouponSalesModal()"
+  >
+    <div
+      class="coupon-modal-dialog"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="coupon-sales-modal-title"
+    >
+      <header class="coupon-modal-header">
+        <div class="coupon-modal-title-wrap">
+          <code class="coupon-code-pill">{{ selectedCoupon.code }}</code>
+          <h3 id="coupon-sales-modal-title">Ventas con Cupón Aplicado</h3>
+        </div>
+        <button
+          type="button"
+          class="btn-close-modal"
+          (click)="closeCouponSalesModal()"
+          aria-label="Cerrar modal"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="coupon-modal-body">
+        <div class="coupon-modal-meta">
+          <span><strong>Beneficiario:</strong> {{ selectedCoupon.assignedClient }}</span>
+          <span><strong>Canjes registrados:</strong> {{ selectedCoupon.usedCount }} / {{ selectedCoupon.maxUses }}</span>
+          <span><strong>Ventas encontradas:</strong> {{ selectedCouponSales().length }}</span>
+        </div>
+
+        <div class="table-responsive" *ngIf="selectedCouponSales().length > 0; else noCouponSales">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>N° Venta</th>
+                <th>Tipo Comprobante</th>
+                <th>Cliente</th>
+                <th>Descuento</th>
+                <th>Total Neto</th>
+                <th>Vendedor</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let sale of selectedCouponSales()">
+                <td><code>{{ sale.id }}</code></td>
+                <td><span class="badge badge-info">{{ sale.documentType }}</span></td>
+                <td><strong>{{ sale.clientName }}</strong></td>
+                <td>
+                  <span class="badge badge-success">
+                    -{{ currencySymbol() }} {{ sale.discountAmount | appAmount }}
+                  </span>
+                </td>
+                <td><strong>{{ currencySymbol() }} {{ sale.total | appAmount }}</strong></td>
+                <td><code>{{ sale.sellerUser }}</code></td>
+                <td class="text-muted"><i class="bi bi-clock-history"></i> {{ sale.date }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #noCouponSales>
+          <div class="coupon-sales-empty">
+            <i class="bi bi-receipt-cutoff"></i>
+            <p>No hay ventas vinculadas registradas en el historial actual para este cupón.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <footer class="coupon-modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeCouponSalesModal()">
+          Cerrar
+        </button>
+      </footer>
+    </div>
   </div>
 </section>

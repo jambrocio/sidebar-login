@@ -1,5 +1,7 @@
 package com.elroble.bevadmin.modules.sessions.service;
 
+import com.elroble.bevadmin.common.exception.BusinessRuleException;
+import com.elroble.bevadmin.common.exception.ResourceNotFoundException;
 import com.elroble.bevadmin.modules.sessions.dto.ActiveSessionDto;
 import com.elroble.bevadmin.modules.sessions.dto.HeartbeatResponse;
 import com.elroble.bevadmin.modules.sessions.repository.SessionRepository;
@@ -185,6 +187,32 @@ public class SessionServiceImpl implements SessionService {
                 "message", "Cuenta bloqueada y todas sus sesiones han sido revocadas.",
                 "sessionsRevoked", sessionsRevoked
         );
+    }
+
+    @Override
+    @Transactional
+    public void revokeAllSessionsOnPasswordChange(UUID userId) {
+        sessionRepository.revokeAllSessionsForUser(userId, "sistema_seguridad", "Cambio o rotación de contraseña");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateSessionBelongsToBusiness(UUID sessionId, UUID businessId) {
+        UUID ownerBusinessId = sessionRepository.findBusinessIdBySessionId(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sesión activa", sessionId));
+        if (businessId != null && !businessId.equals(ownerBusinessId)) {
+            throw new BusinessRuleException("No tiene permisos para revocar sesiones pertenecientes a otro negocio matriz.");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateUserBelongsToBusiness(UUID userId, UUID businessId) {
+        UUID ownerBusinessId = sessionRepository.findBusinessIdByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", userId));
+        if (businessId != null && !businessId.equals(ownerBusinessId)) {
+            throw new BusinessRuleException("No tiene permisos para bloquear o revocar sesiones de usuarios de otro negocio matriz.");
+        }
     }
 
     // =========================================================================

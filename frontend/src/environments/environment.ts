@@ -11,5 +11,5 @@ export const environment = {
   healthEndpoint: '/api/v1/auth/health',
   actuatorEndpoint: '/actuator/health',
   version: '2.4.1',
-  buildDate: '2026-11-23',
+  buildDate: '2026-11-26',
 };

@@ -102,7 +102,8 @@ public class UsersController {
                     ? req.businessCode()
                     : user.businessCode();
 
-            if (!user.isSuperAdmin() && ("ADMIN".equalsIgnoreCase(req.roleCode()) || req.roleCode().toUpperCase().contains("SUPERUSUARIO"))) {
+            if (!user.isSuperAdmin() && req.roleCode() != null
+                    && ("ADMIN".equalsIgnoreCase(req.roleCode()) || req.roleCode().toUpperCase().contains("SUPERUSUARIO"))) {
                 throw new BusinessRuleException("Solo el Administrador General (Superusuario) puede asignar el rol ADMIN.");
             }
 
@@ -145,11 +146,16 @@ public class UsersController {
             @Valid @RequestBody UpdateUserWithBranchesRequest req) {
         UpdateUserWithBranchesRequest resolved = req;
         if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUserPrincipal user) {
+            if (!user.isSuperAdmin()) {
+                usersService.validateUserBelongsToBusiness(userId, user.businessId());
+            }
+
             String targetBusinessCode = user.isSuperAdmin() && req.businessCode() != null && !req.businessCode().isBlank()
                     ? req.businessCode()
                     : user.businessCode();
 
-            if (!user.isSuperAdmin() && ("ADMIN".equalsIgnoreCase(req.roleCode()) || req.roleCode().toUpperCase().contains("SUPERUSUARIO"))) {
+            if (!user.isSuperAdmin() && req.roleCode() != null
+                    && ("ADMIN".equalsIgnoreCase(req.roleCode()) || req.roleCode().toUpperCase().contains("SUPERUSUARIO"))) {
                 throw new BusinessRuleException("Solo el Administrador General (Superusuario) puede asignar el rol ADMIN.");
             }
 

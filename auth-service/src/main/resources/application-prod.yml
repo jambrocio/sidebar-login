@@ -6,3 +6,10 @@ logging:
     root: WARN
     com.auth.identity: INFO
     org.springframework.security: WARN
+
+# Desactivar documentación interactiva OpenAPI/Swagger en entorno productivo (OWASP A05 / API9)
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -28,7 +28,7 @@ public class VulnerabilitiesServiceImpl implements VulnerabilitiesService {
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listVulnerabilities(AuthenticatedUserPrincipal user) {
-        return vulnerabilitiesRepository.findByBusinessId(user.businessId(), user.isSuperAdmin());
+        return vulnerabilitiesRepository.findAll();
     }
 
     @Override
@@ -36,14 +36,14 @@ public class VulnerabilitiesServiceImpl implements VulnerabilitiesService {
     public Map<String, Object> createVulnerability(CreateVulnerabilityRequest request, AuthenticatedUserPrincipal user) {
         String cleanCode = request.code().trim().toUpperCase();
 
-        if (vulnerabilitiesRepository.existsByCode(user.businessId(), cleanCode)) {
+        if (vulnerabilitiesRepository.existsByCode(cleanCode)) {
             throw new BusinessRuleException(
-                    "El código de hallazgo '" + cleanCode + "' ya se encuentra registrado para este negocio matriz. " +
+                    "El código de hallazgo '" + cleanCode + "' ya se encuentra registrado en el catálogo de auditoría. " +
                     "Los identificadores de vulnerabilidad deben ser únicos."
             );
         }
 
-        vulnerabilitiesRepository.insertVulnerability(user.businessId(), user.userId(), request);
+        vulnerabilitiesRepository.insertVulnerability(user.userId(), request);
         return Map.of("code", cleanCode, "status", "ABIERTO", "message", "Vulnerabilidad registrada correctamente en la base de datos.");
     }
 
@@ -51,12 +51,10 @@ public class VulnerabilitiesServiceImpl implements VulnerabilitiesService {
     @Transactional
     public Map<String, Object> updateStatus(UUID id, UpdateVulnerabilityStatusRequest request, AuthenticatedUserPrincipal user) {
         int rows = vulnerabilitiesRepository.updateStatus(
-                user.businessId(),
                 user.userId(),
                 id,
                 request.status(),
-                request.mitigationNotes(),
-                user.isSuperAdmin()
+                request.mitigationNotes()
         );
         if (rows == 0) {
             throw new ResourceNotFoundException("Vulnerabilidad de seguridad", id);

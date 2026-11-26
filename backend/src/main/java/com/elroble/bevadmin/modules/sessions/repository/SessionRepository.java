@@ -316,4 +316,33 @@ public class SessionRepository {
         """;
         jdbcTemplate.update(sql, userId, branchId, eventType, actionDetail, module, ip, metadataJson != null ? metadataJson : "{}");
     }
+
+    /**
+     * Obtiene el UUID de la empresa (empresa_id) a la que pertenece el usuario titular de una sesión.
+     */
+    public Optional<UUID> findBusinessIdBySessionId(UUID sessionId) {
+        String sql = """
+            SELECT u.empresa_id
+            FROM sesiones_usuario s
+            JOIN usuarios u ON u.id = s.usuario_id
+            WHERE s.id = ?
+            LIMIT 1
+        """;
+        List<UUID> list = jdbcTemplate.query(sql, (rs, rowNum) -> (UUID) rs.getObject("empresa_id"), sessionId);
+        return list.stream().findFirst();
+    }
+
+    /**
+     * Obtiene el UUID de la empresa (empresa_id) a la que pertenece un usuario.
+     */
+    public Optional<UUID> findBusinessIdByUserId(UUID userId) {
+        String sql = """
+            SELECT empresa_id
+            FROM usuarios
+            WHERE id = ?
+            LIMIT 1
+        """;
+        List<UUID> list = jdbcTemplate.query(sql, (rs, rowNum) -> (UUID) rs.getObject("empresa_id"), userId);
+        return list.stream().findFirst();
+    }
 }

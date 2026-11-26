@@ -460,12 +460,8 @@ export class ReportsViewComponent {
       this.isExporting.set(true);
       const dataset = this.generateDataset(rep.reportType || 'SALES');
 
-      // Escapado seguro CSV según RFC 4180
-      const escapeCell = (val: string | number): string => {
-        if (val === null || val === undefined) return '""';
-        const str = String(val).replace(/"/g, '""');
-        return `"${str}"`;
-      };
+      // Escapado seguro CSV según RFC 4180 + mitigación contra CSV Formula Injection (OWASP A03)
+      const escapeCell = (val: string | number): string => this.escapeCsvCell(val);
 
       const delimiter = rep.format === 'TXT' ? '|' : ',';
       const lines: string[] = [];
@@ -549,9 +545,9 @@ export class ReportsViewComponent {
 
       lines.push('"DETALLE CONSOLIDADO DE COMPROBANTES DE VENTA EMITIDOS"');
       const salesData = this.generateDataset('SALES');
-      lines.push(salesData.headers.map((h) => `"${h}"`).join(','));
+      lines.push(salesData.headers.map((h) => this.escapeCsvCell(h)).join(','));
       salesData.rows.forEach((r) =>
-        lines.push(r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+        lines.push(r.map((c) => this.escapeCsvCell(c)).join(','))
       );
 
       const content = lines.join('\r\n');
@@ -582,5 +578,21 @@ export class ReportsViewComponent {
     } finally {
       this.isExporting.set(false);
     }
+  }
+
+  /**
+   * Escapa de forma segura una celda CSV según RFC 4180 y neutraliza prefijos
+   * peligrosos de inyección de fórmulas (=, +, -, @, TAB, CR) en Excel/Calc.
+   *
+   * @param val Valor de celda a sanitizar.
+   * @returns Cadena escapada y entrecomillada lista para CSV.
+   */
+  private escapeCsvCell(val: string | number | null | undefined): string {
+    if (val === null || val === undefined) return '""';
+    let str = String(val);
+    if (/^[\t\r ]*[=+\-@\t\r]/.test(str)) {
+      str = `'${str}`;
+    }
+    return `"${str.replace(/"/g, '""')}"`;
   }
 }
