@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Relación Frontend, Backend y Módulos Funcionales",
+    "locale": "es",
+    "quality_profile": "showcase",
+    "output": "docs/diagrams/12_flujo_frontend_backend_funcionalidades.html"
+  },
+  "lanes": [
+    { "id": "fe", "label": "Frontend Angular 21 (dev-frontend)" },
+    { "id": "sec", "label": "Seguridad e IdP (dev-auth-service)", "variant": "exception" },
+    { "id": "be", "label": "Backend REST API (dev-backend)" },
+    { "id": "db", "label": "Persistencia PostgreSQL 17" }
+  ],
+  "phases": [
+    { "id": "entry", "label": "1. Acceso y Sesión", "fromCol": 0, "toCol": 1 },
+    { "id": "core", "label": "2. Módulos Funcionales", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "ops", "label": "3. Gobierno y Auditoría", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "grp_fe_modules", "label": "Vistas Standalone (Lazy Loading)", "lane": "fe", "fromCol": 2, "toCol": 4, "variant": "default" },
+    { "id": "grp_be_modules", "label": "Controladores REST /api/v1", "lane": "be", "fromCol": 2, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["ui_login", "idp_auth", "jwt_filter", "ui_shell", "ui_sales", "api_sales", "db_sales"],
+  "nodes": [
+    { "id": "ui_login", "lane": "fe", "col": 0, "type": "frontend", "icon": "person", "label": "Login y Clave", "sublabel": "/login + AppDialog" },
+    { "id": "ui_shell", "lane": "fe", "col": 1, "type": "frontend", "icon": "active", "label": "Shell + Sidebar RBAC", "sublabel": "AuthGuard + Menú" },
+    { "id": "ui_sales", "lane": "fe", "col": 2, "type": "frontend", "icon": "briefcase", "label": "Comercial y POS", "sublabel": "Ventas, Caja, Cupones" },
+    { "id": "ui_catalog", "lane": "fe", "col": 3, "type": "frontend", "icon": "briefcase", "label": "Catálogo y Compras", "sublabel": "Productos, Proveedores" },
+    { "id": "ui_org", "lane": "fe", "col": 4, "type": "frontend", "icon": "person", "label": "Org, Usuarios y NOC", "sublabel": "Negocios, Sedes, Roles" },
+    { "id": "idp_auth", "lane": "sec", "col": 0, "type": "security", "icon": "decision", "label": "Auth IdP (:8081/:8080)", "sublabel": "BCrypt + Estado Negocio", "tag": "JWT + RBAC" },
+    { "id": "jwt_filter", "lane": "sec", "col": 1, "type": "security", "icon": "waiting", "label": "Filtro JWT y Permisos", "sublabel": "MenuPermission + Sede" },
+    { "id": "api_sales", "lane": "be", "col": 2, "type": "backend", "icon": "active", "label": "API Comercial", "sublabel": "/sales, /cash-register, /coupons" },
+    { "id": "api_catalog", "lane": "be", "col": 3, "type": "backend", "icon": "active", "label": "API Catálogo y Compras", "sublabel": "/catalog, /purchases, /suppliers" },
+    { "id": "api_org", "lane": "be", "col": 4, "type": "backend", "icon": "active", "label": "API Org y Seguridad", "sublabel": "/businesses, /branches, /users" },
+    { "id": "api_reports", "lane": "be", "col": 5, "type": "backend", "icon": "start", "label": "Auditoría y Sesiones", "sublabel": "/sessions, /notifications, /audit" },
+    { "id": "db_auth", "lane": "db", "col": 1, "type": "database", "icon": "database", "label": "auth & rbac", "sublabel": "usuarios, roles, sesiones" },
+    { "id": "db_sales", "lane": "db", "col": 2, "type": "database", "icon": "database", "label": "Esquema Comercial", "sublabel": "ventas, caja, cupones" },
+    { "id": "db_catalog", "lane": "db", "col": 3, "type": "database", "icon": "database", "label": "Esquema Inventario", "sublabel": "productos, compras, stock" },
+    { "id": "db_core", "lane": "db", "col": 4, "type": "database", "icon": "database", "label": "core (Multi-Tenant)", "sublabel": "empresas, sedes, monedas" }
+  ],
+  "edges": [
+    { "id": "e_login_idp", "from": "ui_login", "to": "idp_auth", "label": "POST /login", "variant": "emphasis" },
+    { "id": "e_idp_filter", "from": "idp_auth", "to": "jwt_filter", "label": "Bearer JWT", "variant": "emphasis" },
+    { "id": "e_filter_shell", "from": "jwt_filter", "to": "ui_shell", "label": "menú efectivo", "variant": "emphasis" },
+    { "id": "e_filter_db", "from": "jwt_filter", "to": "db_auth", "label": "valida sesión", "variant": "dashed" },
+    { "id": "e_shell_sales", "from": "ui_shell", "to": "ui_sales", "variant": "default" },
+    { "id": "e_sales_cat", "from": "ui_sales", "to": "ui_catalog", "variant": "default" },
+    { "id": "e_cat_org", "from": "ui_catalog", "to": "ui_org", "variant": "default" },
+    { "id": "e_fe_be_sales", "from": "ui_sales", "to": "api_sales", "label": "HTTP Bearer", "variant": "emphasis" },
+    { "id": "e_fe_be_cat", "from": "ui_catalog", "to": "api_catalog", "label": "HTTP Bearer", "variant": "default" },
+    { "id": "e_fe_be_org", "from": "ui_org", "to": "api_org", "label": "HTTP Bearer", "variant": "default" },
+    { "id": "e_be_db_sales", "from": "api_sales", "to": "db_sales", "label": "ACID", "variant": "emphasis" },
+    { "id": "e_be_db_cat", "from": "api_catalog", "to": "db_catalog", "label": "stock", "variant": "default" },
+    { "id": "e_be_db_org", "from": "api_org", "to": "db_core", "label": "multi-tenant", "variant": "default" },
+    { "id": "e_org_audit", "from": "api_org", "to": "api_reports", "label": "AOP @Auditable", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Comunicación Frontend ↔ Backend",
+      "items": [
+        "AdminApiService y AuthApiService consumen /api/v1/* con Bearer JWT y X-Branch-Id",
+        "AppErrorHandler, BackendHealthInterceptor y AppDialogService estandarizan errores y alertas"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Control Multi-Tenant y RBAC",
+      "items": [
+        "BranchAccessGuard y MenuPermissionEvaluator validan sede autorizada y permisos por módulo",
+        "Si un Negocio Matriz está deshabilitado, Auth bloquea el login y revoca sesiones activas"
+      ]
+    }
+  ]
+}

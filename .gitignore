@@ -43,19 +43,27 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Node / Frontend Artifacts
-frontend/node_modules/
-frontend/dist/
-frontend/.angular/
-frontend/coverage/
+dev-frontend/node_modules/
+dev-frontend/dist/
+dev-frontend/.angular/
+dev-frontend/coverage/
 
-# Java / Maven / Backend Artifacts
-backend/target/
-backend/*.jar
-backend/*.war
-backend/hs_err_pid*
-backend/replay_pid*
-backend/application-local.yml
-backend/application-secret.yml
+# Java / Maven / Backend & Auth Service Artifacts
+dev-backend/target/
+dev-backend/*.jar
+dev-backend/*.war
+dev-backend/hs_err_pid*
+dev-backend/replay_pid*
+dev-backend/application-local.yml
+dev-backend/application-secret.yml
+
+dev-auth-service/target/
+dev-auth-service/*.jar
+dev-auth-service/*.war
+dev-auth-service/hs_err_pid*
+dev-auth-service/replay_pid*
+dev-auth-service/application-local.yml
+dev-auth-service/application-secret.yml
 
 # Docker & Container Data
 docker-data/

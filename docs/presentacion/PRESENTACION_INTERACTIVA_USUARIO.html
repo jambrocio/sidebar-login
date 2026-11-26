@@ -1460,53 +1460,6 @@
       }
     }
 
-    function triggerCleanMp4Download(fileName) {
-      fetch(fileName)
-        .then(res => {
-          if (!res.ok) throw new Error('Fetch failed');
-          return res.blob();
-        })
-        .then(blob => {
-          const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'video/mp4' }));
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = blobUrl;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            if (a.parentNode) a.parentNode.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-          }, 1500);
-        })
-        .catch(() => {
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = fileName;
-          a.setAttribute('download', fileName);
-          a.target = '_self';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            if (a.parentNode) a.parentNode.removeChild(a);
-          }, 500);
-        });
-    }
-
-    function downloadMp4FromPortal() {
-      const file = currentVideoType === 'sofia' 
-        ? 'video_2_demo_sofia_cotic.mp4' 
-        : 'video_1_spot_comercial_cotic.mp4';
-      triggerCleanMp4Download(file);
-    }
-
-    // Receptor de evento para descargas solicitadas desde el reproductor dentro del iframe
-    window.addEventListener('message', event => {
-      if (event.data && event.data.type === 'DOWNLOAD_COTIC_MP4') {
-        triggerCleanMp4Download(event.data.file);
-      }
-    });
-
     // INICIALIZACIÓN
     renderSlide();
     calcRoi();

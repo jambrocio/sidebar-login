@@ -1,0 +1,205 @@
+:host {
+  display: block;
+}
+
+.feedback-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-md, 8px);
+  margin-bottom: 1.25rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  &.feedback-success {
+    background-color: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+  }
+
+  &.feedback-warning {
+    background-color: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+  }
+
+  &.feedback-error {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  &.feedback-info {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+  }
+}
+
+.section-description {
+  color: var(--text-muted-color, #64748b);
+  font-size: 0.9rem;
+  margin-top: -0.25rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted-color, #64748b);
+  margin-top: 0.25rem;
+}
+
+/* Navegación por Pestañas */
+.tab-navigation {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--border-color, #e2e8f0);
+  margin-bottom: 1.5rem;
+
+  .tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted-color, #64748b);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      color: var(--primary-color, #007bff);
+      background-color: var(--sidebar-hover-bg, rgba(0, 123, 255, 0.05));
+    }
+
+    &.active {
+      color: var(--primary-color, #007bff);
+      border-bottom-color: var(--primary-color, #007bff);
+      background-color: var(--sidebar-hover-bg, rgba(0, 123, 255, 0.04));
+    }
+
+    i {
+      font-size: 1.1rem;
+    }
+
+    .tab-badge {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      background-color: var(--border-color, #e2e8f0);
+      color: var(--text-color, #334155);
+      font-weight: 700;
+    }
+
+    &.active .tab-badge {
+      background-color: var(--primary-color, #007bff);
+      color: #ffffff;
+    }
+  }
+}
+
+.badge-info {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-success {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background-color: rgba(0, 123, 255, 0.12);
+  color: var(--primary-color, #007bff);
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-danger {
+  background-color: rgba(239, 68, 68, 0.14);
+  color: #dc2626;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.btn-outline {
+    background: transparent;
+    border: 1px solid var(--primary-color, #007bff);
+    color: var(--primary-color, #007bff);
+
+    &:hover:not(:disabled) {
+      background-color: var(--primary-color, #007bff);
+      color: #ffffff;
+    }
+  }
+
+  &.btn-danger-outline {
+    background: transparent;
+    border: 1px solid #dc2626;
+    color: #dc2626;
+
+    &:hover:not(:disabled) {
+      background-color: #dc2626;
+      color: #ffffff;
+    }
+  }
+
+  &.btn-success-outline {
+    background: transparent;
+    border: 1px solid #16a34a;
+    color: #16a34a;
+
+    &:hover:not(:disabled) {
+      background-color: #16a34a;
+      color: #ffffff;
+    }
+  }
+}

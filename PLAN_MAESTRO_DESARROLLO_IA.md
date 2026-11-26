@@ -86,12 +86,12 @@ flowchart TD
 ```text
 nombre-del-proyecto/
 ├── PLAN_MAESTRO_DESARROLLO_IA.md # Este documento de referencia maestra
-├── docker-compose.yml            # Orquestación local (db, auth-service, backend, frontend)
+├── docker-compose.yml            # Orquestación local (dev-postgres, dev-auth-service, dev-backend, dev-frontend)
 ├── start.ps1                     # Script maestro para Windows
 ├── start.sh                      # Script maestro para Linux / macOS
 ├── README.md                     # Documentación general y puesta en marcha
 │
-├── auth-service/                 # 🛡️ Microservicio Identity Provider (IdP / IAM Centralizado)
+├── dev-auth-service/             # 🛡️ Microservicio Identity Provider (IdP / IAM Centralizado)
 │   ├── src/main/java/com/auth/identity/
 │   │   ├── core/                 # RS256 Asymmetric Token Signing, JWKS Provider, RFC 7807 Errors
 │   │   ├── domain/model/         # Modelos de identidad, sesiones y roles
@@ -101,7 +101,7 @@ nombre-del-proyecto/
 │   ├── Dockerfile                # Multi-stage Eclipse Temurin 21 JRE Alpine
 │   └── pom.xml                   # Spring Boot 3.4 + Nimbus JOSE + Virtual Threads
 │
-├── backend/                      # Módulo Backend de Negocio (Comercial, Ventas, Inventario)
+├── dev-backend/                  # Módulo Backend de Negocio (Comercial, Ventas, Inventario)
 │   ├── src/main/java/com/empresa/proyecto/
 │   │   ├── config/               # CorsConfig, OpenApiConfig, SecurityConfig
 │   │   ├── common/               # GlobalExceptionHandler, ProblemDetail, DTOs genéricos
@@ -118,7 +118,7 @@ nombre-del-proyecto/
 │   ├── Dockerfile                # Multi-stage Eclipse Temurin JRE
 │   └── pom.xml
 │
-├── frontend/                     # Módulo Frontend Angular
+├── dev-frontend/                 # Módulo Frontend Angular
 │   ├── scripts/
 │   │   └── update-version.js     # Script de incremento semántico prebuild (v2.4.1)
 │   ├── src/app/

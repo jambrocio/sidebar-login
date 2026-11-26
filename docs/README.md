@@ -30,7 +30,11 @@ docs/
 │   ├── 05_flujo_operativo_negocio.html         # Flujo Operativo End-to-End (Workflow Trace)
 │   ├── 06_modelo_datos_erd.html                # Modelo de Datos Relacional ERD (19 Tablas en Español)
 │   ├── 07_c4_interconexion_ops_aplicaciones.html # C4 Nivel 2: Segmentación de Redes (Ops, App y Datos) con Databasus
-│   └── 08_c4_pipeline_cicd_homelab.html        # C4 Nivel 2: Pipeline CI/CD con GitHub Actions y Runner en Homelab
+│   ├── 08_c4_pipeline_cicd_homelab.html        # C4 Nivel 2: Pipeline CI/CD con GitHub Actions y Runner en Homelab
+│   ├── 09_secuencia_autenticacion_centralizada_multitenant.html # Secuencia: Auth Centralizada y Multi-Tenant
+│   ├── 10_secuencia_versionado_cache_busting_y_dialogos.html # Secuencia: Versionado, Cache-Busting y Diálogos
+│   ├── 11_estrategia_repositorio_github.html   # Workflow: Estrategia de Ramas, PRs, CI/CD y Releases en GitHub
+│   └── 12_flujo_frontend_backend_funcionalidades.html # Workflow: Relación Frontend, Backend y Módulos Funcionales
 │
 ├── README_PIPELINE_CICD_HOMELAB_DEVSECOPS.md   # Guía Maestra DevSecOps: Implementación paso a paso del Pipeline CI/CD en Homelab
 │

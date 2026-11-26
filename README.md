@@ -1,6 +1,6 @@
 # 📦 COTIC — SISTEMA POS & GESTIÓN DE PRODUCTOS
 
-Repositorio monorepo estructurado en **módulos limpios** (`frontend/`, `backend/` y `docs/`) para la gestión integral de **Negocios Matriz, Múltiples Sedes/Sucursales, Ventas al por Mayor y Menor de Productos en General (Abarrotes, Bebidas, Golosinas, Limpieza, Consumo Masivo), Comprobante Electrónico SUNAT con Impresión Dual, Historial de Ventas, Compras y Abastecimiento a Inventario, Cupones de Descuento, Arqueo de Caja por Turno y Seguridad RBAC**.
+Repositorio monorepo estructurado en **módulos limpios** (`dev-frontend/`, `dev-backend/`, `dev-auth-service/` y `docs/`) para la gestión integral de **Negocios Matriz, Múltiples Sedes/Sucursales, Ventas al por Mayor y Menor de Productos en General (Abarrotes, Bebidas, Golosinas, Limpieza, Consumo Masivo), Comprobante Electrónico SUNAT con Impresión Dual, Historial de Ventas, Compras y Abastecimiento a Inventario, Cupones de Descuento, Arqueo de Caja por Turno y Seguridad RBAC**.
 
 ---
 
@@ -9,7 +9,7 @@ Repositorio monorepo estructurado en **módulos limpios** (`frontend/`, `backend
 ```text
 sidebar-login/
 ├── PLAN_MAESTRO_DESARROLLO_IA.md # 🌟 Blueprint y Estándar Maestro para Modelos de IA
-├── auth-service/               # 🛡️ Centralized Identity Provider (IdP / IAM) en Spring Boot 3.4 (Java 21 LTS + RS256 / JWKS)
+├── dev-auth-service/           # 🛡️ Centralized Identity Provider (IdP / IAM) en Spring Boot 3.4 (Java 21 LTS + RS256 / JWKS)
 │   ├── src/main/java/com/auth/identity/
 │   │   ├── core/               # Configuración de Seguridad, JWT Asimétrico (RS256/JWKS) y Errores RFC 7807
 │   │   ├── domain/model/       # Entidades de identidad, roles y sesiones
@@ -21,7 +21,7 @@ sidebar-login/
 │   ├── pom.xml
 │   └── README.md               # Guía técnica de integración para aplicaciones satélites
 │
-├── frontend/                   # Aplicación Web & PWA en Angular 21 (Standalone + Signals)
+├── dev-frontend/               # Aplicación Web & PWA en Angular 21 (Standalone + Signals)
 │   ├── scripts/update-version.js # Versionado semántico automático en prebuild (v2.4.1)
 │   ├── public/                 # version.json, manifest PWA y Service Worker anti-caché
 │   ├── src/app/                # 16 Interfaces modulares, AppVersionService y AppDialogService
@@ -29,7 +29,7 @@ sidebar-login/
 │   ├── package.json            # Script "prebuild": "node scripts/update-version.js"
 │   └── README.md               # Guía de instalación y ejecución del Frontend
 │
-├── backend/                    # Backend REST API en Spring Boot 4.0 (Java 21 LTS + Hilos Virtuales)
+├── dev-backend/                # Backend REST API en Spring Boot 4.0 (Java 21 LTS + Hilos Virtuales)
 │   ├── src/main/java/com/elroble/bevadmin/
 │   │   ├── config/             # Configuración CORS y Web
 │   │   ├── common/             # Manejador global de errores RFC 9457 (ProblemDetail)
@@ -64,8 +64,8 @@ sidebar-login/
 │   │   └── 10_secuencia_versionado_cache_busting_y_dialogos.html # Auto-Version, Cache-Busting & Diálogos
 │   │
 │   ├── presentacion/           # Presentación Comercial para Clientes Finales
-│   │   ├── video_demo_modulos_persona.html # Demo con Presentadora Virtual (Sofía - 65s) en MP4
-│   │   ├── video_promocional_bevadmin.html # Spot comercial en video animado HD (50s) en MP4
+│   │   ├── video_demo_modulos_persona.html # Demo con Presentadora Virtual (Sofía - 65s)
+│   │   ├── video_promocional_bevadmin.html # Spot comercial en video animado HD (50s)
 │   │   ├── PRESENTACION_INTERACTIVA_USUARIO.html # Pitch Deck interactivo en Tema Claro
 │   │   └── PRESENTACION_INTERACTIVA_USUARIO.md # Manual funcional para el usuario de tienda
 │   │

@@ -209,11 +209,11 @@ if ($Mode -eq 'docker') {
     # Modo Local
     Write-Color "`n[3/4] Modo Local: Inicie los servicios en terminales dedicadas:" "Yellow"
     Write-Host "  Terminal 1 (Centralized Auth IdP):"
-    Write-Color "    cd auth-service; mvn spring-boot:run -Dspring-boot.run.profiles=$Environment" "Cyan"
+    Write-Color "    cd dev-auth-service; mvn spring-boot:run -Dspring-boot.run.profiles=$Environment" "Cyan"
     Write-Host "  Terminal 2 (Backend de Negocio):"
-    Write-Color "    cd backend; mvn spring-boot:run -Dspring-boot.run.profiles=$Environment" "Cyan"
+    Write-Color "    cd dev-backend; mvn spring-boot:run -Dspring-boot.run.profiles=$Environment" "Cyan"
     Write-Host "  Terminal 3 (Frontend Angular 21):"
-    Write-Color "    cd frontend; npm run start:$Environment" "Cyan"
+    Write-Color "    cd dev-frontend; npm run start:$Environment" "Cyan"
 }
 
 # 5. Resumen de Despliegue y Enlaces de Acceso

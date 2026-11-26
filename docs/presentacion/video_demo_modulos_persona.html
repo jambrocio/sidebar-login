@@ -847,7 +847,7 @@
         id: 'slide6',
         start: 56,
         end: 65,
-        voice: "¡Multiplica las ventas de tus productos y automatiza tu negocio hoy mismo! Haz clic para probar la demostración interactiva o descarga este video en MP4."
+        voice: "¡Multiplica las ventas de tus productos y automatiza tu negocio hoy mismo! Haz clic para probar la demostración interactiva."
       }
     ];
 
@@ -1138,67 +1138,6 @@
       requestAnimationFrame(drawBgLights);
     }
     drawBgLights();
-
-    // =========================================================================
-    // EXPORTACIÓN Y DESCARGA MP4 EN ALTA DEFINICIÓN (1280x720 HD)
-    // =========================================================================
-    let isExporting = false;
-    let exportRecorder = null;
-    let exportAnimId = null;
-    let exportCanvas = null;
-    let exportCtx = null;
-    let exportPreviewCanvas = null;
-    let exportPreviewCtx = null;
-    let exportTime = 0;
-    let exportChunks = [];
-
-    function recordAndDownloadMp4() {
-      const file = 'video_2_demo_sofia_cotic.mp4';
-      if (window.parent && window.parent !== window) {
-        try {
-          window.parent.postMessage({ type: 'DOWNLOAD_COTIC_MP4', file: file }, '*');
-          return;
-        } catch (e) { }
-      }
-      fetch(file)
-        .then(res => {
-          if (!res.ok) throw new Error('Fetch failed');
-          return res.blob();
-        })
-        .then(blob => {
-          const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'video/mp4' }));
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = blobUrl;
-          a.download = file;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            if (a.parentNode) a.parentNode.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-          }, 1500);
-        })
-        .catch(() => {
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = file;
-          a.setAttribute('download', file);
-          a.target = '_self';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            if (a.parentNode) a.parentNode.removeChild(a);
-          }, 500);
-        });
-    }
-
-    function finishExportEarly() {
-      recordAndDownloadMp4();
-    }
-
-    function cancelExportMp4() {
-      isExporting = false;
-    }
 
     // RENDERIZADOR CANVAS 2D DE ALTA DEFINICIÓN (1280x720)
     function renderExportFrame(ctx, w, h, t) {
@@ -1644,14 +1583,6 @@
 
     // INICIALIZACIÓN
     updateTimeline(0);
-
-    // AUTO-DESCARGA POR URL (?download=true)
-    window.addEventListener('DOMContentLoaded', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('download') === 'true') {
-        setTimeout(recordAndDownloadMp4, 700);
-      }
-    });
   </script>
 </body>
 </html>

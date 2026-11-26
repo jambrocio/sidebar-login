@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "98a7b6da-e87c-4097-a6b0-090b863e0997",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\workflow-github-strategy-20261126-164300\\candidate.json",
+  "output": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\11_estrategia_repositorio_github.html",
+  "specification": {
+    "sha256": "b97c6c1337385114cd06a3fa0d619c45e5128dd036c0dcfa24ba1db48e83d368",
+    "bytes": 4960
+  },
+  "artifact": {
+    "sha256": "7c42644453b422c5f4476668e5ceaaa9ca3d4f83fc35858db3361d9da48fb1cc",
+    "bytes": 833749
+  }
+}

@@ -477,7 +477,7 @@ jobs:
 
       - name: Backend Tests & Cobertura
         run: |
-          cd backend
+          cd dev-backend
           mvn clean test jacoco:report
 
       - name: Escaneo de Vulnerabilidades SAST con Trivy
@@ -507,7 +507,7 @@ jobs:
       - name: Compilar y Push Backend
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./dev-backend
           push: true
           tags: ${{ env.REGISTRY_AZURE }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }}
           cache-from: type=gha
@@ -516,7 +516,7 @@ jobs:
       - name: Compilar y Push Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./dev-frontend
           push: true
           tags: ${{ env.REGISTRY_AZURE }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
           cache-from: type=gha

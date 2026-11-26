@@ -227,7 +227,7 @@ jobs:
           cache: 'maven'
 
       - name: Compilar y Ejecutar Pruebas Unitarias
-        working-directory: ./backend
+        working-directory: ./dev-backend
         run: |
           mvn clean verify --batch-mode -Dorg.slf4j.simpleLogger.defaultLogLevel=warn
 
@@ -247,14 +247,14 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
+          cache-dependency-path: './dev-frontend/package-lock.json'
 
       - name: Instalar Dependencias Limpias (npm ci)
-        working-directory: ./frontend
+        working-directory: ./dev-frontend
         run: npm ci --prefer-offline --no-audit
 
       - name: Compilación Producción Angular
-        working-directory: ./frontend
+        working-directory: ./dev-frontend
         run: npm run build -- --configuration=production
 
   # ----------------------------------------------------------------------------
@@ -274,7 +274,7 @@ jobs:
       - name: Construir Imagen Local Backend para Escaneo
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./dev-backend
           load: true
           tags: bevadmin-backend:local-test
           cache-from: type=gha
@@ -314,7 +314,7 @@ jobs:
       - name: Construir y Publicar Backend
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./dev-backend
           push: true
           tags: |
             ghcr.io/${{ github.repository }}/backend:sha-${{ github.sha }}
@@ -325,7 +325,7 @@ jobs:
       - name: Construir y Publicar Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./dev-frontend
           push: true
           tags: |
             ghcr.io/${{ github.repository }}/frontend:sha-${{ github.sha }}

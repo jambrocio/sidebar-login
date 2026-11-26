@@ -31,7 +31,7 @@ services:
   # Centralized Identity & Access Management (IAM / IdP) Service (Spring Boot 3.4 + Java 21)
   dev-auth-service:
     build:
-      context: ./auth-service
+      context: ./dev-auth-service
       dockerfile: Dockerfile
     image: dev-auth-service
     container_name: dev-auth-service
@@ -64,7 +64,7 @@ services:
   # Backend REST API Spring Boot 4 + Java 21 (Imperativo / Síncrono)
   dev-backend:
     build:
-      context: ./backend
+      context: ./dev-backend
       dockerfile: Dockerfile
     image: dev-backend
     container_name: dev-backend
@@ -100,7 +100,7 @@ services:
   # Frontend SPA Angular 21 servida por Nginx Alpine
   dev-frontend:
     build:
-      context: ./frontend
+      context: ./dev-frontend
       dockerfile: Dockerfile
       args:
         ENV: ${FRONTEND_ENV:-production}

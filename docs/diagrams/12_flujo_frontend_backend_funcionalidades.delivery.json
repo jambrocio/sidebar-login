@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "31647318-a0e5-4733-b23a-c03537240442",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\workflow-fe-be-flow-20261126-170400\\candidate.json",
+  "output": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\12_flujo_frontend_backend_funcionalidades.html",
+  "specification": {
+    "sha256": "c9614195c4489fa7a036662f47bcb5b49b3b1a73e4619856b82eaf15da551693",
+    "bytes": 5906
+  },
+  "artifact": {
+    "sha256": "e9e8f7b130dd3c923664a22c40ede0a4a7209473d3b1ad0ed0c1b3dbb6d859e4",
+    "bytes": 840354
+  }
+}

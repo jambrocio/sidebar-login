@@ -389,10 +389,28 @@
           <span class="item-badge badge-seq">Sequence</span>
         </div>
       </button>
+
+      <!-- Item 11 -->
+      <button class="diagram-item" onclick="selectDiagram(10)">
+        <i class="bi bi-diagram-3-fill item-icon"></i>
+        <div class="item-content">
+          <div class="item-title">11. Estrategia Repositorio GitHub</div>
+          <span class="item-badge badge-flow">Workflow Trace</span>
+        </div>
+      </button>
+
+      <!-- Item 12 -->
+      <button class="diagram-item" onclick="selectDiagram(11)">
+        <i class="bi bi-layers-fill item-icon"></i>
+        <div class="item-content">
+          <div class="item-title">12. Flujo Frontend ↔ Backend</div>
+          <span class="item-badge badge-flow">Workflow Trace</span>
+        </div>
+      </button>
     </div>
 
     <div class="sidebar-footer">
-      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 10 Diagramas Listos</span>
+      <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> 12 Diagramas Listos</span>
       <span style="font-family: 'JetBrains Mono', monospace;">100% Pasaron Gates</span>
     </div>
   </aside>
@@ -499,6 +517,20 @@
         badgeClass: "badge-seq",
         desc: "Sincronización continua de versión en prebuild, headers no-store en Nginx, auto-recuperación de chunks, banner reactivo y diálogos corporativos homologados.",
         url: "10_secuencia_versionado_cache_busting_y_dialogos.html"
+      },
+      {
+        title: "11. Estrategia de Manejo de Repositorio GitHub",
+        badge: "Workflow Trace",
+        badgeClass: "badge-flow",
+        desc: "Flujo de ramas efímeras (feat/*, fix/*, hotfix/*), Pull Requests con CODEOWNERS, GitHub Actions CI, Branch Protection en main, Squash & Merge y release SemVer.",
+        url: "11_estrategia_repositorio_github.html"
+      },
+      {
+        title: "12. Relación Frontend, Backend y Módulos Funcionales",
+        badge: "Workflow Trace",
+        badgeClass: "badge-flow",
+        desc: "Interconexión entre Angular 21 (dev-frontend), IdP (dev-auth-service), API REST Spring Boot 4 (dev-backend) y PostgreSQL 17 por cada dominio funcional.",
+        url: "12_flujo_frontend_backend_funcionalidades.html"
       }
     ];
 

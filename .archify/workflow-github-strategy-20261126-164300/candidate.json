@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Estrategia de Manejo de Repositorio GitHub",
+    "locale": "es",
+    "quality_profile": "showcase",
+    "output": "docs/diagrams/11_estrategia_repositorio_github.html"
+  },
+  "lanes": [
+    { "id": "dev", "label": "Desarrollo (Branches)" },
+    { "id": "pr", "label": "Pull Request y Review" },
+    { "id": "gates", "label": "CI/CD y Branch Protection", "variant": "exception" },
+    { "id": "release", "label": "Integración y Release" }
+  ],
+  "phases": [
+    { "id": "branch", "label": "1. Rama y Código", "fromCol": 0, "toCol": 1 },
+    { "id": "verify", "label": "2. PR y Validación", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "ship", "label": "3. Merge y Release", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "grp_branching", "label": "Ramas efímeras", "lane": "dev", "fromCol": 1, "toCol": 2, "variant": "default" },
+    { "id": "grp_protection", "label": "Reglas en main", "lane": "gates", "fromCol": 2, "toCol": 4, "variant": "security" },
+    { "id": "grp_release", "label": "Entrega continua", "lane": "release", "fromCol": 4, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["issue", "feature", "open_pr", "ci_checks", "policy_gate", "squash_merge", "tag_release"],
+  "nodes": [
+    { "id": "issue", "lane": "dev", "col": 0, "type": "external", "icon": "flag", "label": "Issue / Tarea", "sublabel": "alcance y criterio" },
+    { "id": "feature", "lane": "dev", "col": 1, "type": "frontend", "icon": "active", "label": "feat/* o fix/*", "sublabel": "Conventional Commits", "tag": "desde main" },
+    { "id": "hotfix", "lane": "dev", "col": 2, "type": "security", "icon": "failure", "label": "hotfix/*", "sublabel": "urgente desde tag", "tag": "producción" },
+    { "id": "open_pr", "lane": "pr", "col": 2, "type": "backend", "icon": "person", "label": "Abrir Pull Request", "sublabel": "hacia main + plantilla" },
+    { "id": "review", "lane": "pr", "col": 3, "type": "backend", "icon": "waiting", "label": "Code Review", "sublabel": "mín. 1 aprobación", "tag": "CODEOWNERS" },
+    { "id": "ci_checks", "lane": "gates", "col": 2, "type": "messagebus", "icon": "active", "label": "GitHub Actions CI", "sublabel": "lint + tests + build" },
+    { "id": "policy_gate", "lane": "gates", "col": 3, "type": "security", "icon": "decision", "label": "Branch Protection", "sublabel": "checks + sin conflictos", "tag": "bloquea push directo" },
+    { "id": "fix_loop", "lane": "gates", "col": 4, "type": "security", "icon": "failure", "label": "Cambios Solicitados", "sublabel": "corregir en rama" },
+    { "id": "squash_merge", "lane": "release", "col": 4, "type": "database", "icon": "success", "label": "Squash & Merge", "sublabel": "a main + borrar rama" },
+    { "id": "tag_release", "lane": "release", "col": 5, "type": "cloud", "icon": "start", "label": "Tag SemVer y Deploy", "sublabel": "vX.Y.Z + release notes", "tag": "producción" }
+  ],
+  "edges": [
+    { "id": "e_issue_feat", "from": "issue", "to": "feature", "variant": "default" },
+    { "id": "e_feat_pr", "from": "feature", "to": "open_pr", "label": "push", "variant": "emphasis" },
+    { "id": "e_hotfix_pr", "from": "hotfix", "to": "open_pr", "label": "urgente", "variant": "security", "role": "branch" },
+    { "id": "e_pr_ci", "from": "open_pr", "to": "ci_checks", "label": "dispara CI", "variant": "default" },
+    { "id": "e_pr_review", "from": "open_pr", "to": "review", "label": "asigna", "variant": "default" },
+    { "id": "e_ci_gate", "from": "ci_checks", "to": "policy_gate", "label": "estado CI", "variant": "emphasis" },
+    { "id": "e_review_gate", "from": "review", "to": "policy_gate", "label": "aprobado", "variant": "emphasis" },
+    { "id": "e_gate_fix", "from": "policy_gate", "to": "fix_loop", "label": "falla / cambios", "variant": "security", "role": "error" },
+    { "id": "e_fix_feat", "from": "fix_loop", "to": "feature", "label": "nuevo commit", "variant": "dashed", "role": "return" },
+    { "id": "e_gate_merge", "from": "policy_gate", "to": "squash_merge", "label": "listo", "variant": "emphasis" },
+    { "id": "e_merge_release", "from": "squash_merge", "to": "tag_release", "label": "CD automático", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Convenciones del Repositorio",
+      "items": [
+        "Commits: feat:, fix:, docs:, refactor:, chore: (Conventional Commits)",
+        "Ramas: feat/<ticket>-desc, fix/<ticket>-desc, hotfix/<desc>",
+        "Historial lineal en main con Squash & Merge y borrado automático de rama"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Reglas de Branch Protection (main)",
+      "items": [
+        "Prohibido push directo o force-push sobre main",
+        "Requiere Pull Request con al menos 1 aprobación de CODEOWNERS",
+        "Requiere checks de GitHub Actions (lint, tests, build) en verde"
+      ]
+    }
+  ]
+}

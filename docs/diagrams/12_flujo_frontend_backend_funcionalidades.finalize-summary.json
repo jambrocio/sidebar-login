@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\.archify\\workflow-fe-be-flow-20261126-170400\\candidate.json",
+    "sha256": "c9614195c4489fa7a036662f47bcb5b49b3b1a73e4619856b82eaf15da551693",
+    "bytes": 5906
+  },
+  "artifact": {
+    "path": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\12_flujo_frontend_backend_funcionalidades.html",
+    "sha256": "e9e8f7b130dd3c923664a22c40ede0a4a7209473d3b1ad0ed0c1b3dbb6d859e4",
+    "bytes": 840354
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\12_flujo_frontend_backend_funcionalidades.finalize.json",
+    "summaryReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\12_flujo_frontend_backend_funcionalidades.finalize-summary.json",
+    "browserCheckReceipt": "D:\\tools\\Proyectos\\sidebar-login\\docs\\diagrams\\12_flujo_frontend_backend_funcionalidades.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.3.2",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.3.2",
+    "severity": "normal",
+    "summary": "Includes archify-pr in default installs, adds offline in-page update notices with Agent prompts, speeds slow update checks, and polishes PR diagrams.",
+    "checkedAt": "2026-11-26T21:43:57.999Z",
+    "source": "cache",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.2.0 → 3.3.2. A previous check at 2026-11-26T21:43:57.999Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.3.2. Would you like me to update Archify?",
+    "eventKey": "archify@sha256:932d915f83fdbf44796cc6b20b085455a763491306e1b8dee92047e11dddc0ea"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 5607,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}
