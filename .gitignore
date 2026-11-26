@@ -72,3 +72,9 @@ docker-data/
 *.pid.lock
 # Local AI runtime state
 .atl/
+
+# Terraform / IaC
+**/.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars

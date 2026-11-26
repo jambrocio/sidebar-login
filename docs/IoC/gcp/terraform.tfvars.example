@@ -1,0 +1,16 @@
+project_id  = "mi-proyecto-gcp-prod"
+region      = "us-central1"
+project_name = "bevadmin"
+environment = "prod"
+domain_name = "app.bevadmin.com"
+
+db_name = "admin_dashboard_db"
+db_user = "bevadmin_pg"
+db_tier = "db-custom-2-7680"
+
+frontend_image_tag = "latest"
+backend_image_tag  = "latest"
+auth_image_tag     = "latest"
+
+# Reemplazar por un secreto real de al menos 64 caracteres (o pasar vía TF_VAR_jwt_secret)
+jwt_secret = "REEMPLAZAR_CON_SECRETO_JWT_SEGURO_DE_AL_MENOS_64_CARACTERES_2026"
